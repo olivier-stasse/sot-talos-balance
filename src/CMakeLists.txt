@@ -106,7 +106,7 @@ IF(BUILD_PYTHON_INTERFACE)
 
   # Install empty __init__.py files in intermediate directories.
   INSTALL(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/dynamic_graph/sot/talos_balance/__init__.py
+    ${CMAKE_CURRENT_BINARY_DIR}/dynamic_graph/sot/talos_balance/__init__.py
     DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/talos_balance
   )
 ENDIF(BUILD_PYTHON_INTERFACE)
