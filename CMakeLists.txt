@@ -77,7 +77,7 @@ SET(SOTTALOSBALANCE_LIB_NAME ${PROJECT_NAME})
 SET(LIBRARY_NAME ${SOTTALOSBALANCE_LIB_NAME})
 
 SET(${LIBRARY_NAME}_HEADERS
-  include/sot/talos_balance/example.hh
+#  include/sot/talos_balance/example.hh
   include/sot/talos_balance/commands-helper.hh
   include/sot/talos_balance/signal-helper.hh
   include/sot/talos_balance/utils/logger.hh
@@ -90,7 +90,7 @@ SET(${LIBRARY_NAME}_HEADERS
 #  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_WRITE)
 
 SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
-    src/example.cpp
+#    src/example.cpp
     src/logger.cpp
     src/stop-watch.cpp
 )
