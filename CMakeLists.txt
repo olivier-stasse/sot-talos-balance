@@ -128,10 +128,6 @@ IF(BUILD_PYTHON_INTERFACE)
   INSTALL(FILES python/dynamic_graph/sot/talos_balance/__init__.py
                 python/dynamic_graph/sot/talos_balance/main.py
                 DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/talos_balance)
-
-  INSTALL(FILES python/dynamic_graph/sot/talos_balance/tests/__init__.py
-                python/dynamic_graph/sot/talos_balance/tests/test_example.py
-                DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/talos_balance/tests)
 ENDIF(BUILD_PYTHON_INTERFACE)
 
 ADD_SUBDIRECTORY(src)
