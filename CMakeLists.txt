@@ -125,8 +125,8 @@ TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${Boost_LIBRARIES})
 INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 IF(BUILD_PYTHON_INTERFACE)
-  INSTALL(FILES python/dynamic_graph/sot/talos_balance/__init__.py
-                python/dynamic_graph/sot/talos_balance/main.py
+  INSTALL(FILES python/talos_balance/__init__.py
+                python/talos_balance/main.py
                 DESTINATION ${PYTHON_SITELIB}/talos_balance)
 ENDIF(BUILD_PYTHON_INTERFACE)
 
