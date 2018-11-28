@@ -61,7 +61,7 @@ IF(BUILD_PYTHON_INTERFACE)
   SET(BOOST_COMPONENTS ${BOOST_COMPONENTS} python)
   ADD_REQUIRED_DEPENDENCY("dynamic-graph-python >= 3.0.0")
   SET(${LIBRARY_NAME}_PYTHON_FILES python/*.py)
-  SET(PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${PYTHON_SITELIB}/dynamic_graph/sot/talos_balance)
+  SET(PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${PYTHON_SITELIB}/talos_balance)
   INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIR})
 ENDIF(BUILD_PYTHON_INTERFACE)
 
@@ -127,8 +127,85 @@ INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 IF(BUILD_PYTHON_INTERFACE)
   INSTALL(FILES python/dynamic_graph/sot/talos_balance/__init__.py
                 python/dynamic_graph/sot/talos_balance/main.py
-                DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/talos_balance)
+                DESTINATION ${PYTHON_SITELIB}/talos_balance)
 ENDIF(BUILD_PYTHON_INTERFACE)
+
+MACRO(TALOS_BALANCE_PYTHON_MODULE SUBMODULENAME LIBRARYNAME TARGETNAME)
+
+  # By default the __init__.py file is installed.
+  SET(INSTALL_INIT_PY 1)
+  SET(SOURCE_PYTHON_MODULE "cmake/dynamic_graph/python-module-py.cc")
+    
+  # Check if there is optional parameters.
+  set(extra_macro_args ${ARGN})
+  list(LENGTH extra_macro_args num_extra_args)
+  if( ${num_extra_args} GREATER 0)
+    list(GET extra_macro_args 0 INSTALL_INIT_PY)
+    if( ${num_extra_args} GREATER 1)
+      list(GET extra_macro_args 1 SOURCE_PYTHON_MODULE)
+    endif(${num_extra_args} GREATER 1)
+  endif(${num_extra_args} GREATER 0)
+  
+  IF(NOT DEFINED PYTHONLIBS_FOUND)
+    FINDPYTHON()
+  ELSEIF(NOT ${PYTHONLIBS_FOUND} STREQUAL "TRUE")
+    MESSAGE(FATAL_ERROR "Python has not been found.")
+  ENDIF()
+
+  SET(PYTHON_MODULE ${TARGETNAME})
+  # We need to set this policy to old to accept wrap target.
+  CMAKE_POLICY(PUSH)
+  IF(POLICY CMP0037)
+    CMAKE_POLICY(SET CMP0037 OLD)
+  ENDIF()
+
+  ADD_LIBRARY(${PYTHON_MODULE}
+    MODULE
+    ${PROJECT_SOURCE_DIR}/${SOURCE_PYTHON_MODULE})
+
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/src/talos_balance/${SUBMODULENAME})
+
+  SET_TARGET_PROPERTIES(${PYTHON_MODULE}
+    PROPERTIES PREFIX ""
+    OUTPUT_NAME talos_balance/${SUBMODULENAME}/wrap
+   )
+  CMAKE_POLICY(POP)
+
+  TARGET_LINK_LIBRARIES(${PYTHON_MODULE} ${PUBLIC_KEYWORD} "-Wl,--no-as-needed")
+  TARGET_LINK_LIBRARIES(${PYTHON_MODULE} ${PUBLIC_KEYWORD} ${LIBRARYNAME} ${PYTHON_LIBRARY})
+
+  INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
+
+  #
+  # Installation
+  #
+  SET(PYTHON_INSTALL_DIR ${PYTHON_SITELIB}/talos_balance/${SUBMODULENAME})
+
+  INSTALL(TARGETS ${PYTHON_MODULE}
+    DESTINATION
+    ${PYTHON_INSTALL_DIR})
+
+  SET(ENTITY_CLASS_LIST "")
+  FOREACH (ENTITY ${NEW_ENTITY_CLASS})
+    SET(ENTITY_CLASS_LIST "${ENTITY_CLASS_LIST}${ENTITY}('')\n")
+  ENDFOREACH(ENTITY ${NEW_ENTITY_CLASS})
+
+  # Install if INSTALL_INIT_PY is set to 1
+  IF (${INSTALL_INIT_PY} EQUAL 1)
+
+    CONFIGURE_FILE(
+      ${PROJECT_SOURCE_DIR}/cmake/dynamic_graph/submodule/__init__.py.cmake
+      ${PROJECT_BINARY_DIR}/src/talos_balance/${SUBMODULENAME}/__init__.py
+      )
+
+    INSTALL(
+      FILES ${PROJECT_BINARY_DIR}/src/talos_balance/${SUBMODULENAME}/__init__.py
+      DESTINATION ${PYTHON_INSTALL_DIR}
+      )
+    
+  ENDIF(${INSTALL_INIT_PY} EQUAL 1)
+
+ENDMACRO(TALOS_BALANCE_PYTHON_MODULE SUBMODULENAME)
 
 ADD_SUBDIRECTORY(src)
 # ADD_SUBDIRECTORY(unitTesting)

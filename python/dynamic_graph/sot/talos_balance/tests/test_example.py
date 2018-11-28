@@ -1,5 +1,5 @@
 from __future__ import print_function
-from dynamic_graph.sot.talos_balance.example import Example
+from talos_balance.example import Example
 
 ex = Example("ciao")
 

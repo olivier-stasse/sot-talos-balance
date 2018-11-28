@@ -90,7 +90,8 @@ FOREACH(plugin ${plugins})
   # (replace minus with underscore to make Python happy)
   IF(BUILD_PYTHON_INTERFACE)
     STRING(REPLACE - _ PYTHON_LIBRARY_NAME ${LIBRARY_NAME})
-    DYNAMIC_GRAPH_PYTHON_MODULE("sot/talos_balance/${PYTHON_LIBRARY_NAME}"
+    TALOS_BALANCE_PYTHON_MODULE(
+      ${PYTHON_LIBRARY_NAME}
       ${LIBRARY_NAME}
       sot-talos-balance-${PYTHON_LIBRARY_NAME}-wrap
       )
@@ -102,11 +103,11 @@ ENDFOREACH(plugin)
 
 # Bindings Python
 IF(BUILD_PYTHON_INTERFACE)
-  DYNAMIC_GRAPH_PYTHON_MODULE("sot/talos_balance" ${SOTTALOSBALANCE_LIB_NAME} wrap)
+  TALOS_BALANCE_PYTHON_MODULE("" ${SOTTALOSBALANCE_LIB_NAME} wrap)
 
   # Install empty __init__.py files in intermediate directories.
   INSTALL(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/dynamic_graph/sot/talos_balance/__init__.py
-    DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/talos_balance
+    ${CMAKE_CURRENT_BINARY_DIR}/talos_balance/__init__.py
+    DESTINATION ${PYTHON_SITELIB}/talos_balance
   )
 ENDIF(BUILD_PYTHON_INTERFACE)
