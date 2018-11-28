@@ -25,7 +25,8 @@ SET(PROJECT_NAME sot-talos-balance)
 SET(PROJECT_DESCRIPTION "Collection of dynamic-graph entities aimed at implementing balance control on talos.")
 SET(PROJECT_URL "https://gepgitlab.laas.fr/loco-3d/sot-talos-balance")
 
-SET(CUSTOM_HEADER_DIR "sot/talos-balance")
+# So that generated headers are in same place as standard ones
+SET(CUSTOM_HEADER_DIR "sot/talos_balance")
 
 SET(DOXYGEN_USE_MATHJAX YES)
 
