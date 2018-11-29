@@ -1,5 +1,5 @@
 from __future__ import print_function
-from talos_balance.example import Example
+from sot_talos_balance.example import Example
 
 ex = Example("ciao")
 

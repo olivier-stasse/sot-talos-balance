@@ -90,7 +90,7 @@ FOREACH(plugin ${plugins})
   # (replace minus with underscore to make Python happy)
   IF(BUILD_PYTHON_INTERFACE)
     STRING(REPLACE - _ PYTHON_LIBRARY_NAME ${LIBRARY_NAME})
-    TALOS_BALANCE_PYTHON_MODULE(
+    SOT_TALOS_BALANCE_PYTHON_MODULE(
       ${PYTHON_LIBRARY_NAME}
       ${LIBRARY_NAME}
       sot-talos-balance-${PYTHON_LIBRARY_NAME}-wrap
@@ -103,11 +103,11 @@ ENDFOREACH(plugin)
 
 # Bindings Python
 IF(BUILD_PYTHON_INTERFACE)
-  TALOS_BALANCE_PYTHON_MODULE("" ${SOTTALOSBALANCE_LIB_NAME} wrap)
+  SOT_TALOS_BALANCE_PYTHON_MODULE("" ${SOTTALOSBALANCE_LIB_NAME} wrap)
 
   # Install empty __init__.py files in intermediate directories.
   INSTALL(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/talos_balance/__init__.py
-    DESTINATION ${PYTHON_SITELIB}/talos_balance
+    ${CMAKE_CURRENT_BINARY_DIR}/sot_talos_balance/__init__.py
+    DESTINATION ${PYTHON_SITELIB}/sot_talos_balance
   )
 ENDIF(BUILD_PYTHON_INTERFACE)
