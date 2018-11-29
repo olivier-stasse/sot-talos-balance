@@ -107,7 +107,7 @@ IF(BUILD_PYTHON_INTERFACE)
 
   # Install empty __init__.py files in intermediate directories.
   INSTALL(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/sot_talos_balance/__init__.py
-    DESTINATION ${PYTHON_SITELIB}/sot_talos_balance
+    ${CMAKE_CURRENT_BINARY_DIR}/${SOTTALOSBALANCE_PYNAME}/__init__.py
+    DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}
   )
 ENDIF(BUILD_PYTHON_INTERFACE)
