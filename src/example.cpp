@@ -15,9 +15,13 @@
  */
 
 #include "sot/talos_balance/example.hh"
+
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
 #include <dynamic-graph/command-bind.h>
+
+#include "sot/talos_balance/commands-helper.hh"
+#include "sot/talos_balance/utils/stop-watch.hh"
 
 namespace dynamicgraph
 {
@@ -28,6 +32,9 @@ namespace dynamicgraph
       namespace dg = ::dynamicgraph;
       using namespace dg;
       using namespace dg::command;
+
+//Size to be aligned                    "-------------------------------------------------------"
+#define PROFILE_EXAMPLE_SUM_COMPUTATION "Example: sum computation                               "
 
 #define INPUT_SIGNALS     m_firstAddendSIN << m_secondAddendSIN
 
@@ -79,10 +86,14 @@ namespace dynamicgraph
           return s;
         }
 
+        getProfiler().start(PROFILE_EXAMPLE_SUM_COMPUTATION);
+
         double firstAddend  = m_firstAddendSIN(iter);
         double secondAddend = m_secondAddendSIN(iter);
 
         s = firstAddend + secondAddend;
+
+        getProfiler().stop(PROFILE_EXAMPLE_SUM_COMPUTATION);
 
         return s;
       }
@@ -97,6 +108,11 @@ namespace dynamicgraph
       void Example::display(std::ostream& os) const
       {
         os << "Example " << getName();
+        try
+        {
+          getProfiler().report_all(3, os);
+        }
+        catch (ExceptionSignal e) {}
       }
     } // namespace talos_balance
   } // namespace sot
