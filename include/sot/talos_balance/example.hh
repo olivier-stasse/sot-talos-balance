@@ -36,7 +36,7 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#include "signal-helper.hh"
+#include "utils/signal-helper.hh"
 #include "utils/logger.hh"
 #include <map>
 #include "boost/assign.hpp"

@@ -36,8 +36,8 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#include <sot/talos_balance/signal-helper.hh>
-#include <sot/talos_balance/utils/vector-conversions.hh>
+#include "sot/talos_balance/utils/signal-helper.hh"
+#include "sot/talos_balance/utils/vector-conversions.hh"
 #include <map>
 #include <iomanip> // std::setprecision
 #include "boost/assign.hpp"

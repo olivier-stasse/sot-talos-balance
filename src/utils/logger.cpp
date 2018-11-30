@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <iomanip>      // std::setprecision
-#include <sot/talos_balance/utils/logger.hh>
+#include "sot/talos_balance/utils/logger.hh"
 
 namespace dynamicgraph
 {
