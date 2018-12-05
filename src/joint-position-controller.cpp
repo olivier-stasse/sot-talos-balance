@@ -14,7 +14,7 @@
  * with sot-talos-balance.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sot/talos_balance/example.hh"
+#include "sot/talos_balance/joint-position-controller.hh"
 
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
@@ -33,44 +33,46 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
 
-//Size to be aligned                    "-------------------------------------------------------"
-#define PROFILE_EXAMPLE_SUM_COMPUTATION "Example: sum computation                               "
+//Size to be aligned                                      "-------------------------------------------------------"
+#define PROFILE_JOINTPOSITIONCONTROLLER_DQREF_COMPUTATION "JointPositionController: dqRef computation             "
 
-#define INPUT_SIGNALS     m_firstAddendSIN << m_secondAddendSIN
+#define INPUT_SIGNALS     m_qSIN << m_qDesSIN << m_dqDesSIN
 
-#define OUTPUT_SIGNALS m_sumSOUT
+#define OUTPUT_SIGNALS m_dqRefSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
-      typedef Example EntityClassName;
+      typedef JointPositionController EntityClassName;
 
       /* --- DG FACTORY ---------------------------------------------------- */
-      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(Example,
-                                         "Example");
+      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(JointPositionController,
+                                         "JointPositionController");
 
       /* ------------------------------------------------------------------- */
       /* --- CONSTRUCTION -------------------------------------------------- */
       /* ------------------------------------------------------------------- */
-      Example::Example(const std::string& name)
+      JointPositionController::JointPositionController(const std::string& name)
                       : Entity(name)
-                      , CONSTRUCT_SIGNAL_IN(firstAddend,  double)
-                      , CONSTRUCT_SIGNAL_IN(secondAddend, double)
-                      , CONSTRUCT_SIGNAL_OUT(sum,         double, INPUT_SIGNALS)
+                      , CONSTRUCT_SIGNAL_IN(q, Eigen::VectorXd)
+                      , CONSTRUCT_SIGNAL_IN(qDes, Eigen::VectorXd)
+                      , CONSTRUCT_SIGNAL_IN(dqDes, Eigen::VectorXd)
+                      , CONSTRUCT_SIGNAL_OUT(dqRef, Eigen::VectorXd, INPUT_SIGNALS)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
         /* Commands. */
-        addCommand("init", makeCommandVoid0(*this, &Example::init, docCommandVoid0("Initialize the entity.")));
+        addCommand("init", makeCommandVoid1(*this, &JointPositionController::init, docCommandVoid1("Initialize the entity.","Control gains")));
       }
 
-      void Example::init()
+      void JointPositionController::init(const Eigen::VectorXd & Kp)
       {
-        if(!m_firstAddendSIN.isPlugged())
+        if(!m_qDesSIN.isPlugged())
           return SEND_MSG("Init failed: signal firstAddend is not plugged", MSG_TYPE_ERROR);
-        if(!m_secondAddendSIN.isPlugged())
+        if(!m_dqDesSIN.isPlugged())
           return SEND_MSG("Init failed: signal secondAddend is not plugged", MSG_TYPE_ERROR);
 
+        m_Kp = Kp;
         m_initSucceeded = true;
       }
 
@@ -78,22 +80,23 @@ namespace dynamicgraph
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      DEFINE_SIGNAL_OUT_FUNCTION(sum,double)
+      DEFINE_SIGNAL_OUT_FUNCTION(dqRef, Eigen::VectorXd)
       {
         if(!m_initSucceeded)
         {
-          SEND_WARNING_STREAM_MSG("Cannot compute signal sum before initialization!");
+          SEND_WARNING_STREAM_MSG("Cannot compute signal dqRef before initialization!");
           return s;
         }
 
-        getProfiler().start(PROFILE_EXAMPLE_SUM_COMPUTATION);
+        getProfiler().start(PROFILE_JOINTPOSITIONCONTROLLER_DQREF_COMPUTATION);
 
-        double firstAddend  = m_firstAddendSIN(iter);
-        double secondAddend = m_secondAddendSIN(iter);
+        Eigen::VectorXd q = m_qSIN(iter);
+        Eigen::VectorXd qDes = m_qDesSIN(iter);
+        Eigen::VectorXd dqDes = m_dqDesSIN(iter);
 
-        s = firstAddend + secondAddend;
+        s = dqDes + m_Kp.cwiseProduct(qDes-q);
 
-        getProfiler().stop(PROFILE_EXAMPLE_SUM_COMPUTATION);
+        getProfiler().stop(PROFILE_JOINTPOSITIONCONTROLLER_DQREF_COMPUTATION);
 
         return s;
       }
@@ -105,9 +108,9 @@ namespace dynamicgraph
       /* --- ENTITY -------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      void Example::display(std::ostream& os) const
+      void JointPositionController::display(std::ostream& os) const
       {
-        os << "Example " << getName();
+        os << "JointPositionController " << getName();
         try
         {
           getProfiler().report_all(3, os);

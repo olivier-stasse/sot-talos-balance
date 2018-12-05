@@ -14,8 +14,8 @@
  * with sot-talos-balance.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __sot_talos_balance_example_H__
-#define __sot_talos_balance_example_H__
+#ifndef __sot_talos_balance_joint_position_controller_H__
+#define __sot_talos_balance_joint_position_controller_H__
 
 /* --------------------------------------------------------------------- */
 /* --- API ------------------------------------------------------------- */
@@ -23,12 +23,12 @@
 
 #if defined (WIN32)
 #  if defined (position_controller_EXPORTS)
-#    define EXAMPLE_EXPORT __declspec(dllexport)
+#    define JOINTPOSITIONCONTROLLER_EXPORT __declspec(dllexport)
 #  else
-#    define EXAMPLE_EXPORT __declspec(dllimport)
+#    define JOINTPOSITIONCONTROLLER_EXPORT __declspec(dllimport)
 #  endif
 #else
-#  define EXAMPLE_EXPORT
+#  define JOINTPOSITIONCONTROLLER_EXPORT
 #endif
 
 
@@ -49,7 +49,7 @@ namespace dynamicgraph {
       /* --- CLASS ----------------------------------------------------------- */
       /* --------------------------------------------------------------------- */
 
-      class EXAMPLE_EXPORT Example
+      class JOINTPOSITIONCONTROLLER_EXPORT JointPositionController
 	                         : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
@@ -58,15 +58,16 @@ namespace dynamicgraph {
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         /* --- CONSTRUCTOR ---- */
-        Example( const std::string & name );
+        JointPositionController( const std::string & name );
 
-        void init();
+        void init(const Eigen::VectorXd & Kp);
 
         /* --- SIGNALS --- */
-        DECLARE_SIGNAL_IN(firstAddend,  double);
-        DECLARE_SIGNAL_IN(secondAddend, double);
+        DECLARE_SIGNAL_IN(q, Eigen::VectorXd);
+        DECLARE_SIGNAL_IN(qDes, Eigen::VectorXd);
+        DECLARE_SIGNAL_IN(dqDes, Eigen::VectorXd);
 
-        DECLARE_SIGNAL_OUT(sum, double);
+        DECLARE_SIGNAL_OUT(dqRef, Eigen::VectorXd);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -74,13 +75,14 @@ namespace dynamicgraph {
 
         void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
         {
-          getLogger().sendMsg("[Example-"+name+"] "+msg, t, file, line);
+          getLogger().sendMsg("[JointPositionController-"+name+"] "+msg, t, file, line);
         }
 
       protected:
-        bool  m_initSucceeded;    /// true if the entity has been successfully initialized
+        bool m_initSucceeded;    /// true if the entity has been successfully initialized
+        Eigen::VectorXd m_Kp;
 
-      }; // class Example
+      }; // class JointPositionController
 
     }    // namespace talos_balance
   }      // namespace sot
@@ -88,4 +90,4 @@ namespace dynamicgraph {
 
 
 
-#endif // #ifndef __sot_talos_balance_example_H__
+#endif // #ifndef __sot_talos_balance_joint_position_controller_H__

@@ -36,6 +36,7 @@ ENDIF(UNIX)
 #This project will create many plugins as shared libraries, listed here
 SET(plugins
     example
+    joint-position-controller
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
