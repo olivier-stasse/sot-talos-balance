@@ -37,6 +37,8 @@ ENDIF(UNIX)
 SET(plugins
     example
     joint-position-controller
+    joint-trajectory-generator
+    nd-trajectory-generator
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
