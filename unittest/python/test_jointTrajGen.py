@@ -1,58 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-1
-
-import sys
-import rospy
+from sot_talos_balance.create_entities_utils import create_joint_trajectory_generator
+from sot_talos_balance.create_entities_utils import create_joint_position_controller
 from dynamic_graph import plug
-from std_srvs.srv import *
-from dynamic_graph_bridge.srv import *
-from dynamic_graph_bridge_msgs.srv import *
-
-def launchScript(code,title,description = ""):
-    raw_input(title+':   '+description)
-    rospy.loginfo(title)
-    rospy.loginfo(code)
-    for line in code:
-        if line != '' and line[0] != '#':
-            print line
-            answer = runCommandClient(str(line))
-            rospy.logdebug(answer)
-            print answer
-    rospy.loginfo("...done with "+title)
 
 
 
 # Waiting for services
 try:
-    rospy.loginfo("Waiting for run_command")
-    rospy.wait_for_service('/run_command')
-    rospy.loginfo("...ok")
+    dt = robot.timeStep;
 
-    rospy.loginfo("Waiting for start_dynamic_graph")
-    rospy.wait_for_service('/start_dynamic_graph')
-    rospy.loginfo("...ok")
+    robot.traj_gen = create_joint_trajectory_generator(robot.device,dt)
+    robot.joint_pos_controller =create_joint_position_controller(robot,dt);
+    plug(robot.traj_gen.q,                       robot.joint_pos_controller.qDes);
+    plug(robot.traj_gen.dq,                       robot.joint_pos_controller.dqDes);
+    plug(robot.joint_pos_controller.dqRef,     robot.device.control);
+    robot.joint_pos_controller.init(tuple([1.0]*32));
 
-    runCommandClient = rospy.ServiceProxy('run_command', RunCommand)
-    runCommandStartDynamicGraph = rospy.ServiceProxy('start_dynamic_graph', Empty)
 
-    initCode = open( "appli_jointTrajGen.py", "r").read().split("\n")
-    
-    rospy.loginfo("Stack of Tasks launched")
-
-    # runCommandClient("from dynamic_graph import plug")
-    # runCommandClient("from dynamic_graph.sot.core import SOT")
-    # runCommandClient("sot = SOT('sot')")
-    # runCommandClient("sot.setSize(robot.dynamic.getDimension())")
-    # runCommandClient("plug(sot.control,robot.device.control)")
-
-    launchScript(initCode,'initialize SoT')
-    raw_input("Wait before starting the dynamic graph")
-    runCommandStartDynamicGraph()
-    #raw_input("Wait before moving the hand")
-    #runCommandClient("target = (0.5,-0.2,1.0)")
-    #runCommandClient("gotoNd(taskRH,target,'111',(4.9,0.9,0.01,0.9))")
-    #runCommandClient("sot.push(taskRH.task.name)")
-
-except rospy.ServiceException, e:
-    rospy.logerr("Service call failed: %s" % e)
-
+    sleep(1.0)
+    os.system('rosservice call /start_dynamic_graph');
