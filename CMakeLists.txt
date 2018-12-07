@@ -78,12 +78,14 @@ SEARCH_FOR_EIGEN()
 ADD_REQUIRED_DEPENDENCY("dynamic-graph >= 3.0.0")
 ADD_REQUIRED_DEPENDENCY("sot-core >= 3.0.0")
 ADD_REQUIRED_DEPENDENCY("pinocchio >= 1.2")
+ADD_REQUIRED_DEPENDENCY("parametric-curves")
 
 SET(SOTTALOSBALANCE_LIB_NAME ${PROJECT_NAME})
 SET(LIBRARY_NAME ${SOTTALOSBALANCE_LIB_NAME})
 
 SET(${LIBRARY_NAME}_HEADERS
 #  include/sot/talos_balance/example.hh
+  include/sot/talos_balance/stc-commands.hh
   include/sot/talos_balance/utils/commands-helper.hh
   include/sot/talos_balance/utils/signal-helper.hh
   include/sot/talos_balance/utils/logger.hh
@@ -112,6 +114,8 @@ SET_TARGET_PROPERTIES(${LIBRARY_NAME}
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} dynamic-graph)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} sot-core)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} pinocchio)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} parametric-curves)
+
 
 IF(BUILD_PYTHON_INTERFACE)
   PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} dynamic-graph-python)
@@ -133,6 +137,7 @@ INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 IF(BUILD_PYTHON_INTERFACE)
   INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/__init__.py
                 python/${SOTTALOSBALANCE_PYNAME}/main.py
+                python/${SOTTALOSBALANCE_PYNAME}/create_entities_utils.py
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
 ENDIF(BUILD_PYTHON_INTERFACE)
 
@@ -157,7 +162,7 @@ MACRO(DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE MODULENAME SUBMODULENAME LIBRARYNAME TA
       list(GET extra_macro_args 1 SOURCE_PYTHON_MODULE)
     endif(${num_extra_args} GREATER 1)
   endif(${num_extra_args} GREATER 0)
-  
+
   IF(NOT DEFINED PYTHONLIBS_FOUND)
     FINDPYTHON()
   ELSEIF(NOT ${PYTHONLIBS_FOUND} STREQUAL "TRUE")
