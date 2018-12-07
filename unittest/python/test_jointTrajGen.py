@@ -1,22 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-1
 from sot_talos_balance.create_entities_utils import create_joint_trajectory_generator
-from sot_talos_balance.create_entities_utils import create_joint_position_controller
 from dynamic_graph import plug
+from time import sleep
 
+dt = robot.timeStep;
 
+robot.traj_gen = create_joint_trajectory_generator(dt);
+robot.device.control.value = 32*[0.0];
+plug(robot.traj_gen.dx,    robot.device.control);
 
-# Waiting for services
-try:
-    dt = robot.timeStep;
-
-    robot.traj_gen = create_joint_trajectory_generator(robot.device,dt)
-    robot.joint_pos_controller =create_joint_position_controller(robot,dt);
-    plug(robot.traj_gen.q,                       robot.joint_pos_controller.qDes);
-    plug(robot.traj_gen.dq,                       robot.joint_pos_controller.dqDes);
-    plug(robot.joint_pos_controller.dqRef,     robot.device.control);
-    robot.joint_pos_controller.init(tuple([1.0]*32));
-
-
-    sleep(1.0)
-    os.system('rosservice call /start_dynamic_graph');
+sleep(1.0);
+os.system('rosservice call /start_dynamic_graph');
+sleep(1.0);
+robot.traj_gen.move(31,-1.0,1.0);
+sleep(1.1);
+robot.traj_gen.startSinusoid(31,3.0,2.0);
+sleep(10.0);
+robot.traj_gen.stop(31);
