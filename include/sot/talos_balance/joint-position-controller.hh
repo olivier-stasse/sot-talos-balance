@@ -60,14 +60,15 @@ namespace dynamicgraph {
         /* --- CONSTRUCTOR ---- */
         JointPositionController( const std::string & name );
 
-        void init(const Eigen::VectorXd & Kp);
+        void init(const unsigned & n);
 
         /* --- SIGNALS --- */
-        DECLARE_SIGNAL_IN(q, Eigen::VectorXd);
-        DECLARE_SIGNAL_IN(qDes, Eigen::VectorXd);
-        DECLARE_SIGNAL_IN(dqDes, Eigen::VectorXd);
+        DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(state, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(qDes, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(dqDes, dynamicgraph::Vector);
 
-        DECLARE_SIGNAL_OUT(dqRef, Eigen::VectorXd);
+        DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -79,8 +80,9 @@ namespace dynamicgraph {
         }
 
       protected:
+        int m_n;
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
-        Eigen::VectorXd m_Kp;
+        dynamicgraph::Vector m_Kp;
 
       }; // class JointPositionController
 

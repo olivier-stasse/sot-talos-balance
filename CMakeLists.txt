@@ -143,6 +143,7 @@ IF(BUILD_PYTHON_INTERFACE)
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointTrajGen.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_jointControl.py
                   DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/test)
   ENDIF(BUILD_TEST)
 ENDIF(BUILD_PYTHON_INTERFACE)

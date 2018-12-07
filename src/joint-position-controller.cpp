@@ -36,7 +36,7 @@ namespace dynamicgraph
 //Size to be aligned                                      "-------------------------------------------------------"
 #define PROFILE_JOINTPOSITIONCONTROLLER_DQREF_COMPUTATION "JointPositionController: dqRef computation             "
 
-#define INPUT_SIGNALS     m_qSIN << m_qDesSIN << m_dqDesSIN
+#define INPUT_SIGNALS     m_KpSIN << m_stateSIN << m_qDesSIN << m_dqDesSIN
 
 #define OUTPUT_SIGNALS m_dqRefSOUT
 
@@ -53,10 +53,11 @@ namespace dynamicgraph
       /* ------------------------------------------------------------------- */
       JointPositionController::JointPositionController(const std::string& name)
                       : Entity(name)
-                      , CONSTRUCT_SIGNAL_IN(q, Eigen::VectorXd)
-                      , CONSTRUCT_SIGNAL_IN(qDes, Eigen::VectorXd)
-                      , CONSTRUCT_SIGNAL_IN(dqDes, Eigen::VectorXd)
-                      , CONSTRUCT_SIGNAL_OUT(dqRef, Eigen::VectorXd, INPUT_SIGNALS)
+                      , CONSTRUCT_SIGNAL_IN(Kp, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_IN(state, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_IN(qDes, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_IN(dqDes, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_OUT(dqRef, dynamicgraph::Vector, INPUT_SIGNALS)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -65,14 +66,20 @@ namespace dynamicgraph
         addCommand("init", makeCommandVoid1(*this, &JointPositionController::init, docCommandVoid1("Initialize the entity.","Control gains")));
       }
 
-      void JointPositionController::init(const Eigen::VectorXd & Kp)
+      void JointPositionController::init(const unsigned & n)
       {
+        if(n<1)
+          return SEND_MSG("n must be at least 1", MSG_TYPE_ERROR);
+        if(!m_KpSIN.isPlugged())
+          return SEND_MSG("Init failed: signal Kp is not plugged", MSG_TYPE_ERROR);
+        if(!m_stateSIN.isPlugged())
+          return SEND_MSG("Init failed: signal q is not plugged", MSG_TYPE_ERROR);
         if(!m_qDesSIN.isPlugged())
-          return SEND_MSG("Init failed: signal firstAddend is not plugged", MSG_TYPE_ERROR);
+          return SEND_MSG("Init failed: signal qDes is not plugged", MSG_TYPE_ERROR);
         if(!m_dqDesSIN.isPlugged())
-          return SEND_MSG("Init failed: signal secondAddend is not plugged", MSG_TYPE_ERROR);
+          return SEND_MSG("Init failed: signal dqDes is not plugged", MSG_TYPE_ERROR);
 
-        m_Kp = Kp;
+        m_n = n;
         m_initSucceeded = true;
       }
 
@@ -80,7 +87,7 @@ namespace dynamicgraph
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      DEFINE_SIGNAL_OUT_FUNCTION(dqRef, Eigen::VectorXd)
+      DEFINE_SIGNAL_OUT_FUNCTION(dqRef, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
         {
@@ -90,11 +97,19 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_JOINTPOSITIONCONTROLLER_DQREF_COMPUTATION);
 
-        Eigen::VectorXd q = m_qSIN(iter);
-        Eigen::VectorXd qDes = m_qDesSIN(iter);
-        Eigen::VectorXd dqDes = m_dqDesSIN(iter);
+        const Vector & state = m_stateSIN(iter);
+        const Vector & qDes = m_qDesSIN(iter);
+        const Vector & dqDes = m_dqDesSIN(iter);
+        const Vector & Kp = m_KpSIN(iter);
 
-        s = dqDes + m_Kp.cwiseProduct(qDes-q);
+        assert(state.size()==m_n+6 && "Unexpected size of signal state");
+        assert(qDes.size()==m_n    && "Unexpected size of signal qDes");
+        assert(dqDes.size()==m_n   && "Unexpected size of signal dqDes");
+        assert(Kp.size()==m_n      && "Unexpected size of signal Kp");
+
+        const Vector & q = state.tail(m_n);
+
+        s = dqDes + Kp.cwiseProduct(qDes-q);
 
         getProfiler().stop(PROFILE_JOINTPOSITIONCONTROLLER_DQREF_COMPUTATION);
 

@@ -9,24 +9,20 @@ print(controller.commands())
 print("\nSignals (at creation):")
 controller.displaySignals()
 
-controller.q.value = (0.0,0.0)
-controller.qDes.value = (1.0,1.0)
-controller.dqDes.value = (0.0,0.0)
+N_JOINTS = 2
 
-Kp = (10.0,10.0)
+controller.Kp.value = tuple(N_JOINTS*[10.0])
+controller.state.value = tuple([0.0]*6 + N_JOINTS*[0.0])
+controller.qDes.value = tuple(N_JOINTS*[1.0])
+controller.dqDes.value = tuple(N_JOINTS*[0.0])
 
-controller.init(Kp)
+controller.init(N_JOINTS)
 
 controller.dqRef.recompute(1)
 
-print( "\nKp: %s" % (Kp,) )
-
-print( "\nq: %s" % (controller.q.value,) )
+print( "\nKp: %s" % (controller.Kp.value,) )
+print( "\nq: %s" % (controller.state.value,) )
 print( "qDes: %s" % (controller.qDes.value,) )
 print( "dqDes: %s" % (controller.dqDes.value,) )
 
 print( "\ndqRef: %s" % (controller.dqRef.value,) )
-
-#print( "\nInputs: %f, %f" % (ex.firstAddend.value, ex.secondAddend.value) )
-#print( "Output: %f" % ex.sum.value )
-
