@@ -36,6 +36,7 @@ ENDIF(UNIX)
 #This project will create many plugins as shared libraries, listed here
 SET(plugins
     example
+    admittance-controller-single-joint
     joint-position-controller
     nd-trajectory-generator
   )
