@@ -12,6 +12,13 @@ def create_joint_trajectory_generator(dt):
     jtg.init(dt, N_JOINTS);
     return jtg;
 
+def create_com_trajectory_generator(dt,robot):
+    comTrajGen = NdTrajectoryGenerator("comTrajGen");
+    comTrajGen.initial_value.value = robot.dynamic.com.value
+    comTrajGen.trigger.value = 1.0;
+    comTrajGen.init(dt, 3);
+    return comTrajGen;
+
 def create_joint_controller(Kp):
     controller = JointPositionController("posctrl")
     controller.Kp.value = Kp
