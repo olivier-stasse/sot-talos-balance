@@ -4,6 +4,7 @@ from sot_talos_balance.create_entities_utils import create_joint_trajectory_gene
 from sot_talos_balance.create_entities_utils import create_joint_controller
 from dynamic_graph import plug
 from time import sleep
+import sys
 import os
 
 def main(robot,gain):
@@ -33,3 +34,7 @@ def main(robot,gain):
     robot.traj_gen.startSinusoid(31,3.0,2.0)
     sleep(10.0)
     robot.traj_gen.stop(31)
+
+if __name__ == '__main__':
+    from sot_talos_balance.test.run_test_utils import run_test
+    run_test('test_jointControl','main','robot',*sys.argv[1:])
