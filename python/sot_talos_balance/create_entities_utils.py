@@ -12,6 +12,14 @@ def create_joint_trajectory_generator(dt):
     jtg.init(dt, N_JOINTS);
     return jtg;
 
+def create_config_trajectory_generator(dt):
+    N_CONFIG = N_JOINTS + 6
+    jtg = NdTrajectoryGenerator("jtg");
+    jtg.initial_value.value = tuple(N_CONFIG*[0.0]);
+    jtg.trigger.value = 1.0;
+    jtg.init(dt, N_CONFIG);
+    return jtg;
+
 def create_com_trajectory_generator(dt,robot):
     comTrajGen = NdTrajectoryGenerator("comTrajGen");
     comTrajGen.initial_value.value = robot.dynamic.com.value

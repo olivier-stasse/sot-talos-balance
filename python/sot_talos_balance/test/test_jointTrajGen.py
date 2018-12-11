@@ -17,6 +17,6 @@ def main(robot):
     sleep(1.0);
     robot.traj_gen.move(31,-1.0,1.0);
     sleep(1.1);
-    robot.traj_gen.startSinusoid(31,3.0,2.0);
+    robot.traj_gen.startSinusoid(31,1.0,2.0);
     sleep(10.0);
     robot.traj_gen.stop(31);
