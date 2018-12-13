@@ -60,15 +60,16 @@ namespace dynamicgraph {
         /* --- CONSTRUCTOR ---- */
         AdmittanceControllerSingleJoint( const std::string & name );
 
-        void init(const unsigned & n);
+        void init(const double & dt, const unsigned & n);
+
+        void setPosition(const dynamicgraph::Vector &);
 
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(state, dynamicgraph::Vector);
-        DECLARE_SIGNAL_IN(qDes, dynamicgraph::Vector);
-        DECLARE_SIGNAL_IN(dqDes, dynamicgraph::Vector);
-
-        DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(tau, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(tauDes, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(qRef, dynamicgraph::Vector);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -83,6 +84,8 @@ namespace dynamicgraph {
         int m_n;
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
         dynamicgraph::Vector m_Kp;
+        dynamicgraph::Vector m_q; // internal state
+        double m_dt;
 
       }; // class AdmittanceControllerSingleJoint
 

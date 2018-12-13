@@ -144,6 +144,7 @@ IF(BUILD_PYTHON_INTERFACE)
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/run_test_utils.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_single_joint.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_singleTraj.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointTrajGen.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointControl.py

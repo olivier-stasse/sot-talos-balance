@@ -33,12 +33,12 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
 
-//Size to be aligned                                              "-------------------------------------------------------"
-#define PROFILE_ADMITTANCECONTROLLERSINGLEJOINT_DQREF_COMPUTATION "AdmittanceControllerSingleJoint: dqRef computation     "
+//Size to be aligned                                             "-------------------------------------------------------"
+#define PROFILE_ADMITTANCECONTROLLERSINGLEJOINT_QREF_COMPUTATION "AdmittanceControllerSingleJoint: qRef computation      "
 
-#define INPUT_SIGNALS     m_KpSIN << m_stateSIN << m_qDesSIN << m_dqDesSIN
+#define INPUT_SIGNALS     m_KpSIN << m_stateSIN << m_tauSIN << m_tauDesSIN
 
-#define OUTPUT_SIGNALS m_dqRefSOUT
+#define OUTPUT_SIGNALS m_qRefSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -55,63 +55,72 @@ namespace dynamicgraph
                       : Entity(name)
                       , CONSTRUCT_SIGNAL_IN(Kp, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(state, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_IN(qDes, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_IN(dqDes, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_OUT(dqRef, dynamicgraph::Vector, INPUT_SIGNALS)
+                      , CONSTRUCT_SIGNAL_IN(tau, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_IN(tauDes, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_OUT(qRef, dynamicgraph::Vector, INPUT_SIGNALS)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
         /* Commands. */
-        addCommand("init", makeCommandVoid1(*this, &AdmittanceControllerSingleJoint::init, docCommandVoid1("Initialize the entity.","Control gains")));
+        addCommand("init", makeCommandVoid2(*this, &AdmittanceControllerSingleJoint::init, docCommandVoid2("Initialize the entity.","Control gains","time step")));
+        addCommand("setPosition", makeCommandVoid1(*this, &AdmittanceControllerSingleJoint::setPosition, docCommandVoid1("Set initial reference position.","Initial position")));
       }
 
-      void AdmittanceControllerSingleJoint::init(const unsigned & n)
+      void AdmittanceControllerSingleJoint::init(const double & dt, const unsigned & n)
       {
         if(n<1)
           return SEND_MSG("n must be at least 1", MSG_TYPE_ERROR);
         if(!m_KpSIN.isPlugged())
           return SEND_MSG("Init failed: signal Kp is not plugged", MSG_TYPE_ERROR);
         if(!m_stateSIN.isPlugged())
-          return SEND_MSG("Init failed: signal q is not plugged", MSG_TYPE_ERROR);
-        if(!m_qDesSIN.isPlugged())
-          return SEND_MSG("Init failed: signal qDes is not plugged", MSG_TYPE_ERROR);
-        if(!m_dqDesSIN.isPlugged())
-          return SEND_MSG("Init failed: signal dqDes is not plugged", MSG_TYPE_ERROR);
+          return SEND_MSG("Init failed: signal state is not plugged", MSG_TYPE_ERROR);
+        if(!m_tauSIN.isPlugged())
+          return SEND_MSG("Init failed: signal tau is not plugged", MSG_TYPE_ERROR);
+        if(!m_tauDesSIN.isPlugged())
+          return SEND_MSG("Init failed: signal tauDes is not plugged", MSG_TYPE_ERROR);
 
         m_n = n;
+        m_dt = dt;
+        m_q.setZero(n);
         m_initSucceeded = true;
+      }
+
+      void AdmittanceControllerSingleJoint::setPosition(const dynamicgraph::Vector & state)
+      {
+        m_q = state;
       }
 
       /* ------------------------------------------------------------------- */
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      DEFINE_SIGNAL_OUT_FUNCTION(dqRef, dynamicgraph::Vector)
+      DEFINE_SIGNAL_OUT_FUNCTION(qRef, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
         {
-          SEND_WARNING_STREAM_MSG("Cannot compute signal dqRef before initialization!");
+          SEND_WARNING_STREAM_MSG("Cannot compute signal qRef before initialization!");
           return s;
         }
 
-        getProfiler().start(PROFILE_ADMITTANCECONTROLLERSINGLEJOINT_DQREF_COMPUTATION);
+        getProfiler().start(PROFILE_ADMITTANCECONTROLLERSINGLEJOINT_QREF_COMPUTATION);
 
-        const Vector & state = m_stateSIN(iter);
-        const Vector & qDes = m_qDesSIN(iter);
-        const Vector & dqDes = m_dqDesSIN(iter);
+        const Vector & tauDes = m_tauDesSIN(iter);
+        const Vector & tau = m_tauSIN(iter);
         const Vector & Kp = m_KpSIN(iter);
 
-        assert(state.size()==m_n+6 && "Unexpected size of signal state");
-        assert(qDes.size()==m_n    && "Unexpected size of signal qDes");
-        assert(dqDes.size()==m_n   && "Unexpected size of signal dqDes");
-        assert(Kp.size()==m_n      && "Unexpected size of signal Kp");
+        assert(state.size()==m_n  && "Unexpected size of signal state");
+        assert(tau.size()==m_n    && "Unexpected size of signal tau");
+        assert(tauDes.size()==m_n && "Unexpected size of signal tauDes");
+        assert(Kp.size()==m_n     && "Unexpected size of signal Kp");
 
-        const Vector & q = state.tail(m_n);
+        const Vector & dqRef = Kp.cwiseProduct(tauDes-tau);
 
-        s = dqDes + Kp.cwiseProduct(qDes-q);
+        m_q += dqRef*m_dt;
 
-        getProfiler().stop(PROFILE_ADMITTANCECONTROLLERSINGLEJOINT_DQREF_COMPUTATION);
+        s = m_q;
+
+        getProfiler().stop(PROFILE_ADMITTANCECONTROLLERSINGLEJOINT_QREF_COMPUTATION);
 
         return s;
       }
