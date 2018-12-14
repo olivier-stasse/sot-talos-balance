@@ -64,7 +64,7 @@ namespace dynamicgraph
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
         /* Commands. */
-        addCommand("init", makeCommandVoid2(*this, &JointAdmittanceController::init, docCommandVoid2("Initialize the entity.","Control gains","time step")));
+        addCommand("init", makeCommandVoid2(*this, &JointAdmittanceController::init, docCommandVoid2("Initialize the entity.","time step","Number of elements")));
         addCommand("setPosition", makeCommandVoid1(*this, &JointAdmittanceController::setPosition, docCommandVoid1("Set initial reference position.","Initial position")));
       }
 
