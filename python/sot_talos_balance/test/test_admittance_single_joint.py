@@ -24,7 +24,8 @@ def main(robot):
     robot.taskJoint.task.controlGain.value = 100
 
     # --- Admittance controller
-    Kp = [0.1]*N_CONFIG
+    Kp = [0.0]*N_CONFIG
+    Kp[QJOINT] = 0.1
     robot.admittance_control = create_admittance_controller(Kp,dt,robot)
     plug(robot.admittance_control.qRef,robot.taskJoint.featureDes.errorIN)
 

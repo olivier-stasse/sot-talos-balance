@@ -33,12 +33,12 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
 
-//Size to be aligned                                       "-------------------------------------------------------"
-#define PROFILE_JOINTADMITTANCECONTROLLER_QREF_COMPUTATION "JointAdmittanceController: qRef computation            "
+//Size to be aligned                                        "-------------------------------------------------------"
+#define PROFILE_JOINTADMITTANCECONTROLLER_DQREF_COMPUTATION "JointAdmittanceController: dqRef computation           "
 
 #define INPUT_SIGNALS     m_KpSIN << m_stateSIN << m_tauSIN << m_tauDesSIN
 
-#define OUTPUT_SIGNALS m_qRefSOUT
+#define OUTPUT_SIGNALS m_qRefSOUT << m_dqRefSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -57,7 +57,8 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(state, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(tau, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(tauDes, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_OUT(qRef, dynamicgraph::Vector, INPUT_SIGNALS)
+                      , CONSTRUCT_SIGNAL_OUT(dqRef, dynamicgraph::Vector, INPUT_SIGNALS)
+                      , CONSTRUCT_SIGNAL_OUT(qRef, dynamicgraph::Vector, m_dqRefSOUT)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -95,15 +96,15 @@ namespace dynamicgraph
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      DEFINE_SIGNAL_OUT_FUNCTION(qRef, dynamicgraph::Vector)
+      DEFINE_SIGNAL_OUT_FUNCTION(dqRef, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
         {
-          SEND_WARNING_STREAM_MSG("Cannot compute signal qRef before initialization!");
+          SEND_WARNING_STREAM_MSG("Cannot compute signal dqRef before initialization!");
           return s;
         }
 
-        getProfiler().start(PROFILE_JOINTADMITTANCECONTROLLER_QREF_COMPUTATION);
+        getProfiler().start(PROFILE_JOINTADMITTANCECONTROLLER_DQREF_COMPUTATION);
 
         const Vector & tauDes = m_tauDesSIN(iter);
         const Vector & tau = m_tauSIN(iter);
@@ -116,11 +117,28 @@ namespace dynamicgraph
 
         const Vector & dqRef = Kp.cwiseProduct(tauDes-tau);
 
+        s = dqRef;
+
+        getProfiler().stop(PROFILE_JOINTADMITTANCECONTROLLER_DQREF_COMPUTATION);
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(qRef, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal qRef before initialization!");
+          return s;
+        }
+
+        const Vector & dqRef = m_dqRefSOUT(iter);
+
+        assert(dqRef.size()==m_n  && "Unexpected size of signal dqRef");
+
         m_q += dqRef*m_dt;
 
         s = m_q;
-
-        getProfiler().stop(PROFILE_JOINTADMITTANCECONTROLLER_QREF_COMPUTATION);
 
         return s;
       }

@@ -69,7 +69,9 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(state, dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(tau, dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(tauDes, dynamicgraph::Vector);
+
         DECLARE_SIGNAL_OUT(qRef, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
