@@ -14,7 +14,7 @@
  * with sot-talos-balance.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sot/talos_balance/admittance-controller-single-joint.hh"
+#include "sot/talos_balance/joint-admittance-controller.hh"
 
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
@@ -33,8 +33,8 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
 
-//Size to be aligned                                             "-------------------------------------------------------"
-#define PROFILE_ADMITTANCECONTROLLERSINGLEJOINT_QREF_COMPUTATION "AdmittanceControllerSingleJoint: qRef computation      "
+//Size to be aligned                                       "-------------------------------------------------------"
+#define PROFILE_JOINTADMITTANCECONTROLLER_QREF_COMPUTATION "JointAdmittanceController: qRef computation            "
 
 #define INPUT_SIGNALS     m_KpSIN << m_stateSIN << m_tauSIN << m_tauDesSIN
 
@@ -42,16 +42,16 @@ namespace dynamicgraph
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
-      typedef AdmittanceControllerSingleJoint EntityClassName;
+      typedef JointAdmittanceController EntityClassName;
 
       /* --- DG FACTORY ---------------------------------------------------- */
-      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(AdmittanceControllerSingleJoint,
-                                         "AdmittanceControllerSingleJoint");
+      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(JointAdmittanceController,
+                                         "JointAdmittanceController");
 
       /* ------------------------------------------------------------------- */
       /* --- CONSTRUCTION -------------------------------------------------- */
       /* ------------------------------------------------------------------- */
-      AdmittanceControllerSingleJoint::AdmittanceControllerSingleJoint(const std::string& name)
+      JointAdmittanceController::JointAdmittanceController(const std::string& name)
                       : Entity(name)
                       , CONSTRUCT_SIGNAL_IN(Kp, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(state, dynamicgraph::Vector)
@@ -63,11 +63,11 @@ namespace dynamicgraph
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
         /* Commands. */
-        addCommand("init", makeCommandVoid2(*this, &AdmittanceControllerSingleJoint::init, docCommandVoid2("Initialize the entity.","Control gains","time step")));
-        addCommand("setPosition", makeCommandVoid1(*this, &AdmittanceControllerSingleJoint::setPosition, docCommandVoid1("Set initial reference position.","Initial position")));
+        addCommand("init", makeCommandVoid2(*this, &JointAdmittanceController::init, docCommandVoid2("Initialize the entity.","Control gains","time step")));
+        addCommand("setPosition", makeCommandVoid1(*this, &JointAdmittanceController::setPosition, docCommandVoid1("Set initial reference position.","Initial position")));
       }
 
-      void AdmittanceControllerSingleJoint::init(const double & dt, const unsigned & n)
+      void JointAdmittanceController::init(const double & dt, const unsigned & n)
       {
         if(n<1)
           return SEND_MSG("n must be at least 1", MSG_TYPE_ERROR);
@@ -86,7 +86,7 @@ namespace dynamicgraph
         m_initSucceeded = true;
       }
 
-      void AdmittanceControllerSingleJoint::setPosition(const dynamicgraph::Vector & state)
+      void JointAdmittanceController::setPosition(const dynamicgraph::Vector & state)
       {
         m_q = state;
       }
@@ -103,7 +103,7 @@ namespace dynamicgraph
           return s;
         }
 
-        getProfiler().start(PROFILE_ADMITTANCECONTROLLERSINGLEJOINT_QREF_COMPUTATION);
+        getProfiler().start(PROFILE_JOINTADMITTANCECONTROLLER_QREF_COMPUTATION);
 
         const Vector & tauDes = m_tauDesSIN(iter);
         const Vector & tau = m_tauSIN(iter);
@@ -120,7 +120,7 @@ namespace dynamicgraph
 
         s = m_q;
 
-        getProfiler().stop(PROFILE_ADMITTANCECONTROLLERSINGLEJOINT_QREF_COMPUTATION);
+        getProfiler().stop(PROFILE_JOINTADMITTANCECONTROLLER_QREF_COMPUTATION);
 
         return s;
       }
@@ -132,9 +132,9 @@ namespace dynamicgraph
       /* --- ENTITY -------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      void AdmittanceControllerSingleJoint::display(std::ostream& os) const
+      void JointAdmittanceController::display(std::ostream& os) const
       {
-        os << "AdmittanceControllerSingleJoint " << getName();
+        os << "JointAdmittanceController " << getName();
         try
         {
           getProfiler().report_all(3, os);

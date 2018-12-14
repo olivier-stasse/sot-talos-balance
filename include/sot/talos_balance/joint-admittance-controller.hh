@@ -14,21 +14,21 @@
  * with sot-talos-balance.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __sot_talos_balance_admittance_controller_single_joint_H__
-#define __sot_talos_balance_admittance_controller_single_joint_H__
+#ifndef __sot_talos_balance_joint_admittance_controller_H__
+#define __sot_talos_balance_joint_admittance_controller_H__
 
 /* --------------------------------------------------------------------- */
 /* --- API ------------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
 #if defined (WIN32)
-#  if defined (admittance_controller_single_joint_EXPORTS)
-#    define ADMITTANCECONTROLLERSINGLEJOINT_EXPORT __declspec(dllexport)
+#  if defined (joint_admittance_controller_EXPORTS)
+#    define JOINTADMITTANCECONTROLLER_EXPORT __declspec(dllexport)
 #  else
-#    define ADMITTANCECONTROLLERSINGLEJOINT_EXPORT __declspec(dllimport)
+#    define JOINTADMITTANCECONTROLLER_EXPORT __declspec(dllimport)
 #  endif
 #else
-#  define ADMITTANCECONTROLLERSINGLEJOINT_EXPORT
+#  define JOINTADMITTANCECONTROLLER_EXPORT
 #endif
 
 
@@ -49,7 +49,7 @@ namespace dynamicgraph {
       /* --- CLASS ----------------------------------------------------------- */
       /* --------------------------------------------------------------------- */
 
-      class ADMITTANCECONTROLLERSINGLEJOINT_EXPORT AdmittanceControllerSingleJoint
+      class JOINTADMITTANCECONTROLLER_EXPORT JointAdmittanceController
 	                         : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
@@ -58,7 +58,7 @@ namespace dynamicgraph {
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         /* --- CONSTRUCTOR ---- */
-        AdmittanceControllerSingleJoint( const std::string & name );
+        JointAdmittanceController( const std::string & name );
 
         void init(const double & dt, const unsigned & n);
 
@@ -77,7 +77,7 @@ namespace dynamicgraph {
 
         void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
         {
-          getLogger().sendMsg("[AdmittanceControllerSingleJoint-"+name+"] "+msg, t, file, line);
+          getLogger().sendMsg("[JointAdmittanceController-"+name+"] "+msg, t, file, line);
         }
 
       protected:
@@ -87,7 +87,7 @@ namespace dynamicgraph {
         dynamicgraph::Vector m_q; // internal state
         double m_dt;
 
-      }; // class AdmittanceControllerSingleJoint
+      }; // class JointAdmittanceController
 
     }    // namespace talos_balance
   }      // namespace sot
@@ -95,4 +95,4 @@ namespace dynamicgraph {
 
 
 
-#endif // #ifndef __sot_talos_balance_admittance_controller_single_joint_H__
+#endif // #ifndef __sot_talos_balance_joint_admittance_controller_H__

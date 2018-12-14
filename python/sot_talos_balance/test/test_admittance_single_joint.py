@@ -62,5 +62,5 @@ def main(robot):
 
     sleep(5)
     print("Desired torque: %f" % target[QJOINT])
-    print("Current torque: %f" % robot.device.currents.value[JOINT])
+    print("Current torque: %f" % robot.device.ptorque.value[JOINT])
 

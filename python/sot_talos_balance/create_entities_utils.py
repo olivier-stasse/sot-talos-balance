@@ -1,7 +1,7 @@
 from dynamic_graph.sot.core.operator import Mix_of_vector
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.joint_position_controller import JointPositionController
-from sot_talos_balance.admittance_controller_single_joint import AdmittanceControllerSingleJoint
+from sot_talos_balance.joint_admittance_controller import JointAdmittanceController
 
 from dynamic_graph import plug
 
@@ -51,12 +51,12 @@ def create_joint_controller(Kp):
     return controller
 
 def create_admittance_controller(Kp,dt,robot):
-    controller = AdmittanceControllerSingleJoint("admctrl")
+    controller = JointAdmittanceController("admctrl")
     controller.Kp.value = Kp
     plug(robot.device.state,controller.state)
 
     mix = create_extend_mix(N_JOINTS,N_JOINTS+6)
-    plug(robot.device.currents,mix.signal("sin2"))
+    plug(robot.device.ptorque,mix.signal("sin2"))
     plug(mix.sout,controller.tau)
 
     # plug(robot.device.ptorque,controller.tau)
