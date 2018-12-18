@@ -35,10 +35,13 @@ namespace dynamicgraph
 
 //Size to be aligned                                         "-------------------------------------------------------"
 #define PROFILE_COMADMITTANCECONTROLLER_DDCOMREF_COMPUTATION "ComAdmittanceController: ddcomRef computation          "
+#define PROFILE_COMADMITTANCECONTROLLER_STATEREF_COMPUTATION "ComAdmittanceController: stateRef computation          "
 #define PROFILE_COMADMITTANCECONTROLLER_DCOMREF_COMPUTATION  "ComAdmittanceController: dcomRef computation           "
 #define PROFILE_COMADMITTANCECONTROLLER_COMREF_COMPUTATION   "ComAdmittanceController: comRef computation            "
 
 #define INPUT_SIGNALS     m_KpSIN << m_zmpSIN << m_zmpDesSIN << m_ddcomDesSIN
+
+#define INNER_SIGNALS     m_stateRefSINNER
 
 #define OUTPUT_SIGNALS m_comRefSOUT << m_dcomRefSOUT << m_ddcomRefSOUT
 
@@ -60,12 +63,13 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(zmpDes, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(ddcomDes, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_OUT(ddcomRef, dynamicgraph::Vector, INPUT_SIGNALS)
-                      , CONSTRUCT_SIGNAL_OUT(comRef, dynamicgraph::Vector, m_ddcomRefSOUT)
-                      , CONSTRUCT_SIGNAL_OUT(dcomRef, dynamicgraph::Vector, m_comRefSOUT << m_ddcomRefSOUT)
+                      , CONSTRUCT_SIGNAL_INNER(stateRef, dynamicgraph::Vector, m_ddcomRefSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(comRef, dynamicgraph::Vector, m_stateRefSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(dcomRef, dynamicgraph::Vector, m_stateRefSINNER)
                       // dcomRef is set to depend from comRefSOUT to ensure position is updated before velocity
                       , m_initSucceeded(false)
       {
-        Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
+        Entity::signalRegistration( INPUT_SIGNALS << INNER_SIGNALS << OUTPUT_SIGNALS );
 
         /* Commands. */
         addCommand("init", makeCommandVoid1(*this, &ComAdmittanceController::init, docCommandVoid1("Initialize the entity.","time step")));
@@ -86,19 +90,18 @@ namespace dynamicgraph
           return SEND_MSG("Init failed: signal zmpDes is not plugged", MSG_TYPE_ERROR);
 
         m_dt = dt;
-        m_com.setZero(3);
-        m_dcom.setZero(3);
+        m_state.setZero(6);
         m_initSucceeded = true;
       }
 
       void ComAdmittanceController::setPosition(const dynamicgraph::Vector & com)
       {
-        m_com = com;
+        m_state.head<3>() = com;
       }
 
       void ComAdmittanceController::setVelocity(const dynamicgraph::Vector & dcom)
       {
-        m_dcom = dcom;
+        m_state.tail<3>() = dcom;
       }
 
       void ComAdmittanceController::setState(const dynamicgraph::Vector & com, const dynamicgraph::Vector & dcom)
@@ -140,26 +143,28 @@ namespace dynamicgraph
         return s;
       }
 
-      DEFINE_SIGNAL_OUT_FUNCTION(dcomRef, dynamicgraph::Vector)
+      DEFINE_SIGNAL_INNER_FUNCTION(stateRef, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
         {
-          SEND_WARNING_STREAM_MSG("Cannot compute signal dcomRef before initialization!");
+          SEND_WARNING_STREAM_MSG("Cannot compute signal stateRef before initialization!");
           return s;
         }
 
-        getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_DCOMREF_COMPUTATION);
+        getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_STATEREF_COMPUTATION);
 
-        const Vector & comRef = m_comRefSOUT(iter); // ficticious call to force recomputation
         const Vector & ddcomRef = m_ddcomRefSOUT(iter);
 
         assert(ddcomRef.size()==3 && "Unexpected size of signal ddcomRef");
 
-        m_dcom += ddcomRef*m_dt;
+        const Vector & dcomRef = m_state.tail<3>();
 
-        s = m_dcom;
+        m_state.head<3>() +=  dcomRef*m_dt + 0.5*ddcomRef*m_dt*m_dt;
+        m_state.tail<3>() += ddcomRef*m_dt;
 
-        getProfiler().stop(PROFILE_COMADMITTANCECONTROLLER_DCOMREF_COMPUTATION);
+        s = m_state;
+
+        getProfiler().stop(PROFILE_COMADMITTANCECONTROLLER_STATEREF_COMPUTATION);
 
         return s;
       }
@@ -174,19 +179,37 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_COMREF_COMPUTATION);
 
-        const Vector & ddcomRef = m_ddcomRefSOUT(iter);
+        const Vector & stateRef = m_stateRefSINNER(iter);
 
-        assert(ddcomRef.size()==3 && "Unexpected size of signal ddcomRef");
+        assert(stateRef.size()==3 && "Unexpected size of signal stateRef");
 
-        m_com += m_dcom*m_dt + 0.5*ddcomRef*m_dt*m_dt;
-
-        s = m_com;
+        s = stateRef.head<3>();
 
         getProfiler().stop(PROFILE_COMADMITTANCECONTROLLER_COMREF_COMPUTATION);
 
         return s;
       }
 
+      DEFINE_SIGNAL_OUT_FUNCTION(dcomRef, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal dcomRef before initialization!");
+          return s;
+        }
+
+        getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_DCOMREF_COMPUTATION);
+
+        const Vector & stateRef = m_stateRefSINNER(iter);
+
+        assert(stateRef.size()==3 && "Unexpected size of signal stateRef");
+
+        s = stateRef.tail<3>();
+
+        getProfiler().stop(PROFILE_COMADMITTANCECONTROLLER_DCOMREF_COMPUTATION);
+
+        return s;
+      }
 
       /* --- COMMANDS ---------------------------------------------------------- */
 

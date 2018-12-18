@@ -14,21 +14,21 @@
  * with sot-talos-balance.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __sot_talos_balance_com_admittance_controller_H__
-#define __sot_talos_balance_com_admittance_controller_H__
+#ifndef __sot_talos_balance_dummy_dcm_estimator_H__
+#define __sot_talos_balance_dummy_dcm_estimator_H__
 
 /* --------------------------------------------------------------------- */
 /* --- API ------------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
 #if defined (WIN32)
-#  if defined (com_admittance_controller_EXPORTS)
-#    define COMADMITTANCECONTROLLER_EXPORT __declspec(dllexport)
+#  if defined (dummy_dcm_estimator_EXPORTS)
+#    define DUMMYDCMESTIMATOR_EXPORT __declspec(dllexport)
 #  else
-#    define COMADMITTANCECONTROLLER_EXPORT __declspec(dllimport)
+#    define DUMMYDCMESTIMATOR_EXPORT __declspec(dllimport)
 #  endif
 #else
-#  define COMADMITTANCECONTROLLER_EXPORT
+#  define DUMMYDCMESTIMATOR_EXPORT
 #endif
 
 
@@ -49,7 +49,7 @@ namespace dynamicgraph {
       /* --- CLASS ----------------------------------------------------------- */
       /* --------------------------------------------------------------------- */
 
-      class COMADMITTANCECONTROLLER_EXPORT ComAdmittanceController
+      class DUMMYDCMESTIMATOR_EXPORT DummyDcmEstimator
 	                         : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
@@ -58,26 +58,17 @@ namespace dynamicgraph {
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         /* --- CONSTRUCTOR ---- */
-        ComAdmittanceController( const std::string & name );
+        DummyDcmEstimator( const std::string & name );
 
-        void init(const double & dt);
-
-        void setPosition(const dynamicgraph::Vector &);
-        void setVelocity(const dynamicgraph::Vector &);
-        void setState(const dynamicgraph::Vector &, const dynamicgraph::Vector &);
+        void init();
 
         /* --- SIGNALS --- */
-        DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
-        DECLARE_SIGNAL_IN(zmp, dynamicgraph::Vector);
-        DECLARE_SIGNAL_IN(zmpDes, dynamicgraph::Vector);
-        DECLARE_SIGNAL_IN(ddcomDes, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(omega, double);
+        DECLARE_SIGNAL_IN(mass, double);
+        DECLARE_SIGNAL_IN(com, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(momenta, dynamicgraph::Vector);     
 
-        DECLARE_SIGNAL_OUT(ddcomRef, dynamicgraph::Vector);
-
-        DECLARE_SIGNAL_INNER(stateRef, dynamicgraph::Vector);
-
-        DECLARE_SIGNAL_OUT(comRef, dynamicgraph::Vector);
-        DECLARE_SIGNAL_OUT(dcomRef, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(dcm, dynamicgraph::Vector);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -85,15 +76,13 @@ namespace dynamicgraph {
 
         void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
         {
-          getLogger().sendMsg("[ComAdmittanceController-"+name+"] "+msg, t, file, line);
+          getLogger().sendMsg("[DummyDcmEstimator-"+name+"] "+msg, t, file, line);
         }
 
       protected:
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
-        dynamicgraph::Vector m_state; // internal state
-        double m_dt;
 
-      }; // class ComAdmittanceController
+      }; // class DummyDcmEstimator
 
     }    // namespace talos_balance
   }      // namespace sot
@@ -101,4 +90,4 @@ namespace dynamicgraph {
 
 
 
-#endif // #ifndef __sot_talos_balance_com_admittance_controller_H__
+#endif // #ifndef __sot_talos_balance_dummy_dcm_estimator_H__

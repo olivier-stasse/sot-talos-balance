@@ -2,6 +2,8 @@ from dynamic_graph.sot.core.operator import Mix_of_vector
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.joint_position_controller import JointPositionController
 from sot_talos_balance.joint_admittance_controller import JointAdmittanceController
+from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
+from sot_talos_balance.com_admittance_controller import ComAdmittanceController
 
 from dynamic_graph import plug
 
@@ -64,4 +66,33 @@ def create_admittance_controller(Kp,dt,robot):
     controller.tauDes.value = [0.0]*(N_JOINTS+6)
     controller.init(dt, N_JOINTS+6)
     controller.setPosition(robot.device.state.value)
+    return controller
+
+def create_dummy_dcm_estimator(robot):
+    from math import sqrt
+    estimator = DummyDcmEstimator("dummy")
+    mass = robot.dynamic.data.mass[0]
+    robot.dynamic.com.recompute(0)
+    h = robot.dynamic.com.value[2]
+    g = 9.81
+    omega = sqrt(g/h)
+
+    estimator.mass.value = mass
+    estimator.omega.value = omega
+    plug(robot.dynamic.com,estimator.com)
+    plug(robot.dynamic.momenta,estimator.momenta)
+    estimator.init()
+    return estimator
+
+def create_com_admittance_controller(Kp,dt,robot):
+    controller = ComAdmittanceController("comAdmCtrl")
+    controller.Kp.value = Kp
+    plug(robot.dynamic.zmp,controller.zmp)
+    robot.dynamic.zmp.recompute(0)
+    controller.zmpDes.value = robot.dynamic.zmp.value
+    controller.ddcomDes.value = [0.0,0.0,0.0]
+
+    controller.init(dt)
+    robot.dynamic.com.recompute(0)
+    controller.setState(robot.dynamic.com.value,[0.0,0.0,0.0])
     return controller
