@@ -5,6 +5,7 @@ from sot_talos_balance.joint_admittance_controller import JointAdmittanceControl
 from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
 from sot_talos_balance.com_admittance_controller import ComAdmittanceController
 
+from time import sleep
 from dynamic_graph import plug
 
 N_JOINTS = 32;
@@ -96,3 +97,16 @@ def create_com_admittance_controller(Kp,dt,robot):
     robot.dynamic.com.recompute(0)
     controller.setState(robot.dynamic.com.value,[0.0,0.0,0.0])
     return controller
+
+def addTrace(tracer, entity, signalName):
+    signal = '{0}.{1}'.format(entity.name, signalName)
+    filename = '{0}-{1}'.format(entity.name, signalName)
+    tracer.add(signal, filename)
+
+def dump_tracer(tracer):
+    tracer.stop()
+    sleep(0.2)
+    tracer.dump()
+    sleep(0.2)
+    tracer.close()
+

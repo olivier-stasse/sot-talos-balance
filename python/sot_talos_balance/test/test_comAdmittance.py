@@ -8,6 +8,11 @@ from time import sleep
 import sys
 import os
 
+from dynamic_graph.tracer_real_time import TracerRealTime
+from sot_talos_balance.create_entities_utils import addTrace, dump_tracer
+import matplotlib.pyplot as plt
+import numpy as np
+
 def main(robot):
     dt = robot.timeStep;
 
@@ -46,6 +51,17 @@ def main(robot):
     robot.sot.push(robot.taskCom.task.name)
     robot.device.control.recompute(0)
 
+    # --- TRACER
+    robot.tracer = TracerRealTime("zmp_tracer")
+    robot.tracer.setBufferSize(80*(2**20))
+    robot.tracer.open('/tmp','dg_','.dat')
+    robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
+
+    addTrace(robot.tracer, robot.dynamic, 'zmp')
+    addTrace(robot.tracer, robot.estimator, 'dcm')
+
+    # SIMULATION
+
     plug(robot.com_admittance_control.comRef,robot.taskCom.featureDes.errorIN)
     sleep(1.0)
     os.system("rosservice call \start_dynamic_graph")
@@ -53,8 +69,32 @@ def main(robot):
 
     plug(robot.estimator.dcm,robot.com_admittance_control.zmpDes)
 
-    print("Activating controller...")
     robot.com_admittance_control.setState(robot.dynamic.com.value,[0.0,0.0,0.0])
     robot.com_admittance_control.Kp.value = [10.0,10.0,0.0]
 
+    robot.tracer.start()
+
     sleep(5.0)
+
+    dump_tracer(robot.tracer)
+
+	  # --- DISPLAY
+    zmp_data = np.loadtxt('/tmp/dg_'+robot.dynamic.name+'-zmp.dat')
+    zmpDes_data = np.loadtxt('/tmp/dg_'+robot.estimator.name+'-dcm.dat')
+
+    plt.figure()
+    plt.plot(zmp_data[:,1],'b-')
+    plt.plot(zmpDes_data[:,1],'b--')
+    plt.plot(zmp_data[:,2],'r-')
+    plt.plot(zmpDes_data[:,2],'r--')
+    plt.title('ZMP real vs desired')
+    plt.legend(['Real x','Desired x','Real y','Desired y'])
+
+    plt.figure()
+    plt.plot(zmp_data[:,1] - zmpDes_data[:,1],'b-')
+    plt.plot(zmp_data[:,2] - zmpDes_data[:,2],'r-')
+    plt.title('ZMP error')
+    plt.legend(['Error on x','Error on y'])
+
+    plt.show()
+
