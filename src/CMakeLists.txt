@@ -36,6 +36,7 @@ ENDIF(UNIX)
 #This project will create many plugins as shared libraries, listed here
 SET(plugins
     example
+    dcm-controller
     dummy-dcm-estimator
     com-admittance-controller
     joint-admittance-controller

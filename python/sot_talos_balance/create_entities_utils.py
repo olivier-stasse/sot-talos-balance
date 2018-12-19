@@ -4,6 +4,7 @@ from sot_talos_balance.joint_position_controller import JointPositionController
 from sot_talos_balance.joint_admittance_controller import JointAdmittanceController
 from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
 from sot_talos_balance.com_admittance_controller import ComAdmittanceController
+from sot_talos_balance.dcm_controller import DcmController
 
 from time import sleep
 from dynamic_graph import plug
@@ -96,6 +97,31 @@ def create_com_admittance_controller(Kp,dt,robot):
     controller.init(dt)
     robot.dynamic.com.recompute(0)
     controller.setState(robot.dynamic.com.value,[0.0,0.0,0.0])
+    return controller
+
+def create_dcm_controller(Kp,Ki,dt,robot,dcmSignal):
+    from math import sqrt
+    controller = DcmController("dcmCtrl")
+    mass = robot.dynamic.data.mass[0]
+    robot.dynamic.com.recompute(0)
+    h = robot.dynamic.com.value[2]
+    g = 9.81
+    omega = sqrt(g/h)
+
+    controller.Kp.value = Kp
+    controller.Ki.value = Ki
+    controller.decayFactor.value = 0.2
+    controller.mass.value = mass
+    controller.omega.value = omega
+
+    plug(robot.dynamic.com,controller.com)
+    plug(dcmSignal,controller.dcm)
+
+    robot.dynamic.zmp.recompute(0)
+    controller.zmpDes.value = robot.dynamic.zmp.value
+    controller.dcmDes.value = robot.dynamic.zmp.value
+
+    controller.init(dt)
     return controller
 
 def addTrace(tracer, entity, signalName):
