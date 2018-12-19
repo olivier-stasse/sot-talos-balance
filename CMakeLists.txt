@@ -95,6 +95,9 @@ SET(${LIBRARY_NAME}_HEADERS
   include/sot/talos_balance/utils/stop-watch.hh
   include/sot/talos_balance/utils/vector-conversions.hh
   include/sot/talos_balance/utils/causal-filter.hh
+  include/sot/talos_balance/math/fwd.hh
+  include/sot/talos_balance/robot/fwd.hh
+  include/sot/talos_balance/robot/robot-wrapper.hh
   )
 
 #INSTALL(FILES ${${LIBRARY_NAME}_HEADERS}
@@ -107,6 +110,7 @@ SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
     src/utils/causal-filter.cpp
     src/utils/stop-watch.cpp
     src/common.cpp
+    src/robot/robot-wrapper.cpp
 )
 
 
@@ -146,6 +150,8 @@ IF(BUILD_PYTHON_INTERFACE)
                 python/${SOTTALOSBALANCE_PYNAME}/create_entities_utils.py
                 python/${SOTTALOSBALANCE_PYNAME}/meta_task_config.py
                 python/${SOTTALOSBALANCE_PYNAME}/talos_conf.py
+                python/${SOTTALOSBALANCE_PYNAME}/control_manager_conf.py
+                python/${SOTTALOSBALANCE_PYNAME}/motor_parameters.py
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py

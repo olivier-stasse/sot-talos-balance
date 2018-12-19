@@ -42,6 +42,7 @@ SET(plugins
     base-estimator
     filter-differentiator
     madgwickahrs
+    control-manager
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
