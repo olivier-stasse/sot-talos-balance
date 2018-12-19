@@ -57,6 +57,7 @@ SET(BOOST_COMPONENTS thread filesystem program_options unit_test_framework syste
 
 OPTION (BUILD_PYTHON_INTERFACE "Build the python bindings" ON)
 OPTION (BUILD_TEST "Build dynamic-graph architecture tests" OFF)
+OPTION (BUILD_UTILS "Build useful python scripts" OFF)
 
 # name of the python module
 IF(BUILD_PYTHON_INTERFACE)
@@ -86,12 +87,14 @@ SET(LIBRARY_NAME ${SOTTALOSBALANCE_LIB_NAME})
 
 SET(${LIBRARY_NAME}_HEADERS
 #  include/sot/talos_balance/example.hh
+  include/sot/talos_balance/utils/logger.hh
   include/sot/talos_balance/stc-commands.hh
+  include/sot/talos_balance/common.hh
   include/sot/talos_balance/utils/commands-helper.hh
   include/sot/talos_balance/utils/signal-helper.hh
-  include/sot/talos_balance/utils/logger.hh
   include/sot/talos_balance/utils/stop-watch.hh
   include/sot/talos_balance/utils/vector-conversions.hh
+  include/sot/talos_balance/utils/causal-filter.hh
   )
 
 #INSTALL(FILES ${${LIBRARY_NAME}_HEADERS}
@@ -100,8 +103,10 @@ SET(${LIBRARY_NAME}_HEADERS
 
 SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
 #    src/example.cpp
-    src/utils/logger.cpp
+    src/utils/logger.cpp    
+    src/utils/causal-filter.cpp
     src/utils/stop-watch.cpp
+    src/common.cpp
 )
 
 
@@ -140,6 +145,7 @@ IF(BUILD_PYTHON_INTERFACE)
                 python/${SOTTALOSBALANCE_PYNAME}/main.py
                 python/${SOTTALOSBALANCE_PYNAME}/create_entities_utils.py
                 python/${SOTTALOSBALANCE_PYNAME}/meta_task_config.py
+                python/${SOTTALOSBALANCE_PYNAME}/talos_conf.py
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
@@ -149,8 +155,16 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointTrajGen.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj.py
+		  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_tracer.py
                   DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/test)
   ENDIF(BUILD_TEST)
+  IF(BUILD_UTILS)
+    INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/utils/__init__.py
+                  python/${SOTTALOSBALANCE_PYNAME}/utils/plot_utils.py
+                  python/${SOTTALOSBALANCE_PYNAME}/utils/sot_utils.py
+                  python/${SOTTALOSBALANCE_PYNAME}/utils/filter_utils.py
+                  DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/utils)
+  ENDIF(BUILD_UTILS)
 ENDIF(BUILD_PYTHON_INTERFACE)
 
 MACRO(DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE MODULENAME SUBMODULENAME LIBRARYNAME TARGETNAME)

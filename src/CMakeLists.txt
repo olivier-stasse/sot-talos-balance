@@ -39,6 +39,9 @@ SET(plugins
     joint-admittance-controller
     joint-position-controller
     nd-trajectory-generator
+    base-estimator
+    filter-differentiator
+    madgwickahrs
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
