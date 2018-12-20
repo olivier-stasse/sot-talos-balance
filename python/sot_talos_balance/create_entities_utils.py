@@ -5,6 +5,7 @@ from sot_talos_balance.joint_admittance_controller import JointAdmittanceControl
 from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
 from sot_talos_balance.com_admittance_controller import ComAdmittanceController
 from sot_talos_balance.dcm_controller import DcmController
+from sot_talos_balance.dcm_com_controller import DcmComController
 
 from time import sleep
 from dynamic_graph import plug
@@ -120,6 +121,32 @@ def create_dcm_controller(Kp,Ki,dt,robot,dcmSignal):
     robot.dynamic.zmp.recompute(0)
     controller.zmpDes.value = robot.dynamic.zmp.value
     controller.dcmDes.value = robot.dynamic.zmp.value
+
+    controller.init(dt)
+    return controller
+
+def create_dcm_com_controller(Kp,Ki,dt,robot,dcmSignal):
+    from math import sqrt
+    controller = DcmComController("dcmComCtrl")
+    mass = robot.dynamic.data.mass[0]
+    robot.dynamic.com.recompute(0)
+    h = robot.dynamic.com.value[2]
+    g = 9.81
+    omega = sqrt(g/h)
+
+    controller.Kp.value = Kp
+    controller.Ki.value = Ki
+    controller.decayFactor.value = 0.2
+    controller.mass.value = mass
+    controller.omega.value = omega
+
+    controller.ddcomDes.value = [0.0,0.0,0.0]
+
+    plug(dcmSignal,controller.dcm)
+
+    robot.dynamic.com.recompute(0)
+    controller.comDes.value = robot.dynamic.com.value
+    controller.dcmDes.value = (robot.dynamic.com.value[0], robot.dynamic.com.value[1], 0.0)
 
     controller.init(dt)
     return controller
