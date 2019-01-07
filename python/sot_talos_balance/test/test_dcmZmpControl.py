@@ -1,3 +1,4 @@
+'''Test CoM admittance control as described in paper.'''
 from sot_talos_balance.create_entities_utils import create_com_admittance_controller, create_dummy_dcm_estimator, create_dcm_controller
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
@@ -20,13 +21,14 @@ def main(robot):
     robot.taskCom = MetaTaskKineCom(robot.dynamic)
     robot.dynamic.com.recompute(0)
     robot.taskCom.featureDes.errorIN.value = robot.dynamic.com.value
-    robot.taskCom.task.controlGain.value = 600
+    robot.taskCom.task.controlGain.value = 0
+    robot.taskCom.task.setWithDerivative(True)
 
     # --- Dummy estimator
     robot.estimator = create_dummy_dcm_estimator(robot)
 
     # --- DCM controller
-    Kp_dcm = [5.0,5.0,5.0]
+    Kp_dcm = [500.0,500.0,500.0]
     Ki_dcm = [0.0,0.0,0.0]
     robot.dcm_control = create_dcm_controller(Kp_dcm,Ki_dcm,dt,robot,robot.estimator.dcm)
 
@@ -71,11 +73,14 @@ def main(robot):
 
     # SIMULATION
 
+    # begin with constant references
     plug(robot.com_admittance_control.comRef,robot.taskCom.featureDes.errorIN)
+    plug(robot.com_admittance_control.dcomRef,robot.taskCom.featureDes.errordotIN)
     sleep(1.0)
     os.system("rosservice call \start_dynamic_graph")
     sleep(2.0)
 
+    # connect ZMP control signal and reset controllers
     plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)
 
     robot.com_admittance_control.setState(robot.dynamic.com.value,[0.0,0.0,0.0])
