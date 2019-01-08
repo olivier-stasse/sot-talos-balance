@@ -14,6 +14,8 @@ from sot_talos_balance.create_entities_utils import addTrace, dump_tracer
 import matplotlib.pyplot as plt
 import numpy as np
 
+from sot_talos_balance.test.run_test_utils import apply_force
+
 def main(robot):
     dt = robot.timeStep;
 
@@ -89,6 +91,11 @@ def main(robot):
     robot.dcm_control.Ki.value = [1.0,1.0,0.0]
 
     robot.tracer.start()
+
+    sleep(5.0)
+
+    # kick the robot on the chest to test its stability
+    apply_force([-1000.0,0,0],0.01)
 
     sleep(5.0)
 
