@@ -1,9 +1,11 @@
+from sot_talos_balance.control_manager                        import ControlManager
+from sot_talos_balance.parameter_server                       import ParameterServer
 from dynamic_graph.tracer_real_time                           import TracerRealTime
 from time                                                     import sleep
 from sot_talos_balance.base_estimator                         import BaseEstimator
 from sot_talos_balance.madgwickahrs                           import MadgwickAHRS
-from dynamic_graph.sot.torque_control.imu_offset_compensation import ImuOffsetCompensation
-from sot_talos_balance.control_manager                        import ControlManager
+from sot_talos_balance.imu_offset_compensation                import ImuOffsetCompensation
+
 
 from dynamic_graph.sot.core.operator import Mix_of_vector
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
@@ -98,10 +100,15 @@ def create_device_filters(robot, dt):
     filters.estimator_kin = create_chebi1_checby2_series_filter("estimator_kin", dt, N_JOINTS);
     
     plug(robot.device.joint_angles,                       filters.estimator_kin.x);  # device.state, device.joint_angles or device.motor_angles ?
-    plug(robot.imu_offset_compensation.accelerometer_out, filters.acc_filter.x);
-    plug(robot.imu_offset_compensation.gyrometer_out,     filters.gyro_filter.x);
     plug(robot.device.forceRLEG,                          filters.ft_RF_filter.x);
     plug(robot.device.forceLLEG,                          filters.ft_LF_filter.x);
+    
+    # switch following lines if willing to use imu offset compensation
+    #~ plug(robot.imu_offset_compensation.accelerometer_out, filters.acc_filter.x);
+    plug(robot.device.accelerometer, filters.acc_filter.x);
+    #~ plug(robot.imu_offset_compensation.gyrometer_out,     filters.gyro_filter.x);
+    plug(robot.device.gyrometer,     filters.gyro_filter.x);
+    
     return filters
 
 def create_be_filters(robot, dt):
@@ -317,3 +324,42 @@ def create_dcm_com_controller(Kp,Ki,dt,robot,dcmSignal):
     controller.init(dt)
     return controller
 
+def create_parameter_server(conf, dt, robot_name='robot'):
+    param_server = ParameterServer("param_server");        
+
+    # Init should be called before addCtrlMode 
+    # because the size of state vector must be known.
+    param_server.init(dt, conf.urdfFileName, robot_name)
+
+    # Set the map from joint name to joint ID
+    for key in conf.mapJointNameToID:
+      param_server.setNameToId(key,conf.mapJointNameToID[key])
+            
+    # Set the map joint limits for each id
+    for key in conf.mapJointLimits:
+      param_server.setJointLimitsFromId(key,conf.mapJointLimits[key][0], \
+                              conf.mapJointLimits[key][1])
+          
+    # Set the force limits for each id
+    for key in conf.mapForceIdToForceLimits:
+      param_server.setForceLimitsFromId(key,tuple(conf.mapForceIdToForceLimits[key][0]), \
+                              tuple(conf.mapForceIdToForceLimits[key][1]))
+
+    # Set the force sensor id for each sensor name
+    for key in conf.mapNameToForceId:
+      param_server.setForceNameToForceId(key,conf.mapNameToForceId[key])
+
+    # Set the map from the urdf joint list to the sot joint list
+    param_server.setJointsUrdfToSot(conf.urdftosot)
+
+    # Set the foot frame name
+    for key in conf.footFrameNames:
+      param_server.setFootFrameName(key,conf.footFrameNames[key])
+    
+    # Set IMU hosting joint name
+    param_server.setImuJointName(conf.ImuJointName)
+    
+    param_server.setRightFootForceSensorXYZ(conf.rightFootSensorXYZ);
+    param_server.setRightFootSoleXYZ(conf.rightFootSoleXYZ);
+
+    return param_server;

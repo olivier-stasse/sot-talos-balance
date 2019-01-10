@@ -47,6 +47,8 @@ SET(plugins
     filter-differentiator
     madgwickahrs
     control-manager
+    imu_offset_compensation
+    parameter-server
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
@@ -79,6 +81,7 @@ FOREACH(plugin ${plugins})
 
   ADD_DEPENDENCIES(${LIBRARY_NAME} ${SOTTALOSBALANCE_LIB_NAME})
 
+  
   IF(ADDITIONAL_${LIBRARY_NAME}_LIBS)
     ADD_DEPENDENCIES(${LIBRARY_NAME} ${ADDITIONAL_${LIBRARY_NAME}_LIBS})
     TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${ADDITIONAL_${LIBRARY_NAME}_LIBS})

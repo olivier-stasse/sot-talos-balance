@@ -19,11 +19,14 @@
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
 
+
 #include <sot/talos_balance/utils/commands-helper.hh>
 #include <sot/talos_balance/utils/stop-watch.hh>
 #include <sot/talos_balance/utils/statistics.hh>
 
-using namespace dynamicgraph::sot::talos_balance;
+
+
+using namespace sot::talos_balance;
 
 namespace dynamicgraph
 {
@@ -709,6 +712,6 @@ namespace dynamicgraph
         catch (ExceptionSignal e) {}
       }
       
-    } // namespace torquecontrol
+    } // namespace talos_balance
   } // namespace sot
 } // namespace dynamicgraph

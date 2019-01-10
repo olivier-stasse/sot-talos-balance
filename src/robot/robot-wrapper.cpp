@@ -26,6 +26,7 @@
 
 using namespace se3;
 using namespace dynamicgraph::sot::talos_balance::math;
+
 namespace dynamicgraph
 {
   namespace sot
