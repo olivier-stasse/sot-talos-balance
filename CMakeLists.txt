@@ -154,8 +154,6 @@ IF(BUILD_PYTHON_INTERFACE)
                 python/${SOTTALOSBALANCE_PYNAME}/control_manager_conf.py
                 python/${SOTTALOSBALANCE_PYNAME}/motor_parameters.py
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
-  INSTALL(DIRECTORY python/${SOTTALOSBALANCE_PYNAME}/talos/
-                    DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/talos)
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/run_test_utils.py
@@ -168,8 +166,6 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointTrajGen.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj.py
-		  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_tracer.py
-		  python/${SOTTALOSBALANCE_PYNAME}/test/test_param_server.py
                   DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/test)
   ENDIF(BUILD_TEST)
   IF(BUILD_UTILS)

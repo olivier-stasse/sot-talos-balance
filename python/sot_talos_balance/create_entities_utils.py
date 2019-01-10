@@ -1,5 +1,4 @@
 from sot_talos_balance.control_manager                        import ControlManager
-from sot_talos_balance.parameter_server                       import ParameterServer
 from dynamic_graph.tracer_real_time                           import TracerRealTime
 from time                                                     import sleep
 from sot_talos_balance.base_estimator                         import BaseEstimator

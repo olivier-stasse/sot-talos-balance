@@ -48,7 +48,6 @@ SET(plugins
     madgwickahrs
     control-manager
     imu_offset_compensation
-    parameter-server
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
