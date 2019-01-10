@@ -1,14 +1,18 @@
-from dynamic_graph.sot.core.operator                          import Mix_of_vector
-from sot_talos_balance.nd_trajectory_generator                import NdTrajectoryGenerator
-from sot_talos_balance.joint_position_controller              import JointPositionController
-from sot_talos_balance.joint_admittance_controller            import JointAdmittanceController
-
 from dynamic_graph.tracer_real_time                           import TracerRealTime
 from time                                                     import sleep
 from sot_talos_balance.base_estimator                         import BaseEstimator
 from sot_talos_balance.madgwickahrs                           import MadgwickAHRS
 from dynamic_graph.sot.torque_control.imu_offset_compensation import ImuOffsetCompensation
 from sot_talos_balance.control_manager                        import ControlManager
+
+from dynamic_graph.sot.core.operator import Mix_of_vector
+from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
+from sot_talos_balance.joint_position_controller import JointPositionController
+from sot_talos_balance.joint_admittance_controller import JointAdmittanceController
+from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
+from sot_talos_balance.com_admittance_controller import ComAdmittanceController
+from sot_talos_balance.dcm_controller import DcmController
+from sot_talos_balance.dcm_com_controller import DcmComController
 
 # python
 from sot_talos_balance.utils.filter_utils                     import create_chebi1_checby2_series_filter
@@ -232,5 +236,84 @@ def dump_tracer(tracer):
     tracer.dump()
     sleep(0.2);
     tracer.close();
-    return
+
+def create_dummy_dcm_estimator(robot):
+    from math import sqrt
+    estimator = DummyDcmEstimator("dummy")
+    mass = robot.dynamic.data.mass[0]
+    robot.dynamic.com.recompute(0)
+    h = robot.dynamic.com.value[2]
+    g = 9.81
+    omega = sqrt(g/h)
+
+    estimator.mass.value = mass
+    estimator.omega.value = omega
+    plug(robot.dynamic.com,estimator.com)
+    plug(robot.dynamic.momenta,estimator.momenta)
+    estimator.init()
+    return estimator
+
+def create_com_admittance_controller(Kp,dt,robot):
+    controller = ComAdmittanceController("comAdmCtrl")
+    controller.Kp.value = Kp
+    plug(robot.dynamic.zmp,controller.zmp)
+    robot.dynamic.zmp.recompute(0)
+    controller.zmpDes.value = robot.dynamic.zmp.value
+    controller.ddcomDes.value = [0.0,0.0,0.0]
+
+    controller.init(dt)
+    robot.dynamic.com.recompute(0)
+    controller.setState(robot.dynamic.com.value,[0.0,0.0,0.0])
+    return controller
+
+def create_dcm_controller(Kp,Ki,dt,robot,dcmSignal):
+    from math import sqrt
+    controller = DcmController("dcmCtrl")
+    mass = robot.dynamic.data.mass[0]
+    robot.dynamic.com.recompute(0)
+    h = robot.dynamic.com.value[2]
+    g = 9.81
+    omega = sqrt(g/h)
+
+    controller.Kp.value = Kp
+    controller.Ki.value = Ki
+    controller.decayFactor.value = 0.2
+    controller.mass.value = mass
+    controller.omega.value = omega
+
+    plug(robot.dynamic.com,controller.com)
+    plug(dcmSignal,controller.dcm)
+
+    robot.dynamic.zmp.recompute(0)
+    controller.zmpDes.value = robot.dynamic.zmp.value
+    controller.dcmDes.value = robot.dynamic.zmp.value
+
+    controller.init(dt)
+    return controller
+
+def create_dcm_com_controller(Kp,Ki,dt,robot,dcmSignal):
+    from math import sqrt
+    controller = DcmComController("dcmComCtrl")
+    mass = robot.dynamic.data.mass[0]
+    robot.dynamic.com.recompute(0)
+    h = robot.dynamic.com.value[2]
+    g = 9.81
+    omega = sqrt(g/h)
+
+    controller.Kp.value = Kp
+    controller.Ki.value = Ki
+    controller.decayFactor.value = 0.2
+    controller.mass.value = mass
+    controller.omega.value = omega
+
+    controller.ddcomDes.value = [0.0,0.0,0.0]
+
+    plug(dcmSignal,controller.dcm)
+
+    robot.dynamic.com.recompute(0)
+    controller.comDes.value = robot.dynamic.com.value
+    controller.dcmDes.value = (robot.dynamic.com.value[0], robot.dynamic.com.value[1], 0.0)
+
+    controller.init(dt)
+    return controller
 

@@ -14,21 +14,21 @@
  * with sot-talos-balance.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __sot_talos_balance_joint_admittance_controller_H__
-#define __sot_talos_balance_joint_admittance_controller_H__
+#ifndef __sot_talos_balance_com_admittance_controller_H__
+#define __sot_talos_balance_com_admittance_controller_H__
 
 /* --------------------------------------------------------------------- */
 /* --- API ------------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
 #if defined (WIN32)
-#  if defined (joint_admittance_controller_EXPORTS)
-#    define JOINTADMITTANCECONTROLLER_EXPORT __declspec(dllexport)
+#  if defined (com_admittance_controller_EXPORTS)
+#    define COMADMITTANCECONTROLLER_EXPORT __declspec(dllexport)
 #  else
-#    define JOINTADMITTANCECONTROLLER_EXPORT __declspec(dllimport)
+#    define COMADMITTANCECONTROLLER_EXPORT __declspec(dllimport)
 #  endif
 #else
-#  define JOINTADMITTANCECONTROLLER_EXPORT
+#  define COMADMITTANCECONTROLLER_EXPORT
 #endif
 
 
@@ -49,7 +49,7 @@ namespace dynamicgraph {
       /* --- CLASS ----------------------------------------------------------- */
       /* --------------------------------------------------------------------- */
 
-      class JOINTADMITTANCECONTROLLER_EXPORT JointAdmittanceController
+      class COMADMITTANCECONTROLLER_EXPORT ComAdmittanceController
 	                         : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
@@ -58,20 +58,26 @@ namespace dynamicgraph {
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         /* --- CONSTRUCTOR ---- */
-        JointAdmittanceController( const std::string & name );
+        ComAdmittanceController( const std::string & name );
 
-        void init(const double & dt, const unsigned & n);
+        void init(const double & dt);
 
         void setPosition(const dynamicgraph::Vector &);
+        void setVelocity(const dynamicgraph::Vector &);
+        void setState(const dynamicgraph::Vector &, const dynamicgraph::Vector &);
 
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
-        DECLARE_SIGNAL_IN(state, dynamicgraph::Vector);
-        DECLARE_SIGNAL_IN(tau, dynamicgraph::Vector);
-        DECLARE_SIGNAL_IN(tauDes, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(zmp, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(zmpDes, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(ddcomDes, dynamicgraph::Vector);
 
-        DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
-        DECLARE_SIGNAL_OUT(qRef, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(ddcomRef, dynamicgraph::Vector);
+
+        DECLARE_SIGNAL_INNER(stateRef, dynamicgraph::Vector);
+
+        DECLARE_SIGNAL_OUT(comRef, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(dcomRef, dynamicgraph::Vector);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -79,17 +85,15 @@ namespace dynamicgraph {
 
         void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
         {
-          getLogger().sendMsg("[JointAdmittanceController-"+name+"] "+msg, t, file, line);
+          getLogger().sendMsg("[ComAdmittanceController-"+name+"] "+msg, t, file, line);
         }
 
       protected:
-        int m_n;
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
-        dynamicgraph::Vector m_Kp;
-        dynamicgraph::Vector m_q; // internal state
+        dynamicgraph::Vector m_state; // internal state
         double m_dt;
 
-      }; // class JointAdmittanceController
+      }; // class ComAdmittanceController
 
     }    // namespace talos_balance
   }      // namespace sot
@@ -97,4 +101,4 @@ namespace dynamicgraph {
 
 
 
-#endif // #ifndef __sot_talos_balance_joint_admittance_controller_H__
+#endif // #ifndef __sot_talos_balance_com_admittance_controller_H__
