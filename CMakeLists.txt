@@ -95,6 +95,7 @@ SET(${LIBRARY_NAME}_HEADERS
   include/sot/talos_balance/utils/stop-watch.hh
   include/sot/talos_balance/utils/vector-conversions.hh
   include/sot/talos_balance/utils/causal-filter.hh
+  include/sot/talos_balance/utils/statistics.hh
   include/sot/talos_balance/math/fwd.hh
   include/sot/talos_balance/robot/fwd.hh
   include/sot/talos_balance/robot/robot-wrapper.hh
@@ -108,6 +109,7 @@ SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
 #    src/example.cpp
     src/utils/logger.cpp    
     src/utils/causal-filter.cpp
+    src/utils/statistics.cpp
     src/utils/stop-watch.cpp
     src/common.cpp
     src/robot/robot-wrapper.cpp
@@ -149,10 +151,11 @@ IF(BUILD_PYTHON_INTERFACE)
                 python/${SOTTALOSBALANCE_PYNAME}/main.py
                 python/${SOTTALOSBALANCE_PYNAME}/create_entities_utils.py
                 python/${SOTTALOSBALANCE_PYNAME}/meta_task_config.py
-                python/${SOTTALOSBALANCE_PYNAME}/talos_conf.py
                 python/${SOTTALOSBALANCE_PYNAME}/control_manager_conf.py
                 python/${SOTTALOSBALANCE_PYNAME}/motor_parameters.py
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
+  INSTALL(DIRECTORY python/${SOTTALOSBALANCE_PYNAME}/talos/
+                    DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/talos)
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/run_test_utils.py
@@ -166,6 +169,7 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj.py
 		  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_tracer.py
+		  python/${SOTTALOSBALANCE_PYNAME}/test/test_param_server.py
                   DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/test)
   ENDIF(BUILD_TEST)
   IF(BUILD_UTILS)

@@ -16,7 +16,7 @@
 //
 
 #include <iomanip>      // std::setprecision
-#include "sot/talos_balance/utils/statistics.hpp"
+#include "sot/talos_balance/utils/statistics.hh"
 
 using std::map;
 using std::string;
