@@ -156,7 +156,9 @@ IF(BUILD_PYTHON_INTERFACE)
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/link_state_publisher.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/run_test_utils.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_ffSubscriber.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_zmpEstimator.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmComControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmComZmpControl.py
