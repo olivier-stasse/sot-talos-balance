@@ -1,4 +1,5 @@
 from sot_talos_balance.control_manager                        import ControlManager
+from sot_talos_balance.example                                import Example
 from sot_talos_balance.parameter_server                       import ParameterServer
 from dynamic_graph.tracer_real_time                           import TracerRealTime
 from time                                                     import sleep
@@ -363,3 +364,10 @@ def create_parameter_server(conf, dt, robot_name='robot'):
     param_server.setRightFootSoleXYZ(conf.rightFootSoleXYZ);
 
     return param_server;
+
+def create_example(robot_name='robot', firstAdd = 0., secondAdd = 0.):
+    example = Example('example')
+    example.firstAddend.value  = firstAdd
+    example.secondAddend.value = secondAdd
+    example.init(robot_name)  
+    return example  

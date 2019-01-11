@@ -23,6 +23,7 @@
 #include "sot/talos_balance/utils/commands-helper.hh"
 #include "sot/talos_balance/utils/stop-watch.hh"
 
+
 namespace dynamicgraph
 {
   namespace sot
@@ -33,12 +34,13 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
 
-//Size to be aligned                    "-------------------------------------------------------"
-#define PROFILE_EXAMPLE_SUM_COMPUTATION "Example: sum computation                               "
+//Size to be aligned                         "-------------------------------------------------------"
+#define PROFILE_EXAMPLE_SUM_COMPUTATION      "Example: sum computation                               "
+#define PROFILE_EXAMPLE_NBJOINTS_COMPUTATION "Example: nbJoints extraction                           "
 
 #define INPUT_SIGNALS     m_firstAddendSIN << m_secondAddendSIN
 
-#define OUTPUT_SIGNALS m_sumSOUT
+#define OUTPUT_SIGNALS m_sumSOUT << m_nbJointsSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -56,20 +58,32 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(firstAddend,  double)
                       , CONSTRUCT_SIGNAL_IN(secondAddend, double)
                       , CONSTRUCT_SIGNAL_OUT(sum,         double, INPUT_SIGNALS)
+                      , CONSTRUCT_SIGNAL_OUT(nbJoints,    int, INPUT_SIGNALS)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
         /* Commands. */
-        addCommand("init", makeCommandVoid0(*this, &Example::init, docCommandVoid0("Initialize the entity.")));
+        addCommand("init", makeCommandVoid1(*this, &Example::init, docCommandVoid1("Initialize the entity.","Robot name")));
       }
 
-      void Example::init()
+      void Example::init(const std::string& robotName)
       {
         if(!m_firstAddendSIN.isPlugged())
           return SEND_MSG("Init failed: signal firstAddend is not plugged", MSG_TYPE_ERROR);
         if(!m_secondAddendSIN.isPlugged())
           return SEND_MSG("Init failed: signal secondAddend is not plugged", MSG_TYPE_ERROR);
+
+        std::string & robotName_nonconst = const_cast<std::string &>(robotName);
+
+        if (!isNameInRobotUtil(robotName_nonconst))
+        {
+          m_robot_util = createRobotUtil(robotName_nonconst);
+        }
+        else
+        {
+          m_robot_util = getRobotUtil(robotName_nonconst);
+        }
 
         m_initSucceeded = true;
       }
@@ -97,6 +111,24 @@ namespace dynamicgraph
 
         return s;
       }
+      
+      DEFINE_SIGNAL_OUT_FUNCTION(nbJoints, int)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal nbJoints before initialization!");
+          return s;
+        }
+        (void)iter;
+
+        getProfiler().start(PROFILE_EXAMPLE_NBJOINTS_COMPUTATION);
+
+        s = int(m_robot_util->m_nbJoints);
+
+        getProfiler().stop(PROFILE_EXAMPLE_NBJOINTS_COMPUTATION);
+
+        return s;
+      }
 
 
       /* --- COMMANDS ---------------------------------------------------------- */
@@ -114,6 +146,7 @@ namespace dynamicgraph
         }
         catch (ExceptionSignal e) {}
       }
+
     } // namespace talos_balance
   } // namespace sot
 } // namespace dynamicgraph

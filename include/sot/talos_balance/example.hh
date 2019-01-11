@@ -40,6 +40,7 @@
 #include "utils/logger.hh"
 #include <map>
 #include "boost/assign.hpp"
+#include <sot/core/robot-utils.hh>
 
 namespace dynamicgraph {
   namespace sot {
@@ -60,13 +61,14 @@ namespace dynamicgraph {
         /* --- CONSTRUCTOR ---- */
         Example( const std::string & name );
 
-        void init();
+        void init(const std::string& robotName);
 
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(firstAddend,  double);
         DECLARE_SIGNAL_IN(secondAddend, double);
 
         DECLARE_SIGNAL_OUT(sum, double);
+        DECLARE_SIGNAL_OUT(nbJoints, int);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -79,6 +81,7 @@ namespace dynamicgraph {
 
       protected:
         bool  m_initSucceeded;    /// true if the entity has been successfully initialized
+        RobotUtil* m_robot_util;
 
       }; // class Example
 
