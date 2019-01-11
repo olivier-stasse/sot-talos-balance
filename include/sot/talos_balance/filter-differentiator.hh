@@ -38,10 +38,10 @@
 /* --------------------------------------------------------------------- */
 
 /* HELPER */
-#include <sot/talos_balance/utils/signal-helper.hh>
+#include <sot/core/signal-helper.hh>
 #include <tsid/utils/stop-watch.hpp>
 #include <sot/talos_balance/utils/causal-filter.hh>
-#include <sot/talos_balance/utils/logger.hh>
+#include <sot/core/logger.hh>
 
 namespace dynamicgraph {
   namespace sot {

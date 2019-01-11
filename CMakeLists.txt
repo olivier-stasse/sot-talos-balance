@@ -86,7 +86,7 @@ SET(SOTTALOSBALANCE_LIB_NAME ${PROJECT_NAME})
 SET(LIBRARY_NAME ${SOTTALOSBALANCE_LIB_NAME})
 
 SET(${LIBRARY_NAME}_HEADERS
-#  include/sot/talos_balance/example.hh
+  include/sot/talos_balance/example.hh
   include/sot/talos_balance/utils/logger.hh
   include/sot/talos_balance/stc-commands.hh
   include/sot/talos_balance/common.hh
@@ -106,7 +106,7 @@ SET(${LIBRARY_NAME}_HEADERS
 #  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_WRITE)
 
 SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
-#    src/example.cpp
+    src/example.cpp
     src/utils/logger.cpp    
     src/utils/causal-filter.cpp
     src/utils/statistics.cpp
