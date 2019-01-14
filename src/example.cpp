@@ -74,15 +74,17 @@ namespace dynamicgraph
         if(!m_secondAddendSIN.isPlugged())
           return SEND_MSG("Init failed: signal secondAddend is not plugged", MSG_TYPE_ERROR);
 
-        std::string & robotName_nonconst = const_cast<std::string &>(robotName);
+        /*std::string & robotName_nonconst = const_cast<std::string &>(robotName);*/
+        std::string robotName_nonconst(robotName);
 
         if (!isNameInRobotUtil(robotName_nonconst))
         {
-          m_robot_util = createRobotUtil(robotName_nonconst);
+          SEND_MSG("You should have a robotUtil pointer initialized before",MSG_TYPE_ERROR);
         }
         else
         {
           m_robot_util = getRobotUtil(robotName_nonconst);
+          std::cerr << "m_robot_util:" << m_robot_util << std::endl;
         }
 
         m_initSucceeded = true;

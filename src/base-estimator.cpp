@@ -17,10 +17,8 @@
 #include <sot/talos_balance/base-estimator.hh>
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
-
 #include <sot/talos_balance/utils/commands-helper.hh>
 #include <sot/talos_balance/utils/stop-watch.hh>
-
 #include "pinocchio/algorithm/frames.hpp"
 
 namespace dynamicgraph
@@ -282,7 +280,7 @@ namespace dynamicgraph
           }
           else
           {
-            SEND_MSG("You should have an entity controller manager initialized before",MSG_TYPE_ERROR);
+            SEND_MSG("You should have a robotUtil pointer initialized before",MSG_TYPE_ERROR);
             return;
           }
 
