@@ -167,7 +167,7 @@ def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
 def create_base_estimator(robot, dt, conf, robot_name="robot"):    
     base_estimator = BaseEstimator('base_estimator');
     base_estimator.init(dt, robot_name);
-    plug(robot.device.state,                      base_estimator.joint_positions);  # device.state, device.joint_angles or device.motor_angles ?
+    plug(robot.device.joint_angles,                      base_estimator.joint_positions);  # device.state, device.joint_angles or device.motor_angles ?
     plug(robot.device_filters.ft_LF_filter.x_filtered,   base_estimator.forceLLEG)
     plug(robot.device_filters.ft_RF_filter.x_filtered,   base_estimator.forceRLEG)
     plug(robot.device_filters.ft_LF_filter.dx,           base_estimator.dforceLLEG)
