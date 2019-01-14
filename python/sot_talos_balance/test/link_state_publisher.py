@@ -51,6 +51,6 @@ class LinkStatePublisher(threading.Thread):
             rate.sleep()
 
 if __name__=='__main__':
-    pub = LinkStatePublisher('torso_1_link',1000)
+    pub = LinkStatePublisher('base_link',1000)
     pub.start()
 
