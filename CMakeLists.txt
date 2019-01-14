@@ -88,7 +88,6 @@ SET(LIBRARY_NAME ${SOTTALOSBALANCE_LIB_NAME})
 SET(${LIBRARY_NAME}_HEADERS
   include/sot/talos_balance/utils/logger.hh
   include/sot/talos_balance/stc-commands.hh
-  include/sot/talos_balance/common.hh
   include/sot/talos_balance/utils/commands-helper.hh
   include/sot/talos_balance/utils/signal-helper.hh
   include/sot/talos_balance/utils/stop-watch.hh
