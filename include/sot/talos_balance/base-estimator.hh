@@ -36,7 +36,6 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#include <sot/talos_balance/common.hh>
 #include <sot/core/signal-helper.hh>
 #include <sot/core/matrix-geometry.hh>
 #include <sot/core/logger.hh>
@@ -49,6 +48,7 @@
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
+#include <sot/core/robot-utils.hh>
 
 namespace dynamicgraph {
   namespace sot {

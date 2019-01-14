@@ -46,7 +46,6 @@
 
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/parsers/urdf.hpp>
-
 #include <sot/talos_balance/robot/robot-wrapper.hh>
 
 namespace dynamicgraph {
