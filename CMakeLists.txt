@@ -57,7 +57,7 @@ SET(BOOST_COMPONENTS thread filesystem program_options unit_test_framework syste
 
 OPTION (BUILD_PYTHON_INTERFACE "Build the python bindings" ON)
 OPTION (BUILD_TEST "Build dynamic-graph architecture tests" OFF)
-OPTION (BUILD_UTILS "Build useful python scripts" OFF)
+OPTION (BUILD_UTILS "Build useful python scripts" ON)
 
 # name of the python module
 IF(BUILD_PYTHON_INTERFACE)

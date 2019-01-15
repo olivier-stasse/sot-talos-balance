@@ -49,6 +49,7 @@ SET(plugins
     control-manager
     imu_offset_compensation
     parameter-server
+    dcm-estimator
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
