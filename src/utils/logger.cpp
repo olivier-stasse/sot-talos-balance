@@ -44,17 +44,16 @@ namespace dynamicgraph
           m_streamPrintPeriod(streamPrintPeriod),
           m_printCountdown(0.0)
       {
-#ifdef LOGGER_VERBOSITY_ERROR
-        m_lv = VERBOSITY_ERROR;
-#endif
-#ifdef LOGGER_VERBOSITY_WARNING_ERROR
-        m_lv = VERBOSITY_WARNING_ERROR;
-#endif
-#ifdef LOGGER_VERBOSITY_INFO_WARNING_ERROR
-        m_lv = VERBOSITY_INFO_WARNING_ERROR;
-#endif
 #ifdef LOGGER_VERBOSITY_ALL
         m_lv = VERBOSITY_ALL;
+#elif defined(LOGGER_VERBOSITY_INFO_WARNING_ERROR)
+        m_lv = VERBOSITY_INFO_WARNING_ERROR;
+#elif defined(LOGGER_VERBOSITY_WARNING_ERROR)
+        m_lv = VERBOSITY_WARNING_ERROR;
+#elif defined(LOGGER_VERBOSITY_ERROR)
+        m_lv = VERBOSITY_ERROR;
+#else
+        m_lv = VERBOSITY_NONE;
 #endif
       }
 

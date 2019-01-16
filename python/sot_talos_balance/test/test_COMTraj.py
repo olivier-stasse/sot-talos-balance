@@ -36,8 +36,8 @@ def main(robot):
     plug(robot.sot.control,robot.device.control)
 
     robot.sot.push(robot.contactRF.task.name)
-    robot.sot.push(robot.taskCom.task.name)
     robot.sot.push(robot.contactLF.task.name)
+    robot.sot.push(robot.taskCom.task.name)
     robot.device.control.recompute(0)
 
     plug(robot.comTrajGen.x,    robot.taskCom.featureDes.errorIN);
