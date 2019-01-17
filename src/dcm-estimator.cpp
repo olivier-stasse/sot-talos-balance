@@ -51,7 +51,7 @@ namespace dynamicgraph
         ,CONSTRUCT_SIGNAL_IN( v,   dynamicgraph::Vector)        
         ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, m_qSIN)
         ,CONSTRUCT_SIGNAL_OUT(dc,  dynamicgraph::Vector, m_qSIN << m_vSIN)
-
+        ,m_data(se3::Model())
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
@@ -93,7 +93,7 @@ namespace dynamicgraph
           SEND_MSG("Init failed: Could load URDF :" + m_robot_util->m_urdf_filename, MSG_TYPE_ERROR);
           return;
         }
-        m_data = new se3::Data(m_model);
+        m_data = se3::Data(m_model);
         m_initSucceeded = true;
       }
     
@@ -109,8 +109,8 @@ namespace dynamicgraph
           return s;
         }
         const Vector & q = m_qSIN(iter);
-        se3::centerOfMass(m_model,*m_data,q);
-        s = m_data->com[0];
+        se3::centerOfMass(m_model,m_data,q);
+        s = m_data.com[0];
         return s;
       }
       
@@ -123,8 +123,8 @@ namespace dynamicgraph
         }
         const Vector & q = m_qSIN(iter);
         const Vector & v = m_vSIN(iter);
-        se3::centerOfMass(m_model,*m_data,q,v);
-        s = m_data->vcom[0];
+        se3::centerOfMass(m_model,m_data,q,v);
+        s = m_data.vcom[0];
         return s;
       }
       void DcmEstimator::display(std::ostream& os) const
