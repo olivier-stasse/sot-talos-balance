@@ -167,6 +167,7 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj.py
 		  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_tracer.py
 		  python/${SOTTALOSBALANCE_PYNAME}/test/test_param_server.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_dcm_estimator.py   
                   DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/test)
   ENDIF(BUILD_TEST)
   IF(BUILD_UTILS)

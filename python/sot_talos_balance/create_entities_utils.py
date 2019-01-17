@@ -6,6 +6,7 @@ from time                                                     import sleep
 from sot_talos_balance.base_estimator                         import BaseEstimator
 from sot_talos_balance.madgwickahrs                           import MadgwickAHRS
 from sot_talos_balance.imu_offset_compensation                import ImuOffsetCompensation
+from sot_talos_balance.dcm_estimator                          import DcmEstimator
 
 
 from dynamic_graph.sot.core.operator import Mix_of_vector
@@ -371,3 +372,11 @@ def create_example(robot_name='robot', firstAdd = 0., secondAdd = 0.):
     example.secondAddend.value = secondAdd
     example.init(robot_name)  
     return example  
+
+def create_dcm_estimator(robot, dt, robot_name='robot'):
+    dcm_estimator = DcmEstimator('dcm_estimator')
+    dcm_estimator.init(dt, robot_name)
+    plug(robot.base_estimator.q, dcm_estimator.q)
+    plug(robot.base_estimator.v, dcm_estimator.v)
+    return dcm_estimator
+  
