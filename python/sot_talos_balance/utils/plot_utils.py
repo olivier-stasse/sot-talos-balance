@@ -5,13 +5,15 @@ import os
 
 def read_tracer_file(filename):
     data = np.loadtxt(filename);
-    return data
+    name = filename[8:-4]
+    return data, name
 
-def plot_select_traj(traj,idxs):
+def plot_select_traj(traj,idxs,name):
     ''' plot selected idx of ND array'''
     nb_plots = np.size(idxs)
     for idx in idxs:
         plt.plot(traj[:,idx])
+        plt.title(name)
     plt.show()
     return
 
