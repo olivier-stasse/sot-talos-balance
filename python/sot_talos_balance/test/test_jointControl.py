@@ -35,6 +35,3 @@ def main(robot,gain):
     sleep(10.0)
     robot.traj_gen.stop(31)
 
-if __name__ == '__main__':
-    from sot_talos_balance.test.run_test_utils import run_test
-    run_test('test_jointControl','main','robot',*sys.argv[1:])
