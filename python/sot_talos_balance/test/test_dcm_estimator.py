@@ -95,4 +95,4 @@ def main(robot):
 
 	write_pdf_graph('/tmp/')
 
-
+²	embed()
