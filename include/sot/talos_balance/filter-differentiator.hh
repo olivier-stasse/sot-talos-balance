@@ -39,7 +39,7 @@
 
 /* HELPER */
 #include <sot/core/signal-helper.hh>
-#include <tsid/utils/stop-watch.hpp>
+#include <sot/talos_balance/utils/stop-watch.hh>
 #include <sot/talos_balance/utils/causal-filter.hh>
 #include <sot/core/logger.hh>
 
