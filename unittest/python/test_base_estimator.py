@@ -42,6 +42,7 @@ example.firstAddend.value  = 0.
 example.secondAddend.value = 0.
 example.init(robot_name)  
 
+embed()
 
 
 

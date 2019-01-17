@@ -1,32 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-1
 from sot_talos_balance.create_entities_utils                  import *
-from dynamic_graph                                            import plug
-from time                                                     import sleep
 import os
 from sot_talos_balance.utils.sot_utils                        import Bunch
 from dynamic_graph.sot.core.meta_tasks_kine                   import MetaTaskKine6d, MetaTaskKineCom, gotoNd
-from dynamic_graph.sot.core.matrix_util                       import matrixToTuple
 from dynamic_graph                                            import plug
-import dynamic_graph                                          as dg
 from dynamic_graph.sot.core                                   import SOT
-from numpy                                                    import eye
 from time                                                     import sleep
 
 def get_default_conf():
-    import sot_talos_balance.talos.balance_ctrl_conf as balance_ctrl_conf
-    import sot_talos_balance.talos.admittance_ctrl_conf as admittance_ctrl_conf
-    import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
-    import sot_talos_balance.talos.control_manager_conf as control_manager_conf
-    import sot_talos_balance.talos.force_torque_estimator_conf as force_torque_estimator_conf
-    import sot_talos_balance.talos.joint_torque_controller_conf as joint_torque_controller_conf
+    import sot_talos_balance.talos.control_manager_conf as param_server_conf
     conf = Bunch();
-    conf.balance_ctrl              = balance_ctrl_conf;
-    conf.adm_ctrl                  = admittance_ctrl_conf;
-    conf.base_estimator            = base_estimator_conf;
-    conf.param_server              = control_manager_conf;
-    conf.force_torque_estimator    = force_torque_estimator_conf;
-    conf.joint_torque_controller   = joint_torque_controller_conf;
+    conf.param_server = param_server_conf;
     return conf;
 
 def main(robot, conf=None):
@@ -68,7 +53,7 @@ def main(robot, conf=None):
     
     #--- ENTITIES
     robot.param_server            = create_parameter_server(conf.param_server, dt)
-    robot.example                 = create_example() # will output the number of joints of the robot thanks to a pointer to the RobotUtil created in parameter server
+    robot.example                 = create_example() 
     
     # --- RUN SIMULATION
     plug(robot.comTrajGen.x,    robot.taskCom.featureDes.errorIN);
@@ -80,6 +65,7 @@ def main(robot, conf=None):
     robot.comTrajGen.startSinusoid(1,0.05,8.0);
     sleep(1.0)
     robot.example.nbJoints.recompute(1)
+    # outputs the number of joints of the robot thanks to a pointer to the RobotUtil created in parameter server
     print(robot.example.nbJoints.value)
 
     
