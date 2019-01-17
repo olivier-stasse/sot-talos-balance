@@ -14,7 +14,7 @@ from sot_talos_balance.create_entities_utils import addTrace, dump_tracer
 import matplotlib.pyplot as plt
 import numpy as np
 
-from sot_talos_balance.test.run_test_utils import apply_force
+from sot_talos_balance.utils.gazebo_utils import apply_force
 
 def main(robot):
     dt = robot.timeStep;

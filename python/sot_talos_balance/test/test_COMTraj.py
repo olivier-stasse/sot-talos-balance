@@ -1,4 +1,4 @@
-from sot_talos_balance.test.run_test_utils import run_test, runCommandClient
+from sot_talos_balance.utils.run_test_utils import run_test, runCommandClient
 from time import sleep
 
 run_test('appli_COMTraj.py')

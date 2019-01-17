@@ -157,7 +157,6 @@ IF(BUILD_PYTHON_INTERFACE)
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/link_state_publisher.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/run_test_utils.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_checkfeedback.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_ffSubscriber.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_zmpEstimator.py
@@ -178,6 +177,8 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/utils/plot_utils.py
                   python/${SOTTALOSBALANCE_PYNAME}/utils/sot_utils.py
                   python/${SOTTALOSBALANCE_PYNAME}/utils/filter_utils.py
+                  python/${SOTTALOSBALANCE_PYNAME}/utils/run_test_utils.py
+                  python/${SOTTALOSBALANCE_PYNAME}/utils/gazebo_utils.py
                   DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/utils)
   ENDIF(BUILD_UTILS)
 ENDIF(BUILD_PYTHON_INTERFACE)
