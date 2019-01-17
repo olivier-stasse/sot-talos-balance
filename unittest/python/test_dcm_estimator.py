@@ -31,3 +31,5 @@ dcm_estimator.c.recompute(1)
 dcm_estimator.dc.recompute(1)
 print "CoM position value: {0}".format(dcm_estimator.c.value)
 print "CoM velocity value: {0}".format(dcm_estimator.dc.value)
+
+embed()
