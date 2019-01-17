@@ -13,6 +13,7 @@
 #include "sot/talos_balance/utils/commands-helper.hh"
 #include <sot/talos_balance/utils/stop-watch.hh>
 #include "pinocchio/algorithm/frames.hpp"
+#include "pinocchio/algorithm/center-of-mass.hpp"
 
 namespace dynamicgraph
 {
@@ -32,7 +33,7 @@ namespace dynamicgraph
 #define PROFILE_BASE_VELOCITY_ESTIMATION      "base-est velocity estimation"
 #define PROFILE_BASE_KINEMATICS_COMPUTATION   "base-est kinematics computation"
 
-#define INPUT_SIGNALS     m_qSIN
+#define INPUT_SIGNALS     m_qSIN  << m_vSIN
 #define OUTPUT_SIGNALS    m_cSOUT << m_dcSOUT
 
       /// Define EntityClassName here rather than in the header file
@@ -47,8 +48,9 @@ namespace dynamicgraph
       DcmEstimator::DcmEstimator(const std::string& name)
         : Entity(name)
         ,CONSTRUCT_SIGNAL_IN( q,   dynamicgraph::Vector)
+        ,CONSTRUCT_SIGNAL_IN( v,   dynamicgraph::Vector)        
         ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, m_qSIN)
-        ,CONSTRUCT_SIGNAL_OUT(dc,  dynamicgraph::Vector, m_qSIN)
+        ,CONSTRUCT_SIGNAL_OUT(dc,  dynamicgraph::Vector, m_qSIN << m_vSIN)
 
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -59,11 +61,6 @@ namespace dynamicgraph
                                     docCommandVoid2("Initialize the entity.",
                                                     "time step (double)",
                                                     "URDF file path (string)")));
-
-        addCommand("test_command",
-                           makeCommandVoid1(*this, &DcmEstimator::test_command,
-                                            docCommandVoid1("Test dumb command",
-                                                            "integer (int)")));
       }
      void DcmEstimator::init(const double & dt, const std::string& robotRef)
       {
@@ -89,11 +86,6 @@ namespace dynamicgraph
           assert(m_model.existFrame(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name));
           assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
           assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
-          m_q_pin.setZero(m_model.nq);
-          m_q_pin[6]= 1.; // for quaternion
-          m_v_pin.setZero(m_robot_util->m_nbJoints+6);
-
-          m_last_vel.setZero(); // ?
         }
         catch (const std::exception& e)
         {
@@ -105,10 +97,6 @@ namespace dynamicgraph
         m_initSucceeded = true;
       }
     
-     void DcmEstimator::test_command(const int& test_int)     
-     {
-        std::cout << "test integer:" << test_int << std::endl;
-     }
       /* ------------------------------------------------------------------- */
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
@@ -120,8 +108,9 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal com before initialization!");
           return s;
         }
-
-        s = m_q_pin;
+        const Vector & q = m_qSIN(iter);
+        se3::centerOfMass(m_model,*m_data,q);
+        s = m_data->com[0];
         return s;
       }
       
@@ -132,8 +121,10 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcom before initialization!");
           return s;
         }
-
-        s = m_q_pin;
+        const Vector & q = m_qSIN(iter);
+        const Vector & v = m_vSIN(iter);
+        se3::centerOfMass(m_model,*m_data,q,v);
+        s = m_data->vcom[0];
         return s;
       }
       void DcmEstimator::display(std::ostream& os) const

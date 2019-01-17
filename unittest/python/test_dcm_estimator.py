@@ -2,7 +2,7 @@ from sot_talos_balance.create_entities_utils import *
 from dynamic_graph import plug
 import dynamic_graph as dg
 from dynamic_graph.sot.core import SOT
-from numpy import eye
+import numpy as np
 from time import sleep
 import os
 from IPython import embed
@@ -24,5 +24,10 @@ param_server.setRightFootForceSensorXYZ(conf.param_server.rightFootSensorXYZ)
 param_server.setRightFootSoleXYZ(conf.param_server.rightFootSoleXYZ)
 
 dcm_estimator = DcmEstimator('dcm_estimator')
+dcm_estimator.q.value = np.random.randn(38)
+dcm_estimator.v.value = np.random.randn(38)
 dcm_estimator.init(dt, robot_name)
-dcm_estimator.test_command(5)
+dcm_estimator.c.recompute(1)
+dcm_estimator.dc.recompute(1)
+print "CoM position value: {0}".format(dcm_estimator.c.value)
+print "CoM velocity value: {0}".format(dcm_estimator.dc.value)

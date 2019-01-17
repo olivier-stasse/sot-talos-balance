@@ -74,9 +74,9 @@ namespace dynamicgraph
         DcmEstimator(const std::string & name );
 
         void init(const double & dt, const std::string& urdfFile);
-        void test_command(const int& test_int);
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(q,   dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(v,   dynamicgraph::Vector);
 
         DECLARE_SIGNAL_OUT(c,  dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(dc, dynamicgraph::Vector);
@@ -96,7 +96,6 @@ namespace dynamicgraph
         se3::Data         *m_data;            /// Pinocchio robot data
         Eigen::VectorXd   m_q_pin;            /// robot configuration according to pinocchio convention
         Eigen::VectorXd   m_v_pin;            /// robot velocities according to pinocchio convention
-        Vector3        m_last_vel;
         double               m_dt;            /// sampling time step
         se3::Model        m_model;            /// Pinocchio robot model
 
