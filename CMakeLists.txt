@@ -56,8 +56,7 @@ PKG_CONFIG_APPEND_LIBS("sot-talos-balance")
 SET(BOOST_COMPONENTS thread filesystem program_options unit_test_framework system regex)
 
 OPTION (BUILD_PYTHON_INTERFACE "Build the python bindings" ON)
-OPTION (BUILD_TEST "Build dynamic-graph architecture tests" OFF)
-OPTION (BUILD_UTILS "Build useful python scripts" OFF)
+OPTION (BUILD_TEST "Build dynamic-graph architecture tests" ON)
 
 # name of the python module
 IF(BUILD_PYTHON_INTERFACE)
@@ -154,6 +153,13 @@ IF(BUILD_PYTHON_INTERFACE)
                 python/${SOTTALOSBALANCE_PYNAME}/control_manager_conf.py
                 python/${SOTTALOSBALANCE_PYNAME}/motor_parameters.py
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
+  INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/utils/__init__.py
+                python/${SOTTALOSBALANCE_PYNAME}/utils/plot_utils.py
+                python/${SOTTALOSBALANCE_PYNAME}/utils/sot_utils.py
+                python/${SOTTALOSBALANCE_PYNAME}/utils/filter_utils.py
+                python/${SOTTALOSBALANCE_PYNAME}/utils/run_test_utils.py
+                python/${SOTTALOSBALANCE_PYNAME}/utils/gazebo_utils.py
+                DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/utils)
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/link_state_publisher.py
@@ -172,15 +178,6 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/appli_COMTraj.py
                   DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/test)
   ENDIF(BUILD_TEST)
-  IF(BUILD_UTILS)
-    INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/utils/__init__.py
-                  python/${SOTTALOSBALANCE_PYNAME}/utils/plot_utils.py
-                  python/${SOTTALOSBALANCE_PYNAME}/utils/sot_utils.py
-                  python/${SOTTALOSBALANCE_PYNAME}/utils/filter_utils.py
-                  python/${SOTTALOSBALANCE_PYNAME}/utils/run_test_utils.py
-                  python/${SOTTALOSBALANCE_PYNAME}/utils/gazebo_utils.py
-                  DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/utils)
-  ENDIF(BUILD_UTILS)
 ENDIF(BUILD_PYTHON_INTERFACE)
 
 MACRO(DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE MODULENAME SUBMODULENAME LIBRARYNAME TARGETNAME)
