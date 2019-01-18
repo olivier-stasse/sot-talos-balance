@@ -1,14 +1,14 @@
 from sot_talos_balance.utils.run_test_utils import run_test, runCommandClient, evalCommandClient
-from sot_talos_balance.test.link_state_publisher import LinkStatePublisher
+from sot_talos_balance.utils.gazebo_utils import GazeboLinkStatePublisher
 from time import sleep
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-pub = LinkStatePublisher('base_link',1000)
-print("Starting link state publisher...")
+pub = GazeboLinkStatePublisher('base_link',1000)
+print("Starting Gazebo link state publisher...")
 pub.start()
-print("Link state publisher started")
+print("Gazebo link state publisher started")
 raw_input("Wait before running the test")
 
 run_test('appli_COMTraj_checkfeedback_gazebo.py')
@@ -71,8 +71,8 @@ plt.plot(comSot_data[:,3],'g:')
 plt.title('COM SOT z')
 
 raw_input("Wait before leaving the simulation")
-print("Stopping link state publisher...")
+print("Stopping Gazebo link state publisher...")
 pub.stop()
 sleep(0.1)
-print("Link state publisher stopped")
+print("Gazebo link state publisher stopped")
 
