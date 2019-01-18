@@ -11,7 +11,7 @@ pub.start()
 print("Link state publisher started")
 raw_input("Wait before running the test")
 
-run_test('appli_COMTraj_checkfeedback.py')
+run_test('appli_COMTraj_checkfeedback_gazebo.py')
 
 sleep(2.0)
 runCommandClient('robot.comTrajGen.move(1,-0.025,4.0)')
