@@ -13,6 +13,9 @@ from dynamic_graph_bridge_msgs.srv import *
 
 runCommandClient = rospy.ServiceProxy('run_command', RunCommand)
 
+def evalCommandClient(code):
+    return eval(runCommandClient(code).result)
+
 def launch_script(code,title,description = ""):
     raw_input(title+':   '+description)
     rospy.loginfo(title)

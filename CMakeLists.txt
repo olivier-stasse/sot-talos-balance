@@ -168,14 +168,15 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmZmpControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_comAdmittance.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_single_joint.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_admittance_single_joint.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_singleTraj.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointTrajGen.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_jointControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj.py
-		  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_tracer.py
-		  python/${SOTTALOSBALANCE_PYNAME}/test/test_param_server.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_dcm_estimator.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/appli_COMTraj.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_tracer.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_param_server.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_dcm_estimator.py
                   DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/test)
   ENDIF(BUILD_TEST)
 ENDIF(BUILD_PYTHON_INTERFACE)
