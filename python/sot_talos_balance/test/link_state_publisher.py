@@ -18,7 +18,14 @@ class LinkStatePublisher(threading.Thread):
         self.rate = rate
         self.prefix = prefix
         self.rpy = rpy
+        self._stop = False
         rospy.init_node(self.name, anonymous=True)
+
+    def stop(self):
+        self._stop = True
+
+    def stopped(self):
+        return self._stop
 
     def run(self):
         topic_pos = self.prefix + '/' + self.link_name + '/position'
@@ -31,7 +38,7 @@ class LinkStatePublisher(threading.Thread):
         get_link_state = rospy.ServiceProxy('/gazebo/get_link_state', GetLinkState)
 
         rate = rospy.Rate(self.rate)
-        while not rospy.is_shutdown():
+        while ( not self.stopped() ) and ( not rospy.is_shutdown() ):
             link_state_msg = get_link_state(link_name = self.link_name)
             link_state = link_state_msg.link_state
 

@@ -161,6 +161,7 @@ IF(BUILD_PYTHON_INTERFACE)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/link_state_publisher.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_checkfeedback.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_COMTraj_checkfeedback.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_ffSubscriber.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_zmpEstimator.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmComControl.py

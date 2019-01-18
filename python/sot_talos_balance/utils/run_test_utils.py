@@ -40,8 +40,6 @@ def run_test(appli):
 
         runCommandStartDynamicGraph = rospy.ServiceProxy('start_dynamic_graph', Empty)
 
-        rospy.loginfo("Stack of Tasks launched")
-
         initCode = open( appli, "r").read().split("\n")
     
         rospy.loginfo("Stack of Tasks launched")
