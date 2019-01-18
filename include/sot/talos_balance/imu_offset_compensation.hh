@@ -36,9 +36,9 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#include <sot/core/signal-helper.hh>
-#include <sot/core/matrix-geometry.hh>
-#include <sot/core/logger.hh>
+#include <sot/talos_balance/utils/signal-helper.hh>
+#include <sot/talos_balance/utils/vector-conversions.hh>
+#include <sot/talos_balance/utils/logger.hh>
 #include <map>
 #include "boost/assign.hpp"
 

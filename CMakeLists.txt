@@ -108,8 +108,8 @@ SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
     src/utils/causal-filter.cpp
     src/utils/statistics.cpp
     src/utils/stop-watch.cpp
-    src/common.cpp
     src/robot/robot-wrapper.cpp
+    src/robot-utils.cpp
 )
 
 

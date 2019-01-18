@@ -40,7 +40,7 @@
 #include "utils/logger.hh"
 #include <map>
 #include "boost/assign.hpp"
-#include <sot/core/robot-utils.hh>
+#include <sot/talos_balance/robot-utils.hh>
 
 namespace dynamicgraph {
   namespace sot {
