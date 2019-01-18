@@ -1,4 +1,8 @@
-'''This module contains utilities for running the tests.'''
+"""
+2019, LAAS/CNRS
+@author: Gabriele Buondonno
+This module contains utilities for running the tests
+"""
 from __future__ import print_function
 
 import rospy
