@@ -47,37 +47,33 @@ namespace dynamicgraph {
   namespace sot {
     namespace talos_balance {
 
-//#define LOGGER_VERBOSITY_INFO_WARNING_ERROR
-#define LOGGER_VERBOSITY_ALL
-
 #define SEND_MSG(msg,type)         sendMsg(msg,type,__FILE__,__LINE__)
-
-#ifdef LOGGER_VERBOSITY_ERROR
-  #define SEND_DEBUG_STREAM_MSG(msg)
-  #define SEND_INFO_STREAM_MSG(msg)
-  #define SEND_WARNING_STREAM_MSG(msg)
-  #define SEND_ERROR_STREAM_MSG(msg)    SEND_MSG(msg,MSG_TYPE_ERROR_STREAM)
-#endif
-
-#ifdef LOGGER_VERBOSITY_WARNING_ERROR
-  #define SEND_DEBUG_STREAM_MSG(msg)
-  #define SEND_INFO_STREAM_MSG(msg)\
-  #define SEND_WARNING_STREAM_MSG(msg)  SEND_MSG(msg,MSG_TYPE_WARNING_STREAM)
-  #define SEND_ERROR_STREAM_MSG(msg)    SEND_MSG(msg,MSG_TYPE_ERROR_STREAM)
-#endif
-
-#ifdef LOGGER_VERBOSITY_INFO_WARNING_ERROR
-  #define SEND_DEBUG_STREAM_MSG(msg)
-  #define SEND_INFO_STREAM_MSG(msg)     SEND_MSG(msg,MSG_TYPE_INFO_STREAM)
-  #define SEND_WARNING_STREAM_MSG(msg)  SEND_MSG(msg,MSG_TYPE_WARNING_STREAM)
-  #define SEND_ERROR_STREAM_MSG(msg)    SEND_MSG(msg,MSG_TYPE_ERROR_STREAM)
-#endif
 
 #ifdef LOGGER_VERBOSITY_ALL
   #define SEND_DEBUG_STREAM_MSG(msg) SEND_MSG(msg,MSG_TYPE_DEBUG_STREAM)
   #define SEND_INFO_STREAM_MSG(msg)   SEND_MSG(msg,MSG_TYPE_INFO_STREAM)
   #define SEND_WARNING_STREAM_MSG(msg)  SEND_MSG(msg,MSG_TYPE_WARNING_STREAM)
   #define SEND_ERROR_STREAM_MSG(msg)    SEND_MSG(msg,MSG_TYPE_ERROR_STREAM)
+#elif defined(LOGGER_VERBOSITY_INFO_WARNING_ERROR)
+  #define SEND_DEBUG_STREAM_MSG(msg)
+  #define SEND_INFO_STREAM_MSG(msg)     SEND_MSG(msg,MSG_TYPE_INFO_STREAM)
+  #define SEND_WARNING_STREAM_MSG(msg)  SEND_MSG(msg,MSG_TYPE_WARNING_STREAM)
+  #define SEND_ERROR_STREAM_MSG(msg)    SEND_MSG(msg,MSG_TYPE_ERROR_STREAM)
+#elif defined(LOGGER_VERBOSITY_WARNING_ERROR)
+  #define SEND_DEBUG_STREAM_MSG(msg)
+  #define SEND_INFO_STREAM_MSG(msg)
+  #define SEND_WARNING_STREAM_MSG(msg)  SEND_MSG(msg,MSG_TYPE_WARNING_STREAM)
+  #define SEND_ERROR_STREAM_MSG(msg)    SEND_MSG(msg,MSG_TYPE_ERROR_STREAM)
+#elif defined(LOGGER_VERBOSITY_ERROR)
+  #define SEND_DEBUG_STREAM_MSG(msg)
+  #define SEND_INFO_STREAM_MSG(msg)
+  #define SEND_WARNING_STREAM_MSG(msg)
+  #define SEND_ERROR_STREAM_MSG(msg)    SEND_MSG(msg,MSG_TYPE_ERROR_STREAM)
+#else
+  #define SEND_DEBUG_STREAM_MSG(msg)
+  #define SEND_INFO_STREAM_MSG(msg)
+  #define SEND_WARNING_STREAM_MSG(msg)
+  #define SEND_ERROR_STREAM_MSG(msg)
 #endif
 
       /** Enum representing the different kind of messages.

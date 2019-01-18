@@ -17,6 +17,7 @@ from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
 from sot_talos_balance.com_admittance_controller import ComAdmittanceController
 from sot_talos_balance.dcm_controller import DcmController
 from sot_talos_balance.dcm_com_controller import DcmComController
+from sot_talos_balance.simple_zmp_estimator import SimpleZmpEstimator
 
 # python
 from sot_talos_balance.utils.filter_utils                     import create_chebi1_checby2_series_filter
@@ -379,4 +380,14 @@ def create_dcm_estimator(robot, dt, robot_name='robot'):
     plug(robot.base_estimator.q, dcm_estimator.q)
     plug(robot.base_estimator.v, dcm_estimator.v)
     return dcm_estimator
-  
+
+def create_zmp_estimator(robot):
+    estimator = SimpleZmpEstimator("zmpEst")
+    plug(robot.dynamic.LF,estimator.poseLeft)
+    plug(robot.dynamic.RF,estimator.poseRight)
+    # force sensors are not mapped correctly
+    plug(robot.device.forceRLEG,estimator.wrenchLeft)
+    plug(robot.device.forceRARM,estimator.wrenchRight)
+
+    estimator.init()
+    return estimator

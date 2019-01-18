@@ -36,6 +36,7 @@ ENDIF(UNIX)
 #This project will create many plugins as shared libraries, listed here
 SET(plugins
     example
+    simple-zmp-estimator
     dcm-com-controller
     dcm-controller
     dummy-dcm-estimator
