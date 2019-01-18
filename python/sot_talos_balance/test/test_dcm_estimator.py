@@ -9,6 +9,8 @@ from dynamic_graph.sot.core                            import SOT
 from time                                              import sleep
 from IPython                                           import embed
 import os
+import numpy                                           as np
+import matplotlib.pyplot                               as plt
 
 def main(robot):
 	dt = robot.timeStep;
@@ -76,7 +78,7 @@ def main(robot):
 	robot.device_tracer.start();
 	robot.base_estimator_tracer.start();
 	robot.dcm_estimator_tracer.start();
-	sleep(10.0);
+	sleep(1.0);
 	dump_tracer(robot.device_tracer);
 	dump_tracer(robot.base_estimator_tracer);
 	dump_tracer(robot.dcm_estimator_tracer);
@@ -89,10 +91,12 @@ def main(robot):
 	base_estimator_data, base_name = read_tracer_file('/tmp/dg_'+robot.base_estimator.name+'-q.dat')
 	dcm_estimator_data,  dcm_name   = read_tracer_file('/tmp/dg_'+robot.dcm_estimator.name+'-c.dat')
 	
-	plot_select_traj(device_data,[10,23,15],         device_name)
-	plot_select_traj(base_estimator_data,[10,23,15], base_name)
-	plot_select_traj(dcm_estimator_data,[0,1,2],     dcm_name)
+	# plot_select_traj(device_data,[10,23,15],         device_name)
+	# plot_select_traj(base_estimator_data,[np.linspace(1,7,7,dtype=int)],     base_name)
+	# plot_select_traj(dcm_estimator_data,[0,1,2],     dcm_name)
+
+	# plt.show()
 
 	write_pdf_graph('/tmp/')
 
-²	embed()
+
