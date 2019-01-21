@@ -8,9 +8,7 @@ from numpy import matrix, identity, zeros, eye
 
 
 class MetaTaskConfig(object):
-    nbDof = None
-
-    def __init__(self,dyn,config,name="joint"):
+    def __init__(self,dyn,config,name="config"):
         self.dyn=dyn
         self.name=name
         self.config = config
@@ -39,7 +37,7 @@ class MetaTaskConfig(object):
         self.featureDes.errorIN.value = v
 
 class MetaTaskKineConfig(MetaTaskConfig):
-    def __init__(self,dyn,config,name="joint"):
+    def __init__(self,dyn,config,name="config"):
         MetaTaskConfig.__init__(self,dyn,config,name)
         self.task = Task('task'+name)
         self.plugTask()

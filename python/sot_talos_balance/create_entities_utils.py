@@ -10,6 +10,7 @@ from sot_talos_balance.dcm_estimator                          import DcmEstimato
 
 
 from dynamic_graph.sot.core.operator import Mix_of_vector
+from dynamic_graph.sot.core.operator import Selec_of_vector
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.joint_position_controller import JointPositionController
 from sot_talos_balance.joint_admittance_controller import JointAdmittanceController
@@ -70,20 +71,23 @@ def create_joint_controller(Kp):
     controller.Kp.value = Kp
     return controller
 
-def create_admittance_controller(Kp,dt,robot):
-    controller = JointAdmittanceController("admctrl")
+def create_joint_admittance_controller(joint,Kp,dt,robot):
+    controller = JointAdmittanceController("jadmctrl")
     controller.Kp.value = Kp
-    plug(robot.device.state,controller.state)
 
-    mix = create_extend_mix(N_JOINTS,N_JOINTS+6)
-    plug(robot.device.ptorque,mix.signal("sin2"))
-    plug(mix.sout,controller.tau)
+    robot.stateselec = Selec_of_vector("state_selec")
+    robot.stateselec.selec(joint+6,joint+7)
+    plug(robot.device.state,robot.stateselec.sin)
+    plug(robot.stateselec.sout,controller.state)
 
-    # plug(robot.device.ptorque,controller.tau)
+    robot.tauselec = Selec_of_vector("tau_selec")
+    robot.tauselec.selec(joint,joint+1)
+    plug(robot.device.ptorque,robot.tauselec.sin)
+    plug(robot.tauselec.sout,controller.tau)
 
-    controller.tauDes.value = [0.0]*(N_JOINTS+6)
-    controller.init(dt, N_JOINTS+6)
-    controller.setPosition(robot.device.state.value)
+    controller.tauDes.value = [0.0]
+    controller.init(dt, 1)
+    controller.setPosition([ robot.device.state.value[joint+6] ])
     return controller
 
 def create_imu_offset_compensation(robot, dt):

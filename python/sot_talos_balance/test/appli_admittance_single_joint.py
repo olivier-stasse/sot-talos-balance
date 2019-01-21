@@ -1,6 +1,6 @@
-from sot_talos_balance.create_entities_utils import create_admittance_controller
+from sot_talos_balance.create_entities_utils import create_joint_admittance_controller
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
-from sot_talos_balance.meta_task_config import MetaTaskKineConfig
+from sot_talos_balance.meta_task_joint import MetaTaskKineJoint
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 
@@ -12,18 +12,16 @@ dt = robot.timeStep
 JOINT = 25
 QJOINT = JOINT + 6
 
-target = N_CONFIG*[0.0]
-target[QJOINT] = -10.0
+target = -10.0
 
 # --- Joint
-robot.taskJoint = MetaTaskKineConfig(robot.dynamic,[QJOINT])
-robot.taskJoint.featureDes.errorIN.value = N_CONFIG*[0.0]
+robot.taskJoint = MetaTaskKineJoint(robot.dynamic,QJOINT)
+robot.taskJoint.featureDes.errorIN.value = [0.0]
 robot.taskJoint.task.controlGain.value = 100
 
 # --- Admittance controller
-Kp = [0.0]*N_CONFIG
-Kp[QJOINT] = 0.1
-robot.admittance_control = create_admittance_controller(Kp,dt,robot)
+Kp = [0.1]
+robot.admittance_control = create_joint_admittance_controller(JOINT,Kp,dt,robot)
 plug(robot.admittance_control.qRef,robot.taskJoint.featureDes.errorIN)
 
 # --- CONTACTS

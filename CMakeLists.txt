@@ -147,6 +147,7 @@ IF(BUILD_PYTHON_INTERFACE)
                 python/${SOTTALOSBALANCE_PYNAME}/main.py
                 python/${SOTTALOSBALANCE_PYNAME}/create_entities_utils.py
                 python/${SOTTALOSBALANCE_PYNAME}/meta_task_config.py
+                python/${SOTTALOSBALANCE_PYNAME}/meta_task_joint.py
                 python/${SOTTALOSBALANCE_PYNAME}/control_manager_conf.py
                 python/${SOTTALOSBALANCE_PYNAME}/motor_parameters.py
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
