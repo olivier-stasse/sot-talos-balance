@@ -13,7 +13,7 @@ from dynamic_graph.sot.core.operator import Mix_of_vector
 from dynamic_graph.sot.core.operator import Selec_of_vector
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.joint_position_controller import JointPositionController
-from sot_talos_balance.joint_admittance_controller import JointAdmittanceController
+from sot_talos_balance.admittance_controller import AdmittanceController
 from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
 from sot_talos_balance.com_admittance_controller import ComAdmittanceController
 from sot_talos_balance.dcm_controller import DcmController
@@ -72,7 +72,7 @@ def create_joint_controller(Kp):
     return controller
 
 def create_joint_admittance_controller(joint,Kp,dt,robot):
-    controller = JointAdmittanceController("jadmctrl")
+    controller = AdmittanceController("jadmctrl")
     controller.Kp.value = Kp
 
     robot.stateselec = Selec_of_vector("state_selec")
@@ -179,16 +179,12 @@ def create_base_estimator(robot, dt, conf, robot_name="robot"):
     plug(robot.device_filters.ft_LF_filter.dx,           base_estimator.dforceLLEG)
     plug(robot.device_filters.ft_RF_filter.dx,           base_estimator.dforceRLEG)
     plug(robot.device_filters.estimator_kin.dx,          base_estimator.joint_velocities);
-    plug(robot.imu_filters.imu_quat,               base_estimator.imu_quaternion);   
+    plug(robot.imu_filters.imu_quat,                     base_estimator.imu_quaternion);   
     plug(robot.device_filters.gyro_filter.x_filtered,    base_estimator.gyroscope);
     plug(robot.device_filters.acc_filter.x_filtered,     base_estimator.accelerometer);
-    base_estimator.K_fb_feet_poses.value = conf.K_fb_feet_poses;
-    try:
-        base_estimator.w_lf_in.value = conf.w_lf_in;
-        base_estimator.w_rf_in.value = conf.w_rf_in;
-    except:
-        pass;
-    
+    base_estimator.K_fb_feet_poses.value =               conf.K_fb_feet_poses;
+    base_estimator.w_lf_in.value =                       conf.w_lf_in;
+    base_estimator.w_rf_in.value =                       conf.w_rf_in;
     base_estimator.set_imu_weight(conf.w_imu);
     base_estimator.set_stiffness_right_foot(conf.K);
     base_estimator.set_stiffness_left_foot(conf.K);
