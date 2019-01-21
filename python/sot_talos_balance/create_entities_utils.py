@@ -13,7 +13,7 @@ from dynamic_graph.sot.core.operator import Mix_of_vector
 from dynamic_graph.sot.core.operator import Selec_of_vector
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.joint_position_controller import JointPositionController
-from sot_talos_balance.joint_admittance_controller import JointAdmittanceController
+from sot_talos_balance.admittance_controller import AdmittanceController
 from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
 from sot_talos_balance.com_admittance_controller import ComAdmittanceController
 from sot_talos_balance.dcm_controller import DcmController
@@ -72,7 +72,7 @@ def create_joint_controller(Kp):
     return controller
 
 def create_joint_admittance_controller(joint,Kp,dt,robot):
-    controller = JointAdmittanceController("jadmctrl")
+    controller = AdmittanceController("jadmctrl")
     controller.Kp.value = Kp
 
     robot.stateselec = Selec_of_vector("state_selec")
