@@ -62,7 +62,7 @@ namespace dynamicgraph {
 
         void init(const double & dt, const unsigned & n);
 
-        void setPosition(const dynamicgraph::Vector &);
+        void setPosition(const dynamicgraph::Vector & position);
 
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
@@ -82,6 +82,7 @@ namespace dynamicgraph {
           getLogger().sendMsg("[AdmittanceController-"+name+"] "+msg, t, file, line);
         }
 
+        bool m_useState;
       protected:
         int m_n;
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
