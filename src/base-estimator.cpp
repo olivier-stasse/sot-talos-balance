@@ -93,6 +93,21 @@ namespace dynamicgraph
             rotatedPoint(1) = q_tmp2(2);
             rotatedPoint(2) = q_tmp2(3);
       }
+      inline
+      double eulerMean(double a1, double a2)
+      {
+        double res  = 0;
+        double mean = (a1+a2)/2.;
+        if( (a1- a2) > EIGEN_PI || (a1- a2) < -EIGEN_PI)
+        {
+          res = mean > 0 ? -EIGEN_PI + mean : EIGEN_PI + mean ;
+        }
+        else
+        {
+          res = mean;
+        }
+        return res;
+      }
 
 #define PROFILE_BASE_POSITION_ESTIMATION    "base-est position estimation"
 #define PROFILE_BASE_VELOCITY_ESTIMATION    "base-est velocity estimation"
@@ -176,8 +191,8 @@ namespace dynamicgraph
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
-        m_K_rf << 4034,23770,239018,707,502,936;
-        m_K_lf << 4034,23770,239018,707,502,936;
+        //m_K_rf << 4034,23770,239018,707,502,936;
+        //m_K_lf << 4034,23770,239018,707,502,936;
         m_left_foot_sizes  << 0.130, -0.100,  0.075, -0.056;
         m_right_foot_sizes << 0.130, -0.100,  0.056, -0.075;
 
@@ -659,13 +674,21 @@ namespace dynamicgraph
           matrixToRpy((m_oMff_lf*ffMchest).rotation(), rpy_chest_lf);
           matrixToRpy((m_oMff_rf*ffMchest).rotation(), rpy_chest_rf);
           Eigen::Quaternion<double> quatIMU(quatIMU_vec[0], quatIMU_vec[1], quatIMU_vec[2], quatIMU_vec[3]);
+          //TODO turn the quaternion to express it in the chest frame
+          // m_imuMbase = SE3::Identity();
+          // m_imuMbase.rotation
           matrixToRpy(quatIMU.toRotationMatrix(), rpy_chest_imu);
 
           // average (we do not take into account the IMU yaw)
           double wSum = wL + wR + m_w_imu;
-          rpy_chest(0) = (rpy_chest_lf[0]*wL + rpy_chest_rf[0]*wR + rpy_chest_imu[0]*m_w_imu) / wSum;
-          rpy_chest(1) = (rpy_chest_lf[1]*wL + rpy_chest_rf[1]*wR + rpy_chest_imu[1]*m_w_imu) / wSum;
-          rpy_chest(2) = (rpy_chest_lf[2]*wL + rpy_chest_rf[2]*wR )                 / (wL+wR);
+          rpy_chest[0] = eulerMean(rpy_chest_lf[0],  rpy_chest_rf[0]);
+          //eulerMean(rpy_chest[0],  rpy_chest_imu[0], rpy_chest(0))
+          rpy_chest[1] = eulerMean(rpy_chest_lf[1],  rpy_chest_rf[1]);
+          //eulerMean(rpy_chest[1],  rpy_chest_imu[1], rpy_chest(1))
+          //rpy_chest(0) = (rpy_chest_lf[0]*wL + rpy_chest_rf[0]*wR + rpy_chest_imu[0]*m_w_imu) / wSum;
+          //rpy_chest(1) = (rpy_chest_lf[1]*wL + rpy_chest_rf[1]*wR + rpy_chest_imu[1]*m_w_imu) / wSum;
+          rpy_chest[2] = eulerMean(rpy_chest_lf[2],  rpy_chest_rf[2]);
+          //rpy_chest(2) = (rpy_chest_lf[2]*wL + rpy_chest_rf[2]*wR )                 / (wL+wR);
 
           rpyToMatrix(rpy_chest, m_oRchest);
           m_oRff = m_oRchest * chestMff.rotation();
@@ -1048,6 +1071,9 @@ namespace dynamicgraph
           /* Get an estimate of linear velocities from gyroscope only*/
           // we make the asumtion than we are 'turning around the foot' with pure angular velocity in the ankle measured by the gyro
           const Matrix3 ffRimu = (m_data->oMf[m_IMU_body_id]).rotation();
+          //std::cerr << m_data->oMf[m_IMU_body_id] << std::endl; 
+          //std::cerr << m_data->liMi[m_IMU_body_id] << std::endl;
+          //std::cerr << "m_IMU_body_id" << m_IMU_body_id << std::endl;
           const Matrix3 lfRimu = ffMlf.rotation().transpose() * ffRimu;
           const Matrix3 rfRimu = ffMrf.rotation().transpose() * ffRimu;
 

@@ -77,6 +77,9 @@ namespace dynamicgraph {
       /** Rotate a point or a vector by a quaternion stored in (w,x,y,z) format */
       void pointRotationByQuaternion(const Eigen::Vector3d & point,const Eigen::Vector4d & quat, Eigen::Vector3d & rotatedPoint);
 
+      /** Avoids singularity while taking the mean of euler angles**/
+      double eulerMean(double a1, double a2);
+
       class SOTBASEESTIMATOR_EXPORT BaseEstimator
           :public::dynamicgraph::Entity
       {
@@ -185,7 +188,6 @@ namespace dynamicgraph {
         int               m_fz_stable_windows_size; /// size of the windows used to detect that feet did not leave the ground
         int               m_lf_fz_stable_cpt; ///counter for detecting for how long the feet has been stable
         int               m_rf_fz_stable_cpt; ///counter for detecting for how long the feet has been stable
-
         /* Estimator parameters */
         double            m_w_imu;            /// weight of IMU for sensor fusion
         double            m_zmp_std_dev_rf;   /// standard deviation of ZMP measurement errors for right foot
@@ -219,6 +221,7 @@ namespace dynamicgraph {
 
         se3::Model        m_model;            /// Pinocchio robot model
         se3::Data         *m_data;            /// Pinocchio robot data
+        //se3::SE3          m_chestMimu         /// chest to imu transformation
         se3::SE3          m_oMff_lf;          /// world-to-base transformation obtained through left foot
         se3::SE3          m_oMff_rf;          /// world-to-base transformation obtained through right foot
         SE3               m_oMlfs;            /// transformation from world to left foot sole

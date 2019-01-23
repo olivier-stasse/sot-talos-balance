@@ -11,6 +11,7 @@ from IPython                                           import embed
 import os
 import numpy                                           as np
 import matplotlib.pyplot                               as plt
+from dynamic_graph.ros                                 import RosPublish
 
 def main(robot):
 	dt = robot.timeStep;
@@ -55,47 +56,16 @@ def main(robot):
 	robot.be_filters              = create_be_filters(robot, dt)
 	robot.dcm_estimator           = create_dcm_estimator(robot, dt)
 
-	# --- TRACERS
-	outputs = ['robotState']
-	robot.device_tracer    = create_tracer(robot,robot.device, 'device_tracer', outputs)
-	outputs = ['q']
-	robot.base_estimator_tracer = create_tracer(robot,robot.base_estimator, 'base_estimator_tracer', outputs)
-	robot.device.after.addSignal('base_estimator.q')
-	outputs = ['c']
-	robot.dcm_estimator_tracer = create_tracer(robot,robot.dcm_estimator,'dcm_estimator_tracer', outputs)
-	robot.device.after.addSignal('dcm_estimator.c')
-
+	
     # --- RUN SIMULATION
 	plug(robot.comTrajGen.x,    robot.taskCom.featureDes.errorIN);
 	sleep(1.0);
 	os.system("rosservice call \start_dynamic_graph")
 	sleep(2.0);
-	robot.comTrajGen.move(1,-0.025,4.0);
+	robot.comTrajGen.move(1,0.025,4.0);
 	sleep(5.0);
-	robot.comTrajGen.startSinusoid(1,0.05,8.0);
+	robot.comTrajGen.startSinusoid(1,-0.05,8.0);
 	sleep(0.2);
-	
-	robot.device_tracer.start();
-	robot.base_estimator_tracer.start();
-	robot.dcm_estimator_tracer.start();
-	sleep(1.0);
-	dump_tracer(robot.device_tracer);
-	dump_tracer(robot.base_estimator_tracer);
-	dump_tracer(robot.dcm_estimator_tracer);
-
-	print 'data dumped'
-
-	
-	# --- DISPLAY
-	device_data,         device_name       = read_tracer_file('/tmp/dg_'+robot.device.name+'-robotState.dat')
-	base_estimator_data, base_name = read_tracer_file('/tmp/dg_'+robot.base_estimator.name+'-q.dat')
-	dcm_estimator_data,  dcm_name   = read_tracer_file('/tmp/dg_'+robot.dcm_estimator.name+'-c.dat')
-	
-	# plot_select_traj(device_data,[10,23,15],         device_name)
-	# plot_select_traj(base_estimator_data,[np.linspace(1,7,7,dtype=int)],     base_name)
-	# plot_select_traj(dcm_estimator_data,[0,1,2],     dcm_name)
-
-	# plt.show()
 
 	write_pdf_graph('/tmp/')
 
