@@ -96,17 +96,39 @@ namespace dynamicgraph
       inline
       double eulerMean(double a1, double a2)
       {
-        double res  = 0;
         double mean = (a1+a2)/2.;
         if( (a1- a2) > EIGEN_PI || (a1- a2) < -EIGEN_PI)
         {
-          res = mean > 0 ? -EIGEN_PI + mean : EIGEN_PI + mean ;
+          return mean > 0 ? -EIGEN_PI + mean : EIGEN_PI + mean ;
         }
-        else
+        return mean;
+      }
+
+      inline 
+      double wEulerMean(double a1, double a2, double w1, double w2)
+      {
+        double wMean = (a1*w1+ a2*w2)/(w1+w2);
+        double na,naw,pa,paw;
+        if((a1- a2) > EIGEN_PI || (a1- a2) < -EIGEN_PI)
         {
-          res = mean;
+          if (a1 < a2)
+          {
+            na  = a1; //negative angle
+            naw = w1; //negative angle weight
+            pa  = a2; //positive angle
+            paw = w2; //positive angle weight
+          }
+          else 
+          {
+            na  = a2; //negative angle
+            naw = w2; //negative angle weight
+            pa  = a1; //positive angle
+            paw = w1; //positive angle weight
+          }
+          double piFac = (paw-naw)/(naw+paw);
+          return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac;
         }
-        return res;
+        return wMean;
       }
 
 #define PROFILE_BASE_POSITION_ESTIMATION    "base-est position estimation"
@@ -681,13 +703,16 @@ namespace dynamicgraph
 
           // average (we do not take into account the IMU yaw)
           double wSum = wL + wR + m_w_imu;
-          rpy_chest[0] = eulerMean(rpy_chest_lf[0],  rpy_chest_rf[0]);
+          rpy_chest[0] = wEulerMean(rpy_chest_lf[0],  rpy_chest_rf[0], wL, wR);
+          //rpy_chest[0] = eulerMean(rpy_chest_lf[0],  rpy_chest_rf[0]);
           //eulerMean(rpy_chest[0],  rpy_chest_imu[0], rpy_chest(0))
-          rpy_chest[1] = eulerMean(rpy_chest_lf[1],  rpy_chest_rf[1]);
+          rpy_chest[1] = wEulerMean(rpy_chest_lf[1],  rpy_chest_rf[1], wL, wR);          
+          //rpy_chest[1] = eulerMean(rpy_chest_lf[1],  rpy_chest_rf[1]);
           //eulerMean(rpy_chest[1],  rpy_chest_imu[1], rpy_chest(1))
           //rpy_chest(0) = (rpy_chest_lf[0]*wL + rpy_chest_rf[0]*wR + rpy_chest_imu[0]*m_w_imu) / wSum;
           //rpy_chest(1) = (rpy_chest_lf[1]*wL + rpy_chest_rf[1]*wR + rpy_chest_imu[1]*m_w_imu) / wSum;
-          rpy_chest[2] = eulerMean(rpy_chest_lf[2],  rpy_chest_rf[2]);
+          rpy_chest[2] = wEulerMean(rpy_chest_lf[2],  rpy_chest_rf[2], wL, wR);
+          //rpy_chest[2] = eulerMean(rpy_chest_lf[2],  rpy_chest_rf[2]);
           //rpy_chest(2) = (rpy_chest_lf[2]*wL + rpy_chest_rf[2]*wR )                 / (wL+wR);
 
           rpyToMatrix(rpy_chest, m_oRchest);

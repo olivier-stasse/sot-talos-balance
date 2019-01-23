@@ -79,6 +79,9 @@ namespace dynamicgraph {
 
       /** Avoids singularity while taking the mean of euler angles**/
       double eulerMean(double a1, double a2);
+      
+      /** Avoids singularity while taking the mean of euler angles**/
+      double wEulerMean(double a1, double a2, double w1, double w2);
 
       class SOTBASEESTIMATOR_EXPORT BaseEstimator
           :public::dynamicgraph::Entity
