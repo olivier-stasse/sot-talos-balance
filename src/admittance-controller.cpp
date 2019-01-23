@@ -34,6 +34,9 @@ namespace dynamicgraph
       using namespace dg::command;
 
 //Size to be aligned                                   "-------------------------------------------------------"
+
+#define PROFILE_ADMITTANCECONTROLLER_QREF_COMPUTATION  "AdmittanceController: qRef computation                 "
+
 #define PROFILE_ADMITTANCECONTROLLER_DQREF_COMPUTATION "AdmittanceController: dqRef computation                "
 
 #define INPUT_SIGNALS     m_KpSIN << m_stateSIN << m_tauSIN << m_tauDesSIN
@@ -66,6 +69,8 @@ namespace dynamicgraph
         /* Commands. */
         addCommand("init", makeCommandVoid2(*this, &AdmittanceController::init, docCommandVoid2("Initialize the entity.","time step","Number of elements")));
         addCommand("setPosition", makeCommandVoid1(*this, &AdmittanceController::setPosition, docCommandVoid1("Set initial reference position.","Initial position")));
+        addCommand("useExternalState", makeDirectSetter(*this,&m_useState, docDirectGetter("use external state","bool")));
+        addCommand("isUsingExternalState", makeDirectGetter(*this,&m_useState, docDirectGetter("use external state","bool")));
       }
 
       void AdmittanceController::init(const double & dt, const unsigned & n)
@@ -74,8 +79,6 @@ namespace dynamicgraph
           return SEND_MSG("n must be at least 1", MSG_TYPE_ERROR);
         if(!m_KpSIN.isPlugged())
           return SEND_MSG("Init failed: signal Kp is not plugged", MSG_TYPE_ERROR);
-        if(!m_stateSIN.isPlugged())
-          return SEND_MSG("Init failed: signal state is not plugged", MSG_TYPE_ERROR);
         if(!m_tauSIN.isPlugged())
           return SEND_MSG("Init failed: signal tau is not plugged", MSG_TYPE_ERROR);
         if(!m_tauDesSIN.isPlugged())
@@ -87,9 +90,10 @@ namespace dynamicgraph
         m_initSucceeded = true;
       }
 
-      void AdmittanceController::setPosition(const dynamicgraph::Vector & state)
+      void AdmittanceController::setPosition(const dynamicgraph::Vector & position)
+
       {
-        m_q = state;
+        m_q = position;
       }
 
       /* ------------------------------------------------------------------- */
@@ -110,7 +114,6 @@ namespace dynamicgraph
         const Vector & tau = m_tauSIN(iter);
         const Vector & Kp = m_KpSIN(iter);
 
-        assert(state.size()==m_n  && "Unexpected size of signal state");
         assert(tau.size()==m_n    && "Unexpected size of signal tau");
         assert(tauDes.size()==m_n && "Unexpected size of signal tauDes");
         assert(Kp.size()==m_n     && "Unexpected size of signal Kp");
@@ -132,13 +135,29 @@ namespace dynamicgraph
           return s;
         }
 
+        getProfiler().start(PROFILE_ADMITTANCECONTROLLER_QREF_COMPUTATION);
+
         const Vector & dqRef = m_dqRefSOUT(iter);
 
         assert(dqRef.size()==m_n  && "Unexpected size of signal dqRef");
 
+        if(m_useState)
+        {
+          if(!m_stateSIN.isPlugged())
+          {
+            SEND_MSG("Signal state is requested, but is not plugged", MSG_TYPE_ERROR);
+            return s;
+          }
+          const Vector & state = m_stateSIN(iter);
+          assert(state.size()==m_n  && "Unexpected size of signal state");
+          m_q = state;
+        }
+
         m_q += dqRef*m_dt;
 
         s = m_q;
+
+        getProfiler().stop(PROFILE_ADMITTANCECONTROLLER_QREF_COMPUTATION);
 
         return s;
       }
