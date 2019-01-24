@@ -108,28 +108,38 @@ namespace dynamicgraph
       double wEulerMean(double a1, double a2, double w1, double w2)
       {
         double wMean = (a1*w1+ a2*w2)/(w1+w2);
-        double na,naw,pa,paw;
-        if((a1- a2) > EIGEN_PI || (a1- a2) < -EIGEN_PI)
-        {
-          if (a1 < a2)
-          {
-            na  = a1; //negative angle
-            naw = w1; //negative angle weight
-            pa  = a2; //positive angle
-            paw = w2; //positive angle weight
-          }
-          else 
-          {
-            na  = a2; //negative angle
-            naw = w2; //negative angle weight
-            pa  = a1; //positive angle
-            paw = w1; //positive angle weight
-          }
-          double piFac = (paw-naw)/(naw+paw);
-          return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac;
-        }
+        if ( a1-a2 >= EIGEN_PI )
+            return (EIGEN_PI*(w1-w2)/(w2+w1) - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*(w1-w2)/(w2+w1) : EIGEN_PI + wMean - EIGEN_PI*(w1-w2)/(w2+w1); 
+        else if ( a1-a2 < -EIGEN_PI )
+            return (EIGEN_PI*(w2-w1)/(w1+w2) - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2) : EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2); 
         return wMean;
       }
+
+      // inline 
+      // double wEulerMean(double a1, double a2, double w1, double w2)
+      // {
+      //   double wMean = (a1*w1+ a2*w2)/(w1+w2);
+      //   double na,naw,pa,paw;
+      //   if ( a1-a2 >= EIGEN_PI )
+      //   {
+      //     na  = a2; //negative angle
+      //     naw = w2; //negative angle weight
+      //     pa  = a1; //positive angle
+      //     paw = w1; //positive angle weight 
+      //     double piFac = (paw-naw)/(naw+paw);
+      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac;        
+      //   }
+      //   else if ( a1-a2 < -EIGEN_PI )
+      //   {
+      //     na  = a1; //negative angle
+      //     naw = w1; //negative angle weight
+      //     pa  = a2; //positive angle
+      //     paw = w2; //positive angle weight
+      //     double piFac = (paw-naw)/(naw+paw);
+      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac; 
+      //   }
+      //   return wMean;
+      // }
 
 #define PROFILE_BASE_POSITION_ESTIMATION    "base-est position estimation"
 #define PROFILE_BASE_VELOCITY_ESTIMATION    "base-est velocity estimation"
@@ -327,9 +337,12 @@ namespace dynamicgraph
           assert(m_model.existFrame(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name));
           assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
           assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
-          m_left_foot_id  = m_model.getFrameId(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name);
-          m_right_foot_id = m_model.getFrameId(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name);
-          m_IMU_body_id   = m_model.getFrameId(m_robot_util->m_imu_joint_name);
+          m_left_foot_id       = m_model.getFrameId(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name);
+          m_right_foot_id      = m_model.getFrameId(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name);
+          m_IMU_frame_id       = m_model.getFrameId(m_robot_util->m_imu_joint_name);
+          m_IMU_body_id        = m_model.frames[m_IMU_frame_id].parent;
+          m_chestMimu          = m_model.frames[m_IMU_frame_id].placement;
+          std::cerr << "chestMimu" << m_chestMimu << std::endl; 
 
           m_q_pin.setZero(m_model.nq);
           m_q_pin[6]= 1.; // for quaternion
@@ -695,23 +708,25 @@ namespace dynamicgraph
 
           matrixToRpy((m_oMff_lf*ffMchest).rotation(), rpy_chest_lf);
           matrixToRpy((m_oMff_rf*ffMchest).rotation(), rpy_chest_rf);
-          Eigen::Quaternion<double> quatIMU(quatIMU_vec[0], quatIMU_vec[1], quatIMU_vec[2], quatIMU_vec[3]);
-          //TODO turn the quaternion to express it in the chest frame
-          // m_imuMbase = SE3::Identity();
-          // m_imuMbase.rotation
-          matrixToRpy(quatIMU.toRotationMatrix(), rpy_chest_imu);
+          Eigen::Quaterniond quatIMU(quatIMU_vec[0], quatIMU_vec[1], quatIMU_vec[2], quatIMU_vec[3]);
+          Eigen::Quaterniond quat_chestMimu(m_chestMimu.rotation()); // transform between chest and IMU
+          Eigen::Quaterniond quat_chest_imu(quatIMU*quat_chestMimu); // quatIMU expressed in chest frame
+          matrixToRpy(quat_chest_imu.toRotationMatrix(), rpy_chest_imu);
 
           // average (we do not take into account the IMU yaw)
           double wSum = wL + wR + m_w_imu;
           rpy_chest[0] = wEulerMean(rpy_chest_lf[0],  rpy_chest_rf[0], wL, wR);
+          rpy_chest[0] = wEulerMean(rpy_chest[0],  rpy_chest_imu[0], wL+wR, m_w_imu);
           //rpy_chest[0] = eulerMean(rpy_chest_lf[0],  rpy_chest_rf[0]);
           //eulerMean(rpy_chest[0],  rpy_chest_imu[0], rpy_chest(0))
-          rpy_chest[1] = wEulerMean(rpy_chest_lf[1],  rpy_chest_rf[1], wL, wR);          
+          rpy_chest[1] = wEulerMean(rpy_chest_lf[1],  rpy_chest_rf[1], wL, wR); 
+          rpy_chest[1] = wEulerMean(rpy_chest[1],  rpy_chest_imu[1], wL+wR, m_w_imu);
           //rpy_chest[1] = eulerMean(rpy_chest_lf[1],  rpy_chest_rf[1]);
           //eulerMean(rpy_chest[1],  rpy_chest_imu[1], rpy_chest(1))
           //rpy_chest(0) = (rpy_chest_lf[0]*wL + rpy_chest_rf[0]*wR + rpy_chest_imu[0]*m_w_imu) / wSum;
           //rpy_chest(1) = (rpy_chest_lf[1]*wL + rpy_chest_rf[1]*wR + rpy_chest_imu[1]*m_w_imu) / wSum;
           rpy_chest[2] = wEulerMean(rpy_chest_lf[2],  rpy_chest_rf[2], wL, wR);
+          //rpy_chest[2] = wEulerMean(rpy_chest[2],  rpy_chest_imu[2], wL+wR, m_w_imu);
           //rpy_chest[2] = eulerMean(rpy_chest_lf[2],  rpy_chest_rf[2]);
           //rpy_chest(2) = (rpy_chest_lf[2]*wL + rpy_chest_rf[2]*wR )                 / (wL+wR);
 
@@ -905,8 +920,12 @@ namespace dynamicgraph
         s.tail(m_robot_util->m_nbJoints) = q.tail(m_robot_util->m_nbJoints);
 
         const Eigen::Vector4d & quatIMU_vec = m_imu_quaternionSIN(iter);
-        Eigen::Quaternion<double> quatIMU(quatIMU_vec);
-        base_se3_to_sot(q.head<3>(), quatIMU.toRotationMatrix(), s.head<6>());
+        //Eigen::Quaternion<double> quatIMU(quatIMU_vec);
+        Eigen::Quaterniond quatIMU(quatIMU_vec[0], quatIMU_vec[1], quatIMU_vec[2], quatIMU_vec[3]);
+        Eigen::Quaterniond quat_chestMimu(m_chestMimu.rotation()); 
+        Eigen::Quaterniond quat_chest_imu(quatIMU*quat_chestMimu);
+        base_se3_to_sot(q.head<3>(), quat_chest_imu.toRotationMatrix(), s.head<6>());
+        //matrixToRpy(quat_chest_imu.toRotationMatrix(), rpy_chest_imu);
 
         return s;
       }
@@ -1102,9 +1121,9 @@ namespace dynamicgraph
           const Matrix3 lfRimu = ffMlf.rotation().transpose() * ffRimu;
           const Matrix3 rfRimu = ffMrf.rotation().transpose() * ffRimu;
 
-          const SE3 chestMimu(Matrix3::Identity(), Vector3(-0.13, 0.0,  0.118)); ///TODO Read this transform from setable parameter /// TODO chesk the sign of the translation
+          //const SE3 chestMimu(Matrix3::Identity(), Vector3(-0.13, 0.0,  0.118)); ///TODO Read this transform from setable parameter /// TODO chesk the sign of the translation
           const SE3 ffMchest(m_data->oMf[m_IMU_body_id]);
-          const SE3 imuMff = (ffMchest * chestMimu).inverse();
+          const SE3 imuMff = (ffMchest * m_chestMimu).inverse();
           //gVw_a =  gVo_g + gHa.act(aVb_a)-gVb_g //angular velocity in the ankle from gyro and d_enc
           const Frame & f_imu = m_model.frames[m_IMU_body_id];
           Vector3 gVo_a_l = Vector3(gyr_imu(0),gyr_imu(1),gyr_imu(2)) + (imuMff*ffMlf).act(v_lf_local).angular() - m_data->v[f_imu.parent].angular();
@@ -1159,7 +1178,7 @@ namespace dynamicgraph
           const Motion ffWchest = m_data->v[f_imu.parent];
           //const SE3 ffMchest(m_data->oMf[m_IMU_body_id]);
           //const SE3 chestMimu(Matrix3::Identity(), +1.0*Vector3(-0.13, 0.0,  0.118)); ///TODO Read this transform from setable parameter /// TODO chesk the sign of the translation
-          const SE3 ffMimu = ffMchest * chestMimu;
+          const SE3 ffMimu = ffMchest * m_chestMimu;
           const Motion v= ffMimu.act(imuWimu) ;//- ffWchest;
           m_v_imu.head<6>() = v.toVector();
           m_v_imu.head<3>() = m_oRff * m_v_imu.head<3>();

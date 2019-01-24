@@ -224,7 +224,7 @@ namespace dynamicgraph {
 
         se3::Model        m_model;            /// Pinocchio robot model
         se3::Data         *m_data;            /// Pinocchio robot data
-        //se3::SE3          m_chestMimu         /// chest to imu transformation
+        se3::SE3    m_chestMimu;              /// chest to imu transformation
         se3::SE3          m_oMff_lf;          /// world-to-base transformation obtained through left foot
         se3::SE3          m_oMff_rf;          /// world-to-base transformation obtained through right foot
         SE3               m_oMlfs;            /// transformation from world to left foot sole
@@ -240,9 +240,9 @@ namespace dynamicgraph {
         SE3               m_sole_M_ftSens;    /// foot sole to F/T sensor transformation
 
 	se3::FrameIndex      m_right_foot_id;
-	se3::FrameIndex     m_left_foot_id;
+	se3::FrameIndex      m_left_foot_id;
 	se3::FrameIndex      m_IMU_body_id;
-
+  se3::FrameIndex      m_IMU_frame_id;
         Eigen::VectorXd   m_q_pin;            /// robot configuration according to pinocchio convention
         Eigen::VectorXd   m_q_sot;            /// robot configuration according to SoT convention
         Eigen::VectorXd   m_v_pin;            /// robot velocities according to pinocchio convention

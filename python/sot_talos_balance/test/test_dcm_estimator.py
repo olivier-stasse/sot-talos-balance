@@ -8,6 +8,8 @@ from dynamic_graph                                     import plug
 from dynamic_graph.sot.core                            import SOT
 from time                                              import sleep
 from IPython                                           import embed
+from sot_talos_balance.utils.gazebo_utils              import GazeboLinkStatePublisher
+from dynamic_graph.ros                                 import RosSubscribe
 import os
 import numpy                                           as np
 import matplotlib.pyplot                               as plt
@@ -16,7 +18,10 @@ from dynamic_graph.ros                                 import RosPublish
 def main(robot):
 	dt = robot.timeStep;
 	robot.comTrajGen = create_com_trajectory_generator(dt,robot);
-	
+	pub = GazeboLinkStatePublisher('base_link',1000)
+	print("Starting Gazebo link state publisher...")
+	pub.start()
+	print("Gazebo link state publisher started")
 	# --- COM
 	robot.taskCom = MetaTaskKineCom(robot.dynamic)
 	robot.dynamic.com.recompute(0)
@@ -46,7 +51,12 @@ def main(robot):
 	robot.sot.push(robot.taskCom.task.name)
 	robot.sot.push(robot.contactLF.task.name)
 	robot.device.control.recompute(0)
-	
+
+	# --- ROS SUBSCRIBER
+	robot.subscriber = RosSubscribe("base_subscriber")
+	robot.subscriber.add("vector","position","/sot/base_link/position")
+	robot.subscriber.add("vector","velocity","/sot/base_link/velocity")
+
 	# --- ESTIMATION
 	robot.param_server            = create_parameter_server(param_server_conf,dt)
 	# robot.imu_offset_compensation = create_imu_offset_compensation(robot, dt)
