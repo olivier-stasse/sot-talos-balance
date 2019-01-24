@@ -158,6 +158,8 @@ IF(BUILD_PYTHON_INTERFACE)
                 python/${SOTTALOSBALANCE_PYNAME}/utils/run_test_utils.py
                 python/${SOTTALOSBALANCE_PYNAME}/utils/gazebo_utils.py
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/utils)
+  INSTALL(DIRECTORY python/${SOTTALOSBALANCE_PYNAME}/talos/
+                DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/talos)
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_checkfeedback_gazebo.py
