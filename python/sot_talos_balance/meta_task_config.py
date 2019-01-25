@@ -1,14 +1,12 @@
 from dynamic_graph.sot.core.meta_task_6d import toFlags
 from dynamic_graph import plug
 from dynamic_graph.sot.core import *
-# from dynamic_graph.sot.core.meta_tasks import setGain
-# from dynamic_graph.sot.dyninv import *
 from dynamic_graph.sot.core.matrix_util import matrixToTuple, vectorToTuple,rotate
 from numpy import matrix, identity, zeros, eye
 
 
 class MetaTaskConfig(object):
-    def __init__(self,dyn,config,name="config"):
+    def __init__(self,dyn,config=None,name="config"):
         self.dyn=dyn
         self.name=name
         self.config = config
@@ -21,7 +19,8 @@ class MetaTaskConfig(object):
         robotDim = len(dyn.position.value)
         self.feature.jacobianIN.value = matrixToTuple( identity(robotDim) )
         self.feature.setReference(self.featureDes.name)
-        self.feature.selec.value = toFlags(self.config)
+        if config is not None:
+            self.feature.selec.value = toFlags(self.config)
 
     def plugTask(self):
         self.task.add(self.feature.name)
@@ -37,7 +36,7 @@ class MetaTaskConfig(object):
         self.featureDes.errorIN.value = v
 
 class MetaTaskKineConfig(MetaTaskConfig):
-    def __init__(self,dyn,config,name="config"):
+    def __init__(self,dyn,config=None,name="config"):
         MetaTaskConfig.__init__(self,dyn,config,name)
         self.task = Task('task'+name)
         self.plugTask()

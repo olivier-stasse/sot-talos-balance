@@ -102,6 +102,9 @@ def create_device_filters(robot, dt):
     filters.joints_kin    = create_chebi1_checby2_series_filter("joints_kin", dt, N_JOINTS);
     filters.ft_RF_filter  = create_chebi1_checby2_series_filter("ft_RF_filter", dt, 6);
     filters.ft_LF_filter  = create_chebi1_checby2_series_filter("ft_LF_filter", dt, 6);
+    filters.ft_RH_filter  = create_chebi1_checby2_series_filter("ft_RH_filter", dt, 6);
+    filters.ft_LH_filter  = create_chebi1_checby2_series_filter("ft_LH_filter", dt, 6);
+    filters.torque_filter = create_chebi1_checby2_series_filter("ptorque_filter", dt, N_JOINTS);
     filters.acc_filter    = create_chebi1_checby2_series_filter("acc_filter", dt, 3);
     filters.gyro_filter   = create_chebi1_checby2_series_filter("gyro_filter", dt, 3);
     filters.estimator_kin = create_chebi1_checby2_series_filter("estimator_kin", dt, N_JOINTS);
@@ -109,6 +112,9 @@ def create_device_filters(robot, dt):
     plug(robot.device.joint_angles,                       filters.estimator_kin.x);  # device.state, device.joint_angles or device.motor_angles ?
     plug(robot.device.forceRLEG,                          filters.ft_RF_filter.x);
     plug(robot.device.forceLLEG,                          filters.ft_LF_filter.x);
+    plug(robot.device.forceRARM,                          filters.ft_RH_filter.x);
+    plug(robot.device.forceLARM,                          filters.ft_LH_filter.x);
+    plug(robot.device.ptorque,                            filters.torque_filter.x);
     
     # switch following lines if willing to use imu offset compensation
     #~ plug(robot.imu_offset_compensation.accelerometer_out, filters.acc_filter.x);
