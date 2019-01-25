@@ -16,7 +16,7 @@ class MetaTaskConfig(object):
         self.gain = GainAdaptive('gain'+name)
 
         plug(dyn.position,self.feature.errorIN)
-        robotDim = len(dyn.position.value)
+        robotDim = dyn.getDimension()
         self.feature.jacobianIN.value = matrixToTuple( identity(robotDim) )
         self.feature.setReference(self.featureDes.name)
         if config is not None:
