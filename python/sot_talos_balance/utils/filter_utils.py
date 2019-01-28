@@ -11,4 +11,13 @@ def create_chebi1_checby2_series_filter(name, dt, size):
                   (1.,-5.32595322,11.89749109,-14.26803139, 9.68705647,  -3.52968633,   0.53914042))
    return lp_filter;
 
+def create_butter_lp_filter_Wn_04_N_2(name, dt, size):
+    # (b,a) =  butter(N=2, Wn=0.04)
+    lp_filter = FilterDifferentiator(name)
+
+    lp_filter.init(dt, size,
+                   (0.0036216815,   0.007243363, 0.0036216815),
+                   (          1., -1.8226949252, 0.8371816513))
+
+    return lp_filter
 
