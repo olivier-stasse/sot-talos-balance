@@ -21,3 +21,12 @@ def create_butter_lp_filter_Wn_04_N_2(name, dt, size):
 
     return lp_filter
 
+def create_bessel_lp_filter_Wn_04_N_2(name, dt, size):
+    # (b,a) =  bessel(N=2, Wn=0.04)
+    lp_filter = FilterDifferentiator(name)
+
+    lp_filter.init(dt, size,
+                   (0.0035566088,  0.0071132175, 0.0035566088),
+                   (          1., -1.7899455543, 0.8041719893))
+
+    return lp_filter
