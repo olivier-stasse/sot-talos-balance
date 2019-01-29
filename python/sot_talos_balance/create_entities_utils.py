@@ -25,6 +25,7 @@ from sot_talos_balance.utils.filter_utils                     import create_cheb
 from sot_talos_balance.utils.sot_utils                        import Bunch
 
 from dynamic_graph import plug
+from dynamic_graph.ros import RosPublish
 
 N_JOINTS = 32;
 
@@ -228,12 +229,13 @@ def addSignalsToTracer(tracer, device, outputs):
          addTrace(tracer,device,sign);
     return
     
-def create_tracer(robot,entity,tracer_name, outputs):
+def create_tracer(robot,entity,tracer_name, outputs=None):
     tracer = TracerRealTime(tracer_name)
     tracer.setBufferSize(80*(2**20))
     tracer.open('/tmp','dg_','.dat')
     robot.device.after.addSignal('{0}.triger'.format(tracer.name))
-    addSignalsToTracer(tracer, entity, outputs)
+    if outputs is not None:
+        addSignalsToTracer(tracer, entity, outputs)
     return tracer
 	
 def reset_tracer(device,tracer):
@@ -252,6 +254,19 @@ def dump_tracer(tracer):
     tracer.dump()
     sleep(0.2);
     tracer.close();
+
+def create_rospublish(robot, name):
+    rospub = RosPublish(name)
+    robot.device.after.addSignal(rospub.name+'.trigger')
+    return rospub
+
+def create_topic(rospub, entity, signalName, robot=None, data_type='vector'):
+    rospub_signalName = '{0}-{1}'.format(entity.name, signalName)
+    topicname = '/sot/{0}/{1}'.format(entity.name, signalName)
+    rospub.add(data_type,rospub_signalName,topicname)
+    plug(entity.signal(signalName), rospub.signal(rospub_signalName))
+    if robot is not None:
+        robot.device.after.addSignal( '{0}.{1}'.format(entity.name, signalName) )
 
 def create_dummy_dcm_estimator(robot):
     from math import sqrt
