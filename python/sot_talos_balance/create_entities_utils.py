@@ -261,7 +261,9 @@ def create_rospublish(robot, name):
     return rospub
 
 def create_topic(rospub, entity, signalName, robot=None, data_type='vector'):
-    rospub_signalName = '{0}-{1}'.format(entity.name, signalName)
+    if not entity.hasSignal(signalName): # check needed to prevent creation of broken topic
+        raise AttributeError( 'Entity %s does not have signal %s' % (entity.name, signalName) )
+    rospub_signalName = '{0}_{1}'.format(entity.name, signalName)
     topicname = '/sot/{0}/{1}'.format(entity.name, signalName)
     rospub.add(data_type,rospub_signalName,topicname)
     plug(entity.signal(signalName), rospub.signal(rospub_signalName))
