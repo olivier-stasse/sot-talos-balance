@@ -108,7 +108,6 @@ SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
     src/utils/statistics.cpp
     src/utils/stop-watch.cpp
     src/robot/robot-wrapper.cpp
-    src/robot-utils.cpp
 )
 
 
@@ -183,6 +182,7 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_tracer.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_param_server.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_dcm_estimator.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcm_estimator.py
                   DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/test)
   ENDIF(BUILD_TEST)
 ENDIF(BUILD_PYTHON_INTERFACE)
