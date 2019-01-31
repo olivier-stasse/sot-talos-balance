@@ -25,6 +25,7 @@ from sot_talos_balance.utils.filter_utils                     import create_cheb
 from sot_talos_balance.utils.sot_utils                        import Bunch
 
 from dynamic_graph import plug
+from dynamic_graph.ros import RosPublish
 
 N_JOINTS = 32;
 
@@ -102,6 +103,9 @@ def create_device_filters(robot, dt):
     filters.joints_kin    = create_chebi1_checby2_series_filter("joints_kin", dt, N_JOINTS);
     filters.ft_RF_filter  = create_chebi1_checby2_series_filter("ft_RF_filter", dt, 6);
     filters.ft_LF_filter  = create_chebi1_checby2_series_filter("ft_LF_filter", dt, 6);
+    filters.ft_RH_filter  = create_chebi1_checby2_series_filter("ft_RH_filter", dt, 6);
+    filters.ft_LH_filter  = create_chebi1_checby2_series_filter("ft_LH_filter", dt, 6);
+    filters.torque_filter = create_chebi1_checby2_series_filter("ptorque_filter", dt, N_JOINTS);
     filters.acc_filter    = create_chebi1_checby2_series_filter("acc_filter", dt, 3);
     filters.gyro_filter   = create_chebi1_checby2_series_filter("gyro_filter", dt, 3);
     filters.estimator_kin = create_chebi1_checby2_series_filter("estimator_kin", dt, N_JOINTS);
@@ -109,6 +113,9 @@ def create_device_filters(robot, dt):
     plug(robot.device.joint_angles,                       filters.estimator_kin.x);  # device.state, device.joint_angles or device.motor_angles ?
     plug(robot.device.forceRLEG,                          filters.ft_RF_filter.x);
     plug(robot.device.forceLLEG,                          filters.ft_LF_filter.x);
+    plug(robot.device.forceRARM,                          filters.ft_RH_filter.x);
+    plug(robot.device.forceLARM,                          filters.ft_LH_filter.x);
+    plug(robot.device.ptorque,                            filters.torque_filter.x);
     
     # switch following lines if willing to use imu offset compensation
     #~ plug(robot.imu_offset_compensation.accelerometer_out, filters.acc_filter.x);
@@ -222,12 +229,13 @@ def addSignalsToTracer(tracer, device, outputs):
          addTrace(tracer,device,sign);
     return
     
-def create_tracer(robot,entity,tracer_name, outputs):
+def create_tracer(robot,entity,tracer_name, outputs=None):
     tracer = TracerRealTime(tracer_name)
     tracer.setBufferSize(80*(2**20))
     tracer.open('/tmp','dg_','.dat')
     robot.device.after.addSignal('{0}.triger'.format(tracer.name))
-    addSignalsToTracer(tracer, entity, outputs)
+    if outputs is not None:
+        addSignalsToTracer(tracer, entity, outputs)
     return tracer
 	
 def reset_tracer(device,tracer):
@@ -246,6 +254,21 @@ def dump_tracer(tracer):
     tracer.dump()
     sleep(0.2);
     tracer.close();
+
+def create_rospublish(robot, name):
+    rospub = RosPublish(name)
+    robot.device.after.addSignal(rospub.name+'.trigger')
+    return rospub
+
+def create_topic(rospub, entity, signalName, robot=None, data_type='vector'):
+    if not entity.hasSignal(signalName): # check needed to prevent creation of broken topic
+        raise AttributeError( 'Entity %s does not have signal %s' % (entity.name, signalName) )
+    rospub_signalName = '{0}_{1}'.format(entity.name, signalName)
+    topicname = '/sot/{0}/{1}'.format(entity.name, signalName)
+    rospub.add(data_type,rospub_signalName,topicname)
+    plug(entity.signal(signalName), rospub.signal(rospub_signalName))
+    if robot is not None:
+        robot.device.after.addSignal( '{0}.{1}'.format(entity.name, signalName) )
 
 def create_dummy_dcm_estimator(robot):
     from math import sqrt

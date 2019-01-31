@@ -161,6 +161,10 @@ IF(BUILD_PYTHON_INTERFACE)
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/talos)
   IF(BUILD_TEST)
     INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_feedback_gazebo.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_COMTraj_feedback_gazebo.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_sensorfeedback.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_COMTraj_sensorfeedback.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_checkfeedback_gazebo.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/appli_COMTraj_checkfeedback_gazebo.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_ffSubscriber.py
