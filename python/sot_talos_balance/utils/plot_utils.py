@@ -1,7 +1,8 @@
 import numpy                                    as np
 import matplotlib.pyplot                        as plt
 from dynamic_graph                              import writeGraph
-from sot_talos_balance.create_entities_utils    import create_tracer, dump_tracer
+from sot_talos_balance.create_entities_utils    import addTrace, create_tracer, dump_tracer
+from dynamic_graph.tracer_real_time             import TracerRealTime
 from time                                       import sleep
 from IPython                                    import embed
 import os
@@ -35,6 +36,24 @@ def dump_sot_sig(robot,entity,signal_name,duration):
     sleep(duration)	
     dump_tracer(robot.tmp_tracer)
     robot.tmp_tracer.clear()
+
+def dump_sot_sigs(robot,list_of_sigs,duration):
+    '''dumps several sot signals in /tmp
+    ex: dump_sot_sig(robot,[entity,signals],1.)'''
+    tracer = TracerRealTime('tmp_tracer')
+    tracer.setBufferSize(80*(2**20))
+    tracer.open('/tmp','dg_','.dat')
+    robot.device.after.addSignal('{0}.triger'.format(tracer.name))
+    for sigs in list_of_sigs:
+            entity = sigs[0]
+            for sig in sigs[1:]:
+                full_sig_name = entity.name +'.'+sig
+                addTrace(tracer,entity,sig)
+                robot.device.after.addSignal(full_sig_name)
+    tracer.start()
+    sleep(duration)	
+    dump_tracer(tracer)
+    tracer.clear()
 
 def plot_sot_sig(filename,idxs):
     '''plots a dumped signal'''
