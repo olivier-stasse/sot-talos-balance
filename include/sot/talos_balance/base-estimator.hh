@@ -48,7 +48,7 @@
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
-#include <sot/talos_balance/robot-utils.hh>
+#include <sot/core/robot-utils.hh>
 
 namespace dynamicgraph {
   namespace sot {
