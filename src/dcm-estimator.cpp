@@ -33,8 +33,8 @@ namespace dynamicgraph
 #define PROFILE_BASE_VELOCITY_ESTIMATION      "base-est velocity estimation"
 #define PROFILE_BASE_KINEMATICS_COMPUTATION   "base-est kinematics computation"
 
-#define INPUT_SIGNALS     m_qSIN  << m_vSIN
-#define OUTPUT_SIGNALS    m_cSOUT << m_dcSOUT
+#define INPUT_SIGNALS     qSIN  << vSIN
+#define OUTPUT_SIGNALS    cSOUT << dcSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -49,8 +49,8 @@ namespace dynamicgraph
         : Entity(name)
         ,CONSTRUCT_SIGNAL_IN( q,   dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_IN( v,   dynamicgraph::Vector)        
-        ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, m_qSIN)
-        ,CONSTRUCT_SIGNAL_OUT(dc,  dynamicgraph::Vector, m_qSIN << m_vSIN)
+        ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, qSIN)
+        ,CONSTRUCT_SIGNAL_OUT(dc,  dynamicgraph::Vector, qSIN << vSIN)
         ,m_data(se3::Model())
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -108,7 +108,7 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal com before initialization!");
           return s;
         }
-        const Vector & q = m_qSIN(iter);
+        const Vector & q = qSIN(iter);
         se3::centerOfMass(m_model,m_data,q);
         s = m_data.com[0];
         return s;
@@ -121,8 +121,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcom before initialization!");
           return s;
         }
-        const Vector & q = m_qSIN(iter);
-        const Vector & v = m_vSIN(iter);
+        const Vector & q = qSIN(iter);
+        const Vector & v = vSIN(iter);
         se3::centerOfMass(m_model,m_data,q,v);
         s = m_data.vcom[0];
         return s;
