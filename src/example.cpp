@@ -38,9 +38,9 @@ namespace dynamicgraph
 #define PROFILE_EXAMPLE_SUM_COMPUTATION      "Example: sum computation                               "
 #define PROFILE_EXAMPLE_NBJOINTS_COMPUTATION "Example: nbJoints extraction                           "
 
-#define INPUT_SIGNALS     m_firstAddendSIN << m_secondAddendSIN
+#define INPUT_SIGNALS     firstAddendSIN << secondAddendSIN
 
-#define OUTPUT_SIGNALS m_sumSOUT << m_nbJointsSOUT
+#define OUTPUT_SIGNALS sumSOUT << nbJointsSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -69,9 +69,9 @@ namespace dynamicgraph
 
       void Example::init(const std::string& robotName)
       {
-        if(!m_firstAddendSIN.isPlugged())
+        if(!firstAddendSIN.isPlugged())
           return SEND_MSG("Init failed: signal firstAddend is not plugged", MSG_TYPE_ERROR);
-        if(!m_secondAddendSIN.isPlugged())
+        if(!secondAddendSIN.isPlugged())
           return SEND_MSG("Init failed: signal secondAddend is not plugged", MSG_TYPE_ERROR);
 
         /*std::string & robotName_nonconst = const_cast<std::string &>(robotName);*/
@@ -86,7 +86,15 @@ namespace dynamicgraph
           m_robot_util = getRobotUtil(robotName_nonconst);
           std::cerr << "m_robot_util:" << m_robot_util << std::endl;
         }
-
+        for (unsigned int i = 0; i<4; i++)
+        {
+          std::cout << "Verbosity Level :" << i << std::endl;
+          Example::setLoggerVerbosityLevel((dynamicgraph::LoggerVerbosity) i);
+          Example::sendMsg("TEST MSG ERROR",dynamicgraph::MSG_TYPE_ERROR);
+          Example::sendMsg("TEST MSG DEBUG",dynamicgraph::MSG_TYPE_DEBUG);
+          Example::sendMsg("TEST MSG INFO",dynamicgraph::MSG_TYPE_INFO);
+          Example::sendMsg("TEST MSG WARNING",dynamicgraph::MSG_TYPE_WARNING);
+        }
         m_initSucceeded = true;
       }
 
@@ -104,8 +112,8 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_EXAMPLE_SUM_COMPUTATION);
 
-        double firstAddend  = m_firstAddendSIN(iter);
-        double secondAddend = m_secondAddendSIN(iter);
+        double firstAddend  = firstAddendSIN(iter);
+        double secondAddend = secondAddendSIN(iter);
 
         s = firstAddend + secondAddend;
 
