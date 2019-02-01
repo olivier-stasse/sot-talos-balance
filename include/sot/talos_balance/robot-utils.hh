@@ -258,12 +258,12 @@ namespace dynamicgraph {
         JointLimits cp_get_joint_limits_from_id(Index id);
 	
 	
-	void sendMsg(const std::string& msg, 
-		     MsgType t=MSG_TYPE_INFO, 
-		     const char* file="", int line=0)
-	{
-          getLogger().sendMsg("[FromURDFToSoT] "+msg, t, file, line);
-	}
+	// void sendMsg(const std::string& msg, 
+	// 	     MsgType t=MSG_TYPE_INFO, 
+	// 	     const char* file="", int line=0)
+	// {
+  //         getLogger().sendMsg("[FromURDFToSoT] "+msg, t, file, line);
+	// }
 
 	void display(std::ostream &os) const;
 
