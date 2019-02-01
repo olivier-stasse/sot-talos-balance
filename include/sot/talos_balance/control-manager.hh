@@ -39,7 +39,7 @@
 #include <sot/talos_balance/utils/signal-helper.hh>
 #include <sot/talos_balance/utils/vector-conversions.hh>
 #include <sot/talos_balance/utils/logger.hh>
-#include <sot/talos_balance/robot-utils.hh>
+#include <sot/core/robot-utils.hh>
 #include <map>
 #include "boost/assign.hpp"
 

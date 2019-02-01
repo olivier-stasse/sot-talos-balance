@@ -45,9 +45,9 @@ namespace dynamicgraph
 #define PROFILE_PWM_DESIRED_COMPUTATION       "Control manager                                        "
 #define PROFILE_DYNAMIC_GRAPH_PERIOD          "Control period                                         "
 
-#define INPUT_SIGNALS  m_i_maxSIN << m_u_maxSIN << m_tau_maxSIN << \
-                       m_tauSIN << m_tau_predictedSIN << m_i_measuredSIN
-#define OUTPUT_SIGNALS m_uSOUT << m_u_safeSOUT
+#define INPUT_SIGNALS  i_maxSIN << u_maxSIN << tau_maxSIN << \
+                       tauSIN << tau_predictedSIN << i_measuredSIN
+#define OUTPUT_SIGNALS uSOUT << u_safeSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -69,9 +69,9 @@ namespace dynamicgraph
         ,CONSTRUCT_SIGNAL_IN(i_max,           dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_IN(u_max,           dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_IN(tau_max,         dynamicgraph::Vector)
-        ,CONSTRUCT_SIGNAL_OUT(u,              dynamicgraph::Vector, m_i_measuredSIN)
+        ,CONSTRUCT_SIGNAL_OUT(u,              dynamicgraph::Vector, i_measuredSIN)
         ,CONSTRUCT_SIGNAL_OUT(u_safe,         dynamicgraph::Vector, INPUT_SIGNALS <<
-                                                                    m_uSOUT)
+                                                                    uSOUT)
         ,m_robot_util(RefVoidRobotUtil())
         ,m_initSucceeded(false)
         ,m_emergency_stop_triggered(false)
@@ -305,13 +305,13 @@ namespace dynamicgraph
           return s;
         }
 
-        const dynamicgraph::Vector& u                      = m_uSOUT(iter);
-        const dynamicgraph::Vector& tau_max                = m_tau_maxSIN(iter);
-        const dynamicgraph::Vector& ctrl_max               = m_u_maxSIN(iter);
-        const dynamicgraph::Vector& i_max                  = m_i_maxSIN(iter);
-        const dynamicgraph::Vector& tau                    = m_tauSIN(iter);
-        const dynamicgraph::Vector& i_real                 = m_i_measuredSIN(iter);
-        const dynamicgraph::Vector& tau_predicted          = m_tau_predictedSIN(iter);
+        const dynamicgraph::Vector& u                      = uSOUT(iter);
+        const dynamicgraph::Vector& tau_max                = tau_maxSIN(iter);
+        const dynamicgraph::Vector& ctrl_max               = u_maxSIN(iter);
+        const dynamicgraph::Vector& i_max                  = i_maxSIN(iter);
+        const dynamicgraph::Vector& tau                    = tauSIN(iter);
+        const dynamicgraph::Vector& i_real                 = i_measuredSIN(iter);
+        const dynamicgraph::Vector& tau_predicted          = tau_predictedSIN(iter);
 
         for(int i=0;i<m_emergencyStopSIN.size();i++)
         {
@@ -389,7 +389,7 @@ namespace dynamicgraph
 
         // register the new signals and add the new signal dependecy
 	Eigen::VectorXd::Index i = m_ctrlModes.size()-1;
-        m_uSOUT.addDependency(*m_ctrlInputsSIN[i]);
+        uSOUT.addDependency(*m_ctrlInputsSIN[i]);
         Entity::signalRegistration(*m_ctrlInputsSIN[i]);
         Entity::signalRegistration(*m_jointsCtrlModesSOUT[i]);
         updateJointCtrlModesOutputSignal();
@@ -501,7 +501,7 @@ namespace dynamicgraph
 
         // register the new signals and add the new signal dependecy
         unsigned int i = m_emergencyStopSIN.size()-1;
-        m_u_safeSOUT.addDependency(*m_emergencyStopSIN[i]);
+        u_safeSOUT.addDependency(*m_emergencyStopSIN[i]);
         Entity::signalRegistration(*m_emergencyStopSIN[i]);
       }
 
