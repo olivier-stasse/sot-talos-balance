@@ -37,9 +37,14 @@
 /* --------------------------------------------------------------------- */
 
 #include <sot/talos_balance/utils/signal-helper.hh>
-#include <sot/talos_balance/utils/vector-conversions.hh>
+// #include <dynamic-graph/signal-helper.h>
+
+//#include <sot/talos_balance/utils/vector-conversions.hh>
+#include <sot/core/matrix-geometry.hh>
 #include <sot/talos_balance/utils/logger.hh>
-#include <sot/talos_balance/robot-utils.hh>
+// #include <dynamic-graph/logger.h>
+//#include <sot/core/robot-utils.hh>
+#include <sot/core/robot-utils.hh>
 #include <map>
 #include "boost/assign.hpp"
 
@@ -110,6 +115,7 @@ namespace dynamicgraph {
         {
           getLogger().sendMsg("[ParameterServer-"+name+"] "+msg, t, file, line);
         }
+
 
       protected:
         RobotUtil *                   m_robot_util;
