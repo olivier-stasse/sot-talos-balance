@@ -56,16 +56,16 @@ def main(robot, conf=None):
     robot.example                 = create_example() 
     
     # --- RUN SIMULATION
-    plug(robot.comTrajGen.x,    robot.taskCom.featureDes.errorIN);
-    sleep(1.0);
-    os.system("rosservice call \start_dynamic_graph")
-    sleep(2.0);
-    robot.comTrajGen.move(1,-0.025,4.0);
-    sleep(5.0);
-    robot.comTrajGen.startSinusoid(1,0.05,8.0);
-    sleep(1.0)
-    robot.example.nbJoints.recompute(1)
-    # outputs the number of joints of the robot thanks to a pointer to the RobotUtil created in parameter server
-    print(robot.example.nbJoints.value)
+    # plug(robot.comTrajGen.x,    robot.taskCom.featureDes.errorIN);
+    # sleep(1.0);
+    # os.system("rosservice call \start_dynamic_graph")
+    # sleep(2.0);
+    # robot.comTrajGen.move(1,-0.025,4.0);
+    # sleep(5.0);
+    # robot.comTrajGen.startSinusoid(1,0.05,8.0);
+    # sleep(1.0)
+    # robot.example.nbJoints.recompute(1)
+    # # outputs the number of joints of the robot thanks to a pointer to the RobotUtil created in parameter server
+    # print(robot.example.nbJoints.value)
 
     
