@@ -18,10 +18,8 @@ raw_input("Wait before plugging the SOT")
 
 # set initial conditions from sensor readings
 runCommandClient('robot.rdynamic.com.recompute(0)')
-runCommandClient('robot.statemix.sout.recompute(0)')
 runCommandClient('robot.taskCom.featureDes.errorIN.value = robot.rdynamic.com.value')
-runCommandClient('robot.device.set(robot.statemix.sout.value)')
-runCommandClient('robot.taskPos.featureDes.errorIN.value = robot.device.state.value')
+runCommandClient('robot.device.set(robot.subscriber.position.value+robot.device.state.value[6:])')
 runCommandClient('robot.contactLF.keep()')
 runCommandClient('robot.contactRF.keep()')
 

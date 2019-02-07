@@ -29,13 +29,13 @@ def quat2list(v):
 
 class GazeboLinkStatePublisher(threading.Thread):
     '''Utility class reading the state of a given link from Gazebo and publishing on a topic.'''
-    def __init__(self, link_name, rate, rpy=True, prefix='/sot'):
+    def __init__(self, link_name, rate, euler='rzyx', prefix='/sot'):
         super(GazeboLinkStatePublisher, self).__init__(name = link_name+"_publisher")
         self.daemon = True
         self.link_name = link_name
         self.rate = rate
         self.prefix = prefix
-        self.rpy = rpy
+        self.euler = euler
         self._stop = False
         rospy.init_node(self.name, anonymous=True)
 
@@ -62,13 +62,11 @@ class GazeboLinkStatePublisher(threading.Thread):
 
             cartesian = vec2list(link_state.pose.position)
             orientation = quat2list(link_state.pose.orientation)
-            if self.rpy:
-                orientation = list(euler_from_quaternion(orientation,'rzyx'))
+            if self.euler:
+                orientation = list(euler_from_quaternion(orientation,self.euler))
             position = cartesian + orientation
-            msg_pos = VectorMsg(position)
 
             velocity = vec2list(link_state.twist.linear) + vec2list(link_state.twist.angular)
-            msg_vel = VectorMsg(velocity)
 
             pub_pos.publish(position)
             pub_vel.publish(velocity)
