@@ -29,7 +29,7 @@ def quat2list(v):
 
 class GazeboLinkStatePublisher(threading.Thread):
     '''Utility class reading the state of a given link from Gazebo and publishing on a topic.'''
-    def __init__(self, link_name, rate, euler='rzyx', prefix='/sot'):
+    def __init__(self, link_name, rate, euler='sxyz', prefix='/sot'):
         super(GazeboLinkStatePublisher, self).__init__(name = link_name+"_publisher")
         self.daemon = True
         self.link_name = link_name
