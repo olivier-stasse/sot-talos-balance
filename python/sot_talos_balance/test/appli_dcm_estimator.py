@@ -46,13 +46,6 @@ robot.sot.push(robot.taskCom.task.name)
 robot.sot.push(robot.contactLF.task.name)
 robot.device.control.recompute(0)
 
-# --- ROS SUBSCRIBER
-robot.subscriber = RosSubscribe("base_subscriber")
-robot.subscriber.add("vector","position","/sot/base_link/position")
-robot.subscriber.add("vector","velocity","/sot/base_link/velocity")
-robot.device.after.addSignal('{0}.position'.format(robot.subscriber.name)) # force recalculation
-robot.device.after.addSignal('{0}.velocity'.format(robot.subscriber.name)) # force recalculation
-
 # --- ESTIMATION
 robot.param_server            = create_parameter_server(param_server_conf,dt)
 # robot.imu_offset_compensation = create_imu_offset_compensation(robot, dt)
@@ -61,4 +54,30 @@ robot.imu_filters             = create_imu_filters(robot, dt)
 robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf) 
 robot.be_filters              = create_be_filters(robot, dt)
 robot.dcm_estimator           = create_dcm_estimator(robot, dt)
+
+
+# --- ROS PUBLISHER
+robot.publisher = create_rospublish(robot, 'robot_publisher')
+create_topic(robot.publisher, robot.base_estimator, 'q', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.base_estimator, 'q_imu', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.device_filters.gyro_filter, 'x', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.device_filters.gyro_filter, 'x_filtered', robot = robot, data_type='vector')
+
+
+# --- ROS SUBSCRIBER
+robot.subscriber = RosSubscribe("base_subscriber")
+# robot.subscriber.add("vector","position","/sot/base_link/position")
+# robot.subscriber.add("vector","velocity","/sot/base_link/velocity")
+robot.subscriber.add("vector","position","/sot/torso_2_link/position")
+robot.subscriber.add("vector","q_est","/sot/base_estimator/q")
+robot.subscriber.add("vector","q_imu","/sot/base_estimator/q_imu")
+robot.subscriber.add("vector","gyro","/sot/gyro_filter/x")
+robot.subscriber.add("vector","gyro_f","/sot/gyro_filter/x_filtered")
+
+robot.device.after.addSignal('{0}.position'.format(robot.subscriber.name)) # force recalculation
+robot.device.after.addSignal('{0}.velocity'.format(robot.subscriber.name)) # force recalculation
+# robot.device.after.addSignal('{0}.q_est'.format(robot.subscriber.name))        # force recalculation
+# robot.device.after.addSignal('{0}.q_imu'.format(robot.subscriber.name))        # force recalculation
+# robot.device.after.addSignal('{0}.gyro'.format(robot.subscriber.name))        # force recalculation
+# robot.device.after.addSignal('{0}.gyro_f'.format(robot.subscriber.name))        # force recalculation
 
