@@ -408,9 +408,8 @@ def create_zmp_estimator(robot):
     estimator = SimpleZmpEstimator("zmpEst")
     plug(robot.dynamic.LF,estimator.poseLeft)
     plug(robot.dynamic.RF,estimator.poseRight)
-    # force sensors are not mapped correctly
-    plug(robot.device.forceRLEG,estimator.wrenchLeft)
-    plug(robot.device.forceRARM,estimator.wrenchRight)
+    plug(robot.device.forceLLEG,estimator.wrenchLeft)
+    plug(robot.device.forceRLEG,estimator.wrenchRight)
 
     estimator.init()
     return estimator
