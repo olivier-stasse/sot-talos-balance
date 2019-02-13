@@ -11,7 +11,17 @@ from std_srvs.srv import *
 from dynamic_graph_bridge.srv import *
 from dynamic_graph_bridge_msgs.srv import *
 
-runCommandClient = rospy.ServiceProxy('run_command', RunCommand)
+_runCommandClient = rospy.ServiceProxy('run_command', RunCommand)
+
+def runCommandClient(code):
+    out = _runCommandClient(code)
+    if out.standardoutput or out.standarderror:
+        print("command: " + code)
+        if out.standardoutput:
+            print("standardoutput: " + out.standardoutput)
+        if out.standarderror:
+            print("standarderror: "  + out.standarderror)
+    return out
 
 def evalCommandClient(code):
     return eval(runCommandClient(code).result)
@@ -22,10 +32,8 @@ def launch_script(code,title,description = ""):
     rospy.loginfo(code)
     for line in code:
         if line != '' and line[0] != '#':
-            print(line)
             answer = runCommandClient(str(line))
             rospy.logdebug(answer)
-            print(answer)
     rospy.loginfo("...done with "+title)
 
 def run_test(appli):
