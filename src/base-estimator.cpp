@@ -701,7 +701,7 @@ namespace dynamicgraph
           kinematics_estimation(ftlf, m_K_lf, m_oMlfs, m_left_foot_id,  m_oMff_lf, oMlfa, lfsMff);
 
           // get rpy
-          const SE3 ffMchest(m_data->oMf[m_IMU_body_id]);  // transform between freeflyer and body attached to IMU sensor
+          const SE3 ffMchest(m_data->oMi[m_IMU_body_id]);  // transform between freeflyer and body attached to IMU sensor
           const SE3 chestMff(ffMchest.inverse());          // transform between body attached to IMU sensor and freeflyer
 
           Vector3 rpy_chest, rpy_chest_lf, rpy_chest_rf, rpy_chest_imu; // orientation of the body which imu is attached to. (fusion, from left kine, from right kine, from imu)
@@ -710,7 +710,8 @@ namespace dynamicgraph
           matrixToRpy((m_oMff_rf*ffMchest).rotation(), rpy_chest_rf);
           Eigen::Quaterniond quatIMU(quatIMU_vec[0], quatIMU_vec[1], quatIMU_vec[2], quatIMU_vec[3]);
           Eigen::Quaterniond quat_chestMimu(m_chestMimu.rotation()); // transform between chest and IMU
-          Eigen::Quaterniond quat_chest_imu(quatIMU*quat_chestMimu); // quatIMU expressed in chest frame
+          Eigen::Quaterniond quat_chest_imu(quat_chestMimu*quatIMU); // quatIMU expressed in chest frame
+          //Eigen::Quaterniond quat_chest_imu(quatIMU); // quatIMU expressed in chest frame
           matrixToRpy(quat_chest_imu.toRotationMatrix(), rpy_chest_imu);
 
           // average (we do not take into account the IMU yaw)
@@ -924,6 +925,7 @@ namespace dynamicgraph
         Eigen::Quaterniond quatIMU(quatIMU_vec[0], quatIMU_vec[1], quatIMU_vec[2], quatIMU_vec[3]);
         Eigen::Quaterniond quat_chestMimu(m_chestMimu.rotation()); 
         Eigen::Quaterniond quat_chest_imu(quatIMU*quat_chestMimu);
+
         base_se3_to_sot(q.head<3>(), quat_chest_imu.toRotationMatrix(), s.head<6>());
         //matrixToRpy(quat_chest_imu.toRotationMatrix(), rpy_chest_imu);
 
