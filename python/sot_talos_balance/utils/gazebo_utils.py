@@ -38,7 +38,6 @@ class GazeboLinkStatePublisher(threading.Thread):
         self.rpy = rpy
         self._stop = False
         rospy.init_node(self.name, anonymous=True)
-
     def stop(self):
         self._stop = True
 
