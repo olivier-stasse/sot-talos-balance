@@ -7,7 +7,7 @@ import numpy                                as np
 from IPython import embed
 
 # pub_base = GazeboLinkStatePublisher('base_link',1000)
-pub_torso = GazeboLinkStatePublisher('torso_2_link',1000,True)
+pub_torso = GazeboLinkStatePublisher('torso_2_link',1000,local_frame = True)
 
 print("Starting Gazebo link state publisher...")
 # pub_base.start()
