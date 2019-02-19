@@ -273,8 +273,8 @@ def create_topic(rospub, entity, signalName, robot=None, data_type='vector'):
 def create_dummy_dcm_estimator(robot):
     from math import sqrt
     estimator = DummyDcmEstimator("dummy")
-    mass = robot.dynamic.data.mass[0]
     robot.dynamic.com.recompute(0)
+    mass = robot.dynamic.data.mass[0]
     h = robot.dynamic.com.value[2]
     g = 9.81
     omega = sqrt(g/h)
@@ -302,8 +302,8 @@ def create_com_admittance_controller(Kp,dt,robot):
 def create_dcm_controller(Kp,Ki,dt,robot,dcmSignal):
     from math import sqrt
     controller = DcmController("dcmCtrl")
-    mass = robot.dynamic.data.mass[0]
     robot.dynamic.com.recompute(0)
+    mass = robot.dynamic.data.mass[0]
     h = robot.dynamic.com.value[2]
     g = 9.81
     omega = sqrt(g/h)
@@ -327,8 +327,8 @@ def create_dcm_controller(Kp,Ki,dt,robot,dcmSignal):
 def create_dcm_com_controller(Kp,Ki,dt,robot,dcmSignal):
     from math import sqrt
     controller = DcmComController("dcmComCtrl")
-    mass = robot.dynamic.data.mass[0]
     robot.dynamic.com.recompute(0)
+    mass = robot.dynamic.data.mass[0]
     h = robot.dynamic.com.value[2]
     g = 9.81
     omega = sqrt(g/h)
