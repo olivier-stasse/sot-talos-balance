@@ -29,10 +29,14 @@ def quat2list(v):
 
 class GazeboLinkStatePublisher(threading.Thread):
     '''Utility class reading the state of a given link from Gazebo and publishing on a topic.'''
-    def __init__(self, link_name, rate, euler='sxyz', prefix='/sot'):
+    def __init__(self, link_name, rate, euler='sxyz', local_frame = False, prefix='/sot'):
         super(GazeboLinkStatePublisher, self).__init__(name = link_name+"_publisher")
         self.daemon = True
         self.link_name = link_name
+        if local_frame:
+            self.reference_frame = link_name
+        else:
+            self.reference_frame = ''
         self.rate = rate
         self.prefix = prefix
         self.euler = euler
@@ -56,7 +60,7 @@ class GazeboLinkStatePublisher(threading.Thread):
 
         rate = rospy.Rate(self.rate)
         while ( not self.stopped() ) and ( not rospy.is_shutdown() ):
-            link_state_msg = get_link_state(link_name = self.link_name)
+            link_state_msg = get_link_state(link_name = self.link_name, reference_frame = self.reference_frame)
             link_state = link_state_msg.link_state
 
             cartesian = vec2list(link_state.pose.position)
@@ -65,8 +69,7 @@ class GazeboLinkStatePublisher(threading.Thread):
                 orientation = list(euler_from_quaternion(orientation,self.euler))
             position = cartesian + orientation
 
-            velocity = vec2list(link_state.twist.linear) + vec2list(link_state.twist.angular)
-
+            velocity     = vec2list(link_state.twist.linear) + vec2list(link_state.twist.angular)
             pub_pos.publish(position)
             pub_vel.publish(velocity)
 
