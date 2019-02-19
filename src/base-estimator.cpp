@@ -340,9 +340,9 @@ namespace dynamicgraph
           m_left_foot_id       = m_model.getFrameId(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name);
           m_right_foot_id      = m_model.getFrameId(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name);
           m_IMU_frame_id       = m_model.getFrameId(m_robot_util->m_imu_joint_name);
-          m_IMU_body_id        = m_model.frames[m_IMU_frame_id].parent;
-          m_chestMimu          = m_model.frames[m_IMU_frame_id].placement;
-          std::cerr << "chestMimu" << m_chestMimu << std::endl; 
+          m_torso_id           = m_model.frames[m_IMU_frame_id].parent;
+          m_torsoMimu          = m_model.frames[m_IMU_frame_id].placement;
+          std::cerr << "IMU in Torso" << m_torsoMimu << std::endl; 
 
           m_q_pin.setZero(m_model.nq);
           m_q_pin[6]= 1.; // for quaternion
@@ -701,7 +701,7 @@ namespace dynamicgraph
           kinematics_estimation(ftlf, m_K_lf, m_oMlfs, m_left_foot_id,  m_oMff_lf, oMlfa, lfsMff);
 
           // get rpy
-          const SE3 ffMchest(m_data->oMi[m_IMU_body_id]);  // transform between freeflyer and body attached to IMU sensor
+          const SE3 ffMchest(m_data->oMi[m_torso_id]);  // transform between freeflyer and body attached to IMU sensor
           const SE3 chestMff(ffMchest.inverse());          // transform between body attached to IMU sensor and freeflyer
 
           Vector3 rpy_chest, rpy_chest_lf, rpy_chest_rf, rpy_chest_imu; // orientation of the body which imu is attached to. (fusion, from left kine, from right kine, from imu)
@@ -709,8 +709,8 @@ namespace dynamicgraph
           matrixToRpy((m_oMff_lf*ffMchest).rotation(), rpy_chest_lf);
           matrixToRpy((m_oMff_rf*ffMchest).rotation(), rpy_chest_rf);
           Eigen::Quaterniond quatIMU(quatIMU_vec[0], quatIMU_vec[1], quatIMU_vec[2], quatIMU_vec[3]);
-          Eigen::Quaterniond quat_chestMimu(m_chestMimu.rotation()); // transform between chest and IMU
-          Eigen::Quaterniond quat_chest_imu(quat_chestMimu*quatIMU); // quatIMU expressed in chest frame
+          Eigen::Quaterniond quat_chestMimu(m_torsoMimu.rotation()); // transform between chest and IMU
+          Eigen::Quaterniond quat_chest_imu(quatIMU*quat_chestMimu); // quatIMU expressed in chest frame
           //Eigen::Quaterniond quat_chest_imu(quatIMU); // quatIMU expressed in chest frame
           matrixToRpy(quat_chest_imu.toRotationMatrix(), rpy_chest_imu);
 
@@ -923,10 +923,10 @@ namespace dynamicgraph
         const Eigen::Vector4d & quatIMU_vec = imu_quaternionSIN(iter);
         //Eigen::Quaternion<double> quatIMU(quatIMU_vec);
         Eigen::Quaterniond quatIMU(quatIMU_vec[0], quatIMU_vec[1], quatIMU_vec[2], quatIMU_vec[3]);
-        Eigen::Quaterniond quat_chestMimu(m_chestMimu.rotation()); 
-        Eigen::Quaterniond quat_chest_imu(quatIMU*quat_chestMimu);
+        Eigen::Quaterniond quat_torsoMimu(m_torsoMimu.rotation()); 
+        Eigen::Quaterniond quat_torso_imu(quatIMU*quat_torsoMimu);
 
-        base_se3_to_sot(q.head<3>(), quat_chest_imu.toRotationMatrix(), s.head<6>());
+        base_se3_to_sot(q.head<3>(), quat_torso_imu.toRotationMatrix(), s.head<6>());
         //matrixToRpy(quat_chest_imu.toRotationMatrix(), rpy_chest_imu);
 
         return s;
@@ -1116,18 +1116,18 @@ namespace dynamicgraph
 
           /* Get an estimate of linear velocities from gyroscope only*/
           // we make the asumtion than we are 'turning around the foot' with pure angular velocity in the ankle measured by the gyro
-          const Matrix3 ffRimu = (m_data->oMf[m_IMU_body_id]).rotation();
-          //std::cerr << m_data->oMf[m_IMU_body_id] << std::endl; 
-          //std::cerr << m_data->liMi[m_IMU_body_id] << std::endl;
-          //std::cerr << "m_IMU_body_id" << m_IMU_body_id << std::endl;
+          const Matrix3 ffRimu = (m_data->oMf[m_torso_id]).rotation();
+          //std::cerr << m_data->oMf[m_torso_id] << std::endl; 
+          //std::cerr << m_data->liMi[m_torso_id] << std::endl;
+          //std::cerr << "m_torso_id" << m_torso_id << std::endl;
           const Matrix3 lfRimu = ffMlf.rotation().transpose() * ffRimu;
           const Matrix3 rfRimu = ffMrf.rotation().transpose() * ffRimu;
 
           //const SE3 chestMimu(Matrix3::Identity(), Vector3(-0.13, 0.0,  0.118)); ///TODO Read this transform from setable parameter /// TODO chesk the sign of the translation
-          const SE3 ffMchest(m_data->oMf[m_IMU_body_id]);
-          const SE3 imuMff = (ffMchest * m_chestMimu).inverse();
+          const SE3 ffMchest(m_data->oMf[m_torso_id]);
+          const SE3 imuMff = (ffMchest * m_torsoMimu).inverse();
           //gVw_a =  gVo_g + gHa.act(aVb_a)-gVb_g //angular velocity in the ankle from gyro and d_enc
-          const Frame & f_imu = m_model.frames[m_IMU_body_id];
+          const Frame & f_imu = m_model.frames[m_torso_id];
           Vector3 gVo_a_l = Vector3(gyr_imu(0),gyr_imu(1),gyr_imu(2)) + (imuMff*ffMlf).act(v_lf_local).angular() - m_data->v[f_imu.parent].angular();
           Vector3 gVo_a_r = Vector3(gyr_imu(0),gyr_imu(1),gyr_imu(2)) + (imuMff*ffMrf).act(v_rf_local).angular() - m_data->v[f_imu.parent].angular();
           Motion v_gyr_ankle_l( Vector3(0.,0.,0.),  lfRimu * gVo_a_l);
@@ -1176,11 +1176,11 @@ namespace dynamicgraph
           const Vector3 imuVimu = m_oRchest.transpose() * ACvel;
           /* Here we could remove dc from gyrometer to remove bias*/  ///TODO
           const Motion imuWimu(imuVimu,gyr_imu);
-          //const Frame & f_imu = m_model.frames[m_IMU_body_id];
+          //const Frame & f_imu = m_model.frames[m_torso_id];
           const Motion ffWchest = m_data->v[f_imu.parent];
-          //const SE3 ffMchest(m_data->oMf[m_IMU_body_id]);
+          //const SE3 ffMchest(m_data->oMf[m_torso_id]);
           //const SE3 chestMimu(Matrix3::Identity(), +1.0*Vector3(-0.13, 0.0,  0.118)); ///TODO Read this transform from setable parameter /// TODO chesk the sign of the translation
-          const SE3 ffMimu = ffMchest * m_chestMimu;
+          const SE3 ffMimu = ffMchest * m_torsoMimu;
           const Motion v= ffMimu.act(imuWimu) ;//- ffWchest;
           m_v_imu.head<6>() = v.toVector();
           m_v_imu.head<3>() = m_oRff * m_v_imu.head<3>();
