@@ -1,10 +1,8 @@
-'''Test CoM admittance control as described in paper.'''
 from sot_talos_balance.create_entities_utils import create_com_admittance_controller, create_dummy_dcm_estimator, create_dcm_controller
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
-from time import sleep
 
 from dynamic_graph.tracer_real_time import TracerRealTime
 from sot_talos_balance.create_entities_utils import addTrace, dump_tracer
@@ -16,12 +14,12 @@ robot.estimator = create_dummy_dcm_estimator(robot)
 
 # --- DCM controller
 Kp_dcm = [500.0,500.0,500.0]
-Ki_dcm = [0.0,0.0,0.0]
-robot.dcm_control = create_dcm_controller(Kp_dcm,Ki_dcm,dt,robot,robot.estimator.dcm)
+Ki_dcm = [1.0,1.0,0.0] # to be set later
+robot.dcm_control = create_dcm_controller(Kp_dcm,[0.0]*3,dt,robot,robot.estimator.dcm)
 
 # --- Admittance controller
-Kp_adm = [0.0,0.0,0.0]
-robot.com_admittance_control = create_com_admittance_controller(Kp_adm,dt,robot)
+Kp_adm = [20.0,10.0,0.0] # to be set later
+robot.com_admittance_control = create_com_admittance_controller([0.0]*3,dt,robot)
 
 # --- CONTACTS
 #define contactLF and contactRF

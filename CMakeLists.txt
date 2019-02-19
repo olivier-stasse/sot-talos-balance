@@ -181,6 +181,7 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmComControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmComZmpControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmZmpControl.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcmZmpControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_comAdmittance.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_single_joint.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/appli_admittance_single_joint.py
