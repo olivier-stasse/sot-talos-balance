@@ -7,9 +7,9 @@ import numpy as np
 run_test('appli_zmpEstimator.py')
 
 sleep(2.0)
-runCommandClient('robot.comTrajGen.move(1,-0.025,4.0)')
+runCommandClient('robot.comTrajGen.move(1,-0.025,1.0)')
 sleep(20.0)
-runCommandClient('robot.comTrajGen.startSinusoid(1,0.05,8.0)')
+runCommandClient('robot.comTrajGen.startSinusoid(1,0.05,2.0)')
 sleep(20.0)
 
 runCommandClient('dump_tracer(robot.tracer)')

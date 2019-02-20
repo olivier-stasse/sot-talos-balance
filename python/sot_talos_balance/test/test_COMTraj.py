@@ -4,7 +4,7 @@ from time import sleep
 run_test('appli_COMTraj.py')
 
 sleep(2.0)
-runCommandClient('robot.comTrajGen.move(1,-0.025,4.0)')
+runCommandClient('robot.comTrajGen.move(1,-0.025,1.0)')
 sleep(5.0)
-runCommandClient('robot.comTrajGen.startSinusoid(1,0.05,8.0)')
+runCommandClient('robot.comTrajGen.startSinusoid(1,0.05,2.0)')
 

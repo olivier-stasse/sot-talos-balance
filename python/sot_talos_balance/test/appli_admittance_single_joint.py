@@ -21,7 +21,7 @@ robot.taskJoint.featureDes.errorIN.value = [0.0]
 robot.taskJoint.task.controlGain.value = 100
 
 # --- Admittance controller
-Kp = [0.1]
+Kp = [0.5]
 robot.admittance_control = create_joint_admittance_controller(JOINT,Kp,dt,robot)
 plug(robot.admittance_control.qRef,robot.taskJoint.featureDes.errorIN)
 
