@@ -7,7 +7,7 @@ import numpy                                as np
 from IPython import embed
 
 # pub_base = GazeboLinkStatePublisher('base_link',1000)
-pub_torso = GazeboLinkStatePublisher('torso_2_link',1000,local_frame = True)
+pub_torso = GazeboLinkStatePublisher('torso_2_link',1000,local_frame = False)
 
 print("Starting Gazebo link state publisher...")
 # pub_base.start()
@@ -36,4 +36,4 @@ print("Stopping Gazebo link state publisher...")
 pub_torso.stop()
 sleep(0.1)
 print("Gazebo link state publisher stopped")
-
+write_pdf_graph('/tmp/')

@@ -13,6 +13,8 @@ import os
 import numpy                                           as np
 from dynamic_graph.ros                                 import RosPublish
 
+
+robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep;
 robot.comTrajGen = create_com_trajectory_generator(dt,robot);
 # --- COM
@@ -62,6 +64,9 @@ create_topic(robot.publisher, robot.base_estimator, 'q', robot = robot, data_typ
 create_topic(robot.publisher, robot.base_estimator, 'q_imu', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.device_filters.gyro_filter, 'x_filtered', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.device_filters.acc_filter, 'x_filtered', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.dcm_estimator, 'c', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.dcm_estimator, 'dc', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.base_estimator, 'v', robot = robot, data_type='vector')
 
 
 # --- ROS SUBSCRIBER
@@ -73,8 +78,15 @@ robot.subscriber.add("vector","q_est","/sot/base_estimator/q")
 robot.subscriber.add("vector","q_imu","/sot/base_estimator/q_imu")
 robot.subscriber.add("vector","gyro_f","/sot/gyro_filter/x_filtered")
 robot.subscriber.add("vector","acc_f","/sot/acc_filter/x_filtered")
+robot.subscriber.add("vector","com","/sot/dcm_estimator/c")
+robot.subscriber.add("vector","vcom","/sot/dcm_estimator/dc")
+robot.subscriber.add("vector","v_torso","/sot/base_estimator/v")
 
 robot.device.after.addSignal('{0}.position'.format(robot.subscriber.name)) # force recalculation
+robot.device.after.addSignal('{0}.com'.format(robot.subscriber.name)) # force recalculation
+robot.device.after.addSignal('{0}.vcom'.format(robot.subscriber.name)) # force recalculation
+robot.device.after.addSignal('{0}.v_torso'.format(robot.subscriber.name)) # force recalculation
+
 # robot.device.after.addSignal('{0}.velocity'.format(robot.subscriber.name)) # force recalculation
 # robot.device.after.addSignal('{0}.q_est'.format(robot.subscriber.name))        # force recalculation
 # robot.device.after.addSignal('{0}.q_imu'.format(robot.subscriber.name))        # force recalculation
