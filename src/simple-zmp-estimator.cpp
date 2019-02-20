@@ -53,7 +53,7 @@ namespace dynamicgraph
       /* ------------------------------------------------------------------- */
       /* --- CONSTRUCTION -------------------------------------------------- */
       /* ------------------------------------------------------------------- */
-      SimpleZmpEstimator::SimpleZmpEstimator(const std::string& name)
+      SimpleZmpEstimator::SimpleZmpEstimator(const std::string & name, const double & eps)
                       : Entity(name)
                       , CONSTRUCT_SIGNAL_IN(wrenchLeft, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(wrenchRight, dynamicgraph::Vector)
@@ -68,6 +68,7 @@ namespace dynamicgraph
 
         /* Commands. */
         addCommand("init", makeCommandVoid0(*this, &SimpleZmpEstimator::init, docCommandVoid0("Initialize the entity.")));
+        m_eps = eps;
       }
 
       void SimpleZmpEstimator::init()
@@ -88,7 +89,8 @@ namespace dynamicgraph
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      dynamicgraph::Vector computeCoP(const dg::Vector & wrench, const MatrixHomogeneous & pose)
+      dynamicgraph::Vector
+      SimpleZmpEstimator::computeCoP(const dg::Vector & wrench, const MatrixHomogeneous & pose) const
       {
           const double h = pose(2,3);
 
@@ -98,8 +100,8 @@ namespace dynamicgraph
           const double tx = wrench[3];
           const double ty = wrench[4];
 
-          const double px = (- ty - fx*h)/fz;
-          const double py = (  tx - fy*h)/fz;
+          const double px = fz > m_eps ? (- ty - fx*h)/fz : 0.0;
+          const double py = fz > m_eps ? (  tx - fy*h)/fz : 0.0;
           const double pz = - h;
 
           dg::Vector copLocal(3);
@@ -178,7 +180,15 @@ namespace dynamicgraph
         const double fzLeft = wrenchLeft[2];
         const double fzRight = wrenchRight[2];
 
-        s = ( copLeft*fzLeft + copRight*fzRight ) / ( fzLeft + fzRight );
+        if(fzLeft > m_eps  || fzRight > m_eps)
+        {
+          s = ( copLeft*fzLeft + copRight*fzRight ) / ( fzLeft + fzRight );
+        }
+        else
+        {
+          SEND_WARNING_STREAM_MSG("Foot forces on the z-axis are both zero!");
+          s.setZero(3);
+        }
 
         getProfiler().stop(PROFILE_SIMPLEZMPESTIMATOR_ZMP_COMPUTATION);
 

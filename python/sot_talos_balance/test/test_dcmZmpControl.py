@@ -1,3 +1,4 @@
+'''Test CoM admittance control as described in paper.'''
 from sot_talos_balance.utils.run_test_utils import run_test, runCommandClient, evalCommandClient
 from time import sleep
 
@@ -10,12 +11,13 @@ run_test('appli_dcmZmpControl.py')
 
 sleep(5.0)
 
-# connect ZMP control signal and reset controllers
+# Connect ZMP reference and reset controllers
+print('Connect ZMP reference')
 runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
 runCommandClient('robot.com_admittance_control.setState(robot.dynamic.com.value,[0.0,0.0,0.0])')
-runCommandClient('robot.com_admittance_control.Kp.value = [20.0,10.0,0.0]')
+runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
 runCommandClient('robot.dcm_control.resetDcmIntegralError()')
-runCommandClient('robot.dcm_control.Ki.value = [1.0,1.0,0.0]')
+runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
 
 sleep(5.0)
 
@@ -28,7 +30,7 @@ sleep(5.0)
 runCommandClient('dump_tracer(robot.tracer)')
 
 # --- DISPLAY
-dcm_data    = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.estimator.name')+ '-dcm.dat')
+dcm_data    = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.estimator.name') + '-dcm.dat')
 zmp_data    = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dynamic.name') + '-zmp.dat')
 zmpDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-zmpRef.dat')
 com_data    = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dynamic.name') + '-com.dat')
