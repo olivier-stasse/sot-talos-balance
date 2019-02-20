@@ -13,7 +13,7 @@ N_CONFIG = N_JOINTS + 6
 
 def main(robot):
     robot.timeStep = robot.device.getTimeStep()
-dt = robot.timeStep;
+    dt = robot.timeStep;
     robot.traj_gen = create_config_trajectory_generator(dt)
 
     JOINT = 31

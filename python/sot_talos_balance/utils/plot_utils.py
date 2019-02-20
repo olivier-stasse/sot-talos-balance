@@ -33,7 +33,7 @@ def dump_sot_sig(robot,entity,signal_name,duration):
     robot.tmp_tracer  = create_tracer(robot,entity,'tmp_tracer', [signal_name])
     robot.device.after.addSignal(full_sig_name)
     robot.tmp_tracer.start()
-    sleep(duration)	
+    sleep(duration)
     dump_tracer(robot.tmp_tracer)
     robot.tmp_tracer.clear()
 
@@ -51,7 +51,7 @@ def dump_sot_sigs(robot,list_of_sigs,duration):
                 addTrace(tracer,entity,sig)
                 robot.device.after.addSignal(full_sig_name)
     tracer.start()
-    sleep(duration)	
+    sleep(duration)
     dump_tracer(tracer)
     tracer.clear()
 

@@ -11,7 +11,7 @@ def main(robot,gain):
     N_JOINTS = 32
     Kp = N_JOINTS*[gain]
     robot.timeStep = robot.device.getTimeStep()
-dt = robot.timeStep;
+    dt = robot.timeStep;
 
     robot.traj_gen   = create_joint_trajectory_generator(dt)
     robot.device.control.value = N_JOINTS*[0.0]

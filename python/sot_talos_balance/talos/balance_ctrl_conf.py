@@ -45,8 +45,8 @@ LEFT_FOOT_CONTACT_POINTS  = np.matrix([[LEFT_FOOT_SIZES[0], LEFT_FOOT_SIZES[3], 
                                      [LEFT_FOOT_SIZES[1], LEFT_FOOT_SIZES[2], -0.105]]).T    # contact points in local reference frame
 FOOT_CONTACT_NORMAL = (0.0, 0.0, 1.0);
 mu  = np.array([0.3, 0.1]);          # force and moment friction coefficient
-fMin = 1.0;              		    # minimum normal force
-fMax = 1e3;					    # maximum normal force
+fMin = 1.0;                          # minimum normal force
+fMax = 1e3;                          # maximum normal force
 
 RF_FORCE_DES = (0, 0, 300, 0, 0, 0.);
 LF_FORCE_DES = (0, 0, 300, 0, 0, 0.);

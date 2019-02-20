@@ -15,7 +15,7 @@ import numpy as np
 
 def main(robot):
     robot.timeStep = robot.device.getTimeStep()
-dt = robot.timeStep;
+    dt = robot.timeStep;
 
     # --- COM
     robot.taskCom = MetaTaskKineCom(robot.dynamic)
@@ -79,7 +79,7 @@ dt = robot.timeStep;
 
     dump_tracer(robot.tracer)
 
-	  # --- DISPLAY
+    # --- DISPLAY
     zmp_data = np.loadtxt('/tmp/dg_'+robot.dynamic.name+'-zmp.dat')
     zmpDes_data = np.loadtxt('/tmp/dg_'+robot.estimator.name+'-dcm.dat')
 

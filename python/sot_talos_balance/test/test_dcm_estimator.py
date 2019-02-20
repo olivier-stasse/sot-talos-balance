@@ -23,7 +23,7 @@ sleep(5.0)
 runCommandClient('robot.comTrajGen.startSinusoid(1,0.05,8.0)')
 sleep(5.0)
 runCommandClient("write_pdf_graph('/tmp/')")
-	
+
 # # --- DUMP SIGNALS
 # runCommandClient("dump_sot_sigs(robot,[[robot.base_estimator,'q','q_imu'],[robot.subscriber,'position','velocity']],5.)")
 # sleep(6.)

@@ -237,7 +237,7 @@ def create_tracer(robot,entity,tracer_name, outputs=None):
     if outputs is not None:
         addSignalsToTracer(tracer, entity, outputs)
     return tracer
-	
+
 def reset_tracer(device,tracer):
     tracer.stop();
     sleep(0.2);
