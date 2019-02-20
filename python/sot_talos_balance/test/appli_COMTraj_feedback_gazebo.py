@@ -8,6 +8,7 @@ from dynamic_graph.sot.core.operator import Mix_of_vector, Selec_of_vector
 from dynamic_graph.ros import RosSubscribe
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 
+robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep;
 
 # --- COM trajectory generator

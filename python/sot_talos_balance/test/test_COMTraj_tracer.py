@@ -10,7 +10,8 @@ from IPython                                  import embed
 import os
 
 def main(robot):
-	dt = robot.timeStep;
+	robot.timeStep = robot.device.getTimeStep()
+dt = robot.timeStep;
 	robot.comTrajGen = create_com_trajectory_generator(dt,robot);
 
 	# --- COM

@@ -7,7 +7,8 @@ from dynamic_graph.sot.core import SOT
 N_JOINTS = 32
 N_CONFIG = N_JOINTS + 6
 
-dt = robot.timeStep
+robot.timeStep = robot.device.getTimeStep()
+dt = robot.timeStep;
 
 JOINT = 25
 QJOINT = JOINT + 6

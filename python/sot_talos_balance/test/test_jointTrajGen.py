@@ -6,7 +6,8 @@ from time import sleep
 import os
 
 def main(robot):
-    dt = robot.timeStep;
+    robot.timeStep = robot.device.getTimeStep()
+dt = robot.timeStep;
 
     robot.traj_gen = create_joint_trajectory_generator(dt);
     robot.device.control.value = 32*[0.0];

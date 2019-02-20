@@ -7,6 +7,7 @@ from dynamic_graph.sot.core import SOT
 from dynamic_graph.tracer_real_time import TracerRealTime
 from sot_talos_balance.create_entities_utils import addTrace, dump_tracer
 
+robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep;
 
 # --- Dummy estimator

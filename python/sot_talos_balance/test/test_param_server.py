@@ -17,7 +17,8 @@ def get_default_conf():
 def main(robot, conf=None):
     if(conf is None):
         conf = get_default_conf();
-    dt = robot.timeStep;
+    robot.timeStep = robot.device.getTimeStep()
+dt = robot.timeStep;
     NJ = robot.dimension-7    
     robot.comTrajGen = create_com_trajectory_generator(dt,robot);
     

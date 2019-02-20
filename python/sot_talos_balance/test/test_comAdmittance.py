@@ -14,7 +14,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def main(robot):
-    dt = robot.timeStep;
+    robot.timeStep = robot.device.getTimeStep()
+dt = robot.timeStep;
 
     # --- COM
     robot.taskCom = MetaTaskKineCom(robot.dynamic)

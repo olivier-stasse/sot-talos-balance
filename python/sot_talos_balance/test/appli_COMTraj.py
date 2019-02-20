@@ -3,6 +3,7 @@ from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineC
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 
+robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep;
 robot.comTrajGen = create_com_trajectory_generator(dt,robot);
 

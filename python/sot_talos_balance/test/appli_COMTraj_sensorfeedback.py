@@ -8,6 +8,7 @@ from dynamic_graph.sot.core import SOT
 
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 
+robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep;
 
 # --- COM trajectory generator
