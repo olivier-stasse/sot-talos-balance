@@ -138,9 +138,10 @@ namespace dynamicgraph
 
         Vector dcmError = dcmDes - dcm;
 
-        m_dcmIntegralError += ( dcmError - decayFactor*m_dcmIntegralError ) * m_dt;
-
         Vector ddcomRef = ddcomDes + omega * Kp.cwiseProduct(dcmError) + omega * Ki.cwiseProduct(m_dcmIntegralError);
+
+        // update the integrator (AFTER using its value)
+        m_dcmIntegralError += ( dcmError - decayFactor*m_dcmIntegralError ) * m_dt;
 
         s = ddcomRef;
 
@@ -167,6 +168,7 @@ namespace dynamicgraph
         assert(comDes.size()==3 && "Unexpected size of signal comDes");
 
         Vector zmpRef = comDes - ddcomRef/(omega*omega);
+        zmpRef[2] = 0.0; // maybe needs better way
 
         s = zmpRef;
 

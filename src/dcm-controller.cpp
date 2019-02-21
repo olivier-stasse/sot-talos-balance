@@ -138,6 +138,7 @@ namespace dynamicgraph
         Vector dcmError = dcmDes - dcm;
 
         Vector zmpRef = zmpDes - (Vector::Constant(3,1,1.0) + Kp/omega).cwiseProduct(dcmError) - Ki.cwiseProduct(m_dcmIntegralError)/omega;
+        zmpRef[2] = 0.0; // maybe needs better way
 
         // update the integrator (AFTER using its value)
         m_dcmIntegralError += ( dcmError - decayFactor*m_dcmIntegralError ) * m_dt;
