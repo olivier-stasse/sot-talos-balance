@@ -1,11 +1,10 @@
-from sot_talos_balance.create_entities_utils import create_com_admittance_controller, create_dummy_dcm_estimator, create_dcm_controller
+from sot_talos_balance.create_entities_utils import *
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 
 from dynamic_graph.tracer_real_time import TracerRealTime
-from sot_talos_balance.create_entities_utils import addTrace, dump_tracer
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep;
@@ -67,6 +66,14 @@ addTrace(robot.tracer, robot.dcm_control, 'zmpRef')
 addTrace(robot.tracer, robot.estimator, 'dcm')
 addTrace(robot.tracer, robot.dynamic, 'com')
 addTrace(robot.tracer, robot.com_admittance_control, 'comRef')
+
+# --- ROS PUBLISHER
+robot.publisher = create_rospublish(robot, 'robot_publisher')
+create_topic(robot.publisher, robot.dynamic, 'zmp', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.estimator, 'dcm', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.com_admittance_control, 'comRef', robot = robot, data_type='vector')
 
 # SIMULATION
 
