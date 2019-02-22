@@ -56,6 +56,8 @@ robot.device.after.addSignal('{0}.zmp'.format(robot.dynamic.name))
 addTrace(robot.tracer, robot.zmp_estimator, 'zmp')
 addTrace(robot.tracer, robot.dynamic, 'com')
 addTrace(robot.tracer, robot.dynamic, 'zmp')
+addTrace(robot.tracer, robot.device, 'forceLLEG')
+addTrace(robot.tracer, robot.device, 'forceRLEG')
 
 robot.tracer.start()
 
