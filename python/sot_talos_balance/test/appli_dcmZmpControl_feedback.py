@@ -16,12 +16,12 @@ robot.device_filters = create_device_filters(robot,dt)
 robot.estimator = create_dummy_dcm_estimator(robot)
 
 # --- DCM controller
-Kp_dcm = [0.0,0.0,0.0]
+Kp_dcm = [5.0,5.0,5.0]
 Ki_dcm = [0.0,0.0,0.0] # to be set later
 robot.dcm_control = create_dcm_controller(Kp_dcm,[0.0]*3,dt,robot,robot.estimator.dcm)
 
 # --- Admittance controller
-Kp_adm = [0.0,0.0,0.0] # to be set later
+Kp_adm = [0.01,0.01,0.0] # to be set later
 robot.com_admittance_control = create_com_admittance_controller([0.0]*3,dt,robot)
 
 # --- CONTACTS
@@ -48,7 +48,7 @@ robot.taskCom.task.setWithDerivative(True)
 
 # -- estimator
 # -- this NEEDS to be called AFTER the operational points LF and RF are created
-robot.zmp_estimator = create_zmp_estimator(robot,False)
+robot.zmp_estimator = create_zmp_estimator(robot,True)
 plug(robot.zmp_estimator.zmp,robot.com_admittance_control.zmp)
 
 robot.sot = SOT('sot')
