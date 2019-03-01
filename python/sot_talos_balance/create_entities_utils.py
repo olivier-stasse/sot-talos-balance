@@ -23,7 +23,7 @@ from sot_talos_balance.dcm_com_controller import DcmComController
 from sot_talos_balance.simple_zmp_estimator import SimpleZmpEstimator
 
 # python
-from sot_talos_balance.utils.filter_utils                     import create_chebi1_checby2_series_filter
+from sot_talos_balance.utils.filter_utils                     import *
 from sot_talos_balance.utils.sot_utils                        import Bunch
 
 from dynamic_graph import plug
@@ -74,7 +74,6 @@ def create_joint_controller(Kp):
     controller.Kp.value = Kp
     return controller
 
-
 def create_end_effector_admittance_controller(Kp, timeStep, robot):
     controller = AdmittanceControllerEndEffector("admittanceController")
     controller.Kp.value = Kp
@@ -87,8 +86,7 @@ def create_end_effector_admittance_controller(Kp, timeStep, robot):
     controller.init(timeStep, "wrist_left_ft_link")
     return controller
 
-
-def create_joint_admittance_controller(joint,Kp,dt,robot):
+def create_joint_admittance_controller(joint,Kp,dt,robot,filter=False):
     controller = AdmittanceController("jadmctrl")
     controller.Kp.value = Kp
 
@@ -99,7 +97,10 @@ def create_joint_admittance_controller(joint,Kp,dt,robot):
 
     robot.tauselec = Selec_of_vector("tau_selec")
     robot.tauselec.selec(joint,joint+1)
-    plug(robot.device.ptorque,robot.tauselec.sin)
+    if filter and hasattr(robot,'device_filters'):
+        plug(robot.device_filters.torque_filter.x_filtered,robot.tauselec.sin)
+    else:
+        plug(robot.device.ptorque,robot.tauselec.sin)
     plug(robot.tauselec.sout,controller.tau)
 
     controller.tauDes.value = [0.0]

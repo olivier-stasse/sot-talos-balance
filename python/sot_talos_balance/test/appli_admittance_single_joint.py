@@ -1,4 +1,4 @@
-from sot_talos_balance.create_entities_utils import create_joint_admittance_controller
+from sot_talos_balance.create_entities_utils import *
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from sot_talos_balance.meta_task_joint import MetaTaskKineJoint
 from dynamic_graph import plug
@@ -20,6 +20,9 @@ target = -10.0
 robot.taskJoint = MetaTaskKineJoint(robot.dynamic,QJOINT)
 robot.taskJoint.featureDes.errorIN.value = [0.0]
 robot.taskJoint.task.controlGain.value = 100
+
+# --- filter
+robot.device_filters = create_device_filters(robot,dt)
 
 # --- Admittance controller
 Kp = [0.5]
@@ -47,4 +50,9 @@ plug(robot.sot.control,robot.device.control)
 robot.sot.push(robot.contactRF.task.name)
 robot.sot.push(robot.contactLF.task.name)
 robot.device.control.recompute(0)
+
+# --- ROS PUBLISHER
+robot.publisher = create_rospublish(robot, 'robot_publisher')
+create_topic(robot.publisher, robot.device_filters.torque_filter, 'x_filtered', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'ptorque', robot = robot, data_type='vector')
 
