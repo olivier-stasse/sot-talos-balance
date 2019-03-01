@@ -420,12 +420,16 @@ def create_dcm_estimator(robot, dt, robot_name='robot'):
     plug(robot.base_estimator.v, dcm_estimator.v)
     return dcm_estimator
 
-def create_zmp_estimator(robot):
+def create_zmp_estimator(robot,filter=False):
     estimator = SimpleZmpEstimator("zmpEst")
     plug(robot.dynamic.LF,estimator.poseLeft)
     plug(robot.dynamic.RF,estimator.poseRight)
-    plug(robot.device.forceLLEG,estimator.wrenchLeft)
-    plug(robot.device.forceRLEG,estimator.wrenchRight)
+    if filter and hasattr(robot,'device_filters'):
+        plug(robot.device_filters.ft_LF_filter.x_filtered,estimator.wrenchLeft)
+        plug(robot.device_filters.ft_RF_filter.x_filtered,estimator.wrenchRight)
+    else:
+        plug(robot.device.forceLLEG,estimator.wrenchLeft)
+        plug(robot.device.forceRLEG,estimator.wrenchRight)
 
     estimator.init()
     return estimator

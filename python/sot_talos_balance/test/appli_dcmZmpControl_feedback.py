@@ -9,6 +9,9 @@ from dynamic_graph.tracer_real_time import TracerRealTime
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep;
 
+# --- filters
+robot.device_filters = create_device_filters(robot,dt)
+
 # --- Dummy estimator
 robot.estimator = create_dummy_dcm_estimator(robot)
 
@@ -45,7 +48,7 @@ robot.taskCom.task.setWithDerivative(True)
 
 # -- estimator
 # -- this NEEDS to be called AFTER the operational points LF and RF are created
-robot.zmp_estimator = create_zmp_estimator(robot)
+robot.zmp_estimator = create_zmp_estimator(robot,False)
 plug(robot.zmp_estimator.zmp,robot.com_admittance_control.zmp)
 
 robot.sot = SOT('sot')
