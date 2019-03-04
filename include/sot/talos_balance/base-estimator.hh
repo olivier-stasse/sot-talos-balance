@@ -79,7 +79,7 @@ namespace dynamicgraph {
 
       /** Avoids singularity while taking the mean of euler angles**/
       double eulerMean(double a1, double a2);
-      
+
       /** Avoids singularity while taking the mean of euler angles**/
       double wEulerMean(double a1, double a2, double w1, double w2);
 
@@ -96,7 +96,7 @@ namespace dynamicgraph {
         typedef Eigen::Matrix3d Matrix3;
         typedef boost::math::normal normal;
 
-        DYNAMIC_GRAPH_ENTITY_DECL();
+      DYNAMIC_GRAPH_ENTITY_DECL();
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -150,26 +150,26 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(accelerometer,              dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(gyroscope,                  dynamicgraph::Vector);
 
-        DECLARE_SIGNAL_INNER(kinematics_computations, dynamicgraph::Vector);
+      DECLARE_SIGNAL_INNER(kinematics_computations, dynamicgraph::Vector);
 
-        DECLARE_SIGNAL_OUT(q,                         dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
-        DECLARE_SIGNAL_OUT(v,                         dynamicgraph::Vector);  /// n+6 robot velocities
-        DECLARE_SIGNAL_OUT(v_kin,                     dynamicgraph::Vector);  /// 6d robot velocities from kinematic only   (encoders derivative)
-        DECLARE_SIGNAL_OUT(v_flex,                    dynamicgraph::Vector);  /// 6d robot velocities from flexibility only (force sensor derivative)
-        DECLARE_SIGNAL_OUT(v_imu,                     dynamicgraph::Vector);  /// 6d robot velocities form imu only (accelerometer integration + gyro)
-        DECLARE_SIGNAL_OUT(v_gyr,                     dynamicgraph::Vector);  /// 6d robot velocities form gyroscope only (as if gyro measured the pure angular ankle velocities)
-        DECLARE_SIGNAL_OUT(lf_xyzquat,                dynamicgraph::Vector);  /// left foot pose
-        DECLARE_SIGNAL_OUT(rf_xyzquat,                dynamicgraph::Vector);  /// right foot pose
-        DECLARE_SIGNAL_OUT(a_ac,                      dynamicgraph::Vector);  /// acceleration of the base in the world with DC component removed
-        DECLARE_SIGNAL_OUT(v_ac,                      dynamicgraph::Vector);  /// velocity of the base in the world with DC component removed
+      DECLARE_SIGNAL_OUT(q,                         dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
+      DECLARE_SIGNAL_OUT(v,                         dynamicgraph::Vector);  /// n+6 robot velocities
+      DECLARE_SIGNAL_OUT(v_kin,                     dynamicgraph::Vector);  /// 6d robot velocities from kinematic only   (encoders derivative)
+      DECLARE_SIGNAL_OUT(v_flex,                    dynamicgraph::Vector);  /// 6d robot velocities from flexibility only (force sensor derivative)
+      DECLARE_SIGNAL_OUT(v_imu,                     dynamicgraph::Vector);  /// 6d robot velocities form imu only (accelerometer integration + gyro)
+      DECLARE_SIGNAL_OUT(v_gyr,                     dynamicgraph::Vector);  /// 6d robot velocities form gyroscope only (as if gyro measured the pure angular ankle velocities)
+      DECLARE_SIGNAL_OUT(lf_xyzquat,                dynamicgraph::Vector);  /// left foot pose
+      DECLARE_SIGNAL_OUT(rf_xyzquat,                dynamicgraph::Vector);  /// right foot pose
+      DECLARE_SIGNAL_OUT(a_ac,                      dynamicgraph::Vector);  /// acceleration of the base in the world with DC component removed
+      DECLARE_SIGNAL_OUT(v_ac,                      dynamicgraph::Vector);  /// velocity of the base in the world with DC component removed
 
-        DECLARE_SIGNAL_OUT(q_lf,                       dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
-        DECLARE_SIGNAL_OUT(q_rf,                       dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
-        DECLARE_SIGNAL_OUT(q_imu,                      dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
-        DECLARE_SIGNAL_OUT(w_lf,                       double);  /// weight of the estimation coming from the left foot
-        DECLARE_SIGNAL_OUT(w_rf,                       double);  /// weight of the estimation coming from the right foot
-        DECLARE_SIGNAL_OUT(w_lf_filtered,              double);  /// filtered weight of the estimation coming from the left foot
-        DECLARE_SIGNAL_OUT(w_rf_filtered,              double);  /// filtered weight of the estimation coming from the right foot
+      DECLARE_SIGNAL_OUT(q_lf,                       dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
+      DECLARE_SIGNAL_OUT(q_rf,                       dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
+      DECLARE_SIGNAL_OUT(q_imu,                      dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
+      DECLARE_SIGNAL_OUT(w_lf,                       double);  /// weight of the estimation coming from the left foot
+      DECLARE_SIGNAL_OUT(w_rf,                       double);  /// weight of the estimation coming from the right foot
+      DECLARE_SIGNAL_OUT(w_lf_filtered,              double);  /// filtered weight of the estimation coming from the left foot
+      DECLARE_SIGNAL_OUT(w_rf_filtered,              double);  /// filtered weight of the estimation coming from the right foot
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -239,10 +239,10 @@ namespace dynamicgraph {
 
         SE3               m_sole_M_ftSens;    /// foot sole to F/T sensor transformation
 
-	se3::FrameIndex      m_right_foot_id;
-	se3::FrameIndex      m_left_foot_id;
-	se3::FrameIndex      m_torso_id;
-  se3::FrameIndex      m_IMU_frame_id;
+        se3::FrameIndex      m_right_foot_id;
+        se3::FrameIndex      m_left_foot_id;
+        se3::FrameIndex      m_torso_id;
+        se3::FrameIndex      m_IMU_frame_id;
         Eigen::VectorXd   m_q_pin;            /// robot configuration according to pinocchio convention
         Eigen::VectorXd   m_q_sot;            /// robot configuration according to SoT convention
         Eigen::VectorXd   m_v_pin;            /// robot velocities according to pinocchio convention

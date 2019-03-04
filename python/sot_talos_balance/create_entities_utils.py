@@ -11,9 +11,11 @@ from sot_talos_balance.dcm_estimator                          import DcmEstimato
 
 from dynamic_graph.sot.core.operator import Mix_of_vector
 from dynamic_graph.sot.core.operator import Selec_of_vector
+from dynamic_graph.sot.core.operator import MatrixHomoToPoseQuaternion
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.joint_position_controller import JointPositionController
 from sot_talos_balance.admittance_controller import AdmittanceController
+from sot_talos_balance.admittance_controller_end_effector import AdmittanceControllerEndEffector
 from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
 from sot_talos_balance.com_admittance_controller import ComAdmittanceController
 from sot_talos_balance.dcm_controller import DcmController
@@ -46,31 +48,45 @@ def create_extend_mix(n_in,n_out):
     return mix_of_vector
 
 def create_joint_trajectory_generator(dt):
-    jtg = NdTrajectoryGenerator("jtg");
-    jtg.initial_value.value = tuple(N_JOINTS*[0.0]);
-    jtg.trigger.value = 1.0;
-    jtg.init(dt, N_JOINTS);
-    return jtg;
+    jtg = NdTrajectoryGenerator("jtg")
+    jtg.initial_value.value = tuple(N_JOINTS*[0.0])
+    jtg.trigger.value = 1.0
+    jtg.init(dt, N_JOINTS)
+    return jtg
 
 def create_config_trajectory_generator(dt):
     N_CONFIG = N_JOINTS + 6
-    jtg = NdTrajectoryGenerator("jtg");
-    jtg.initial_value.value = tuple(N_CONFIG*[0.0]);
-    jtg.trigger.value = 1.0;
-    jtg.init(dt, N_CONFIG);
-    return jtg;
+    jtg = NdTrajectoryGenerator("jtg")
+    jtg.initial_value.value = tuple(N_CONFIG*[0.0])
+    jtg.trigger.value = 1.0
+    jtg.init(dt, N_CONFIG)
+    return jtg
 
 def create_com_trajectory_generator(dt,robot):
-    comTrajGen = NdTrajectoryGenerator("comTrajGen");
+    comTrajGen = NdTrajectoryGenerator("comTrajGen")
     comTrajGen.initial_value.value = robot.dynamic.com.value
-    comTrajGen.trigger.value = 1.0;
-    comTrajGen.init(dt, 3);
-    return comTrajGen;
+    comTrajGen.trigger.value = 1.0
+    comTrajGen.init(dt, 3)
+    return comTrajGen
 
 def create_joint_controller(Kp):
     controller = JointPositionController("posctrl")
     controller.Kp.value = Kp
     return controller
+
+
+def create_end_effector_admittance_controller(Kp, timeStep, robot):
+    controller = AdmittanceControllerEndEffector("admittanceController")
+    controller.Kp.value = Kp
+
+    # Plug the force and joint configuration
+    plug(robot.device.joint_angles,  controller.jointPosition)
+    plug(robot.device.forceRARM, controller.force)
+
+    controller.forceDes.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    controller.init(timeStep, "wrist_left_ft_link")
+    return controller
+
 
 def create_joint_admittance_controller(joint,Kp,dt,robot):
     controller = AdmittanceController("jadmctrl")
@@ -178,23 +194,23 @@ def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
     return ctrl_manager;
 
 def create_base_estimator(robot, dt, conf, robot_name="robot"):    
-    base_estimator = BaseEstimator('base_estimator');
-    base_estimator.init(dt, robot_name);
-    plug(robot.device.joint_angles,                      base_estimator.joint_positions);  # device.state, device.joint_angles or device.motor_angles ?
+    base_estimator = BaseEstimator('base_estimator')
+    base_estimator.init(dt, robot_name)
+    plug(robot.device.joint_angles,                      base_estimator.joint_positions)  # device.state, device.joint_angles or device.motor_angles ?
     plug(robot.device_filters.ft_LF_filter.x_filtered,   base_estimator.forceLLEG)
     plug(robot.device_filters.ft_RF_filter.x_filtered,   base_estimator.forceRLEG)
     plug(robot.device_filters.ft_LF_filter.dx,           base_estimator.dforceLLEG)
     plug(robot.device_filters.ft_RF_filter.dx,           base_estimator.dforceRLEG)
-    plug(robot.device_filters.estimator_kin.dx,          base_estimator.joint_velocities);
-    plug(robot.imu_filters.imu_quat,                     base_estimator.imu_quaternion);   
-    plug(robot.device_filters.gyro_filter.x_filtered,    base_estimator.gyroscope);
-    plug(robot.device_filters.acc_filter.x_filtered,     base_estimator.accelerometer);
-    base_estimator.K_fb_feet_poses.value =               conf.K_fb_feet_poses;
-    base_estimator.w_lf_in.value =                       conf.w_lf_in;
-    base_estimator.w_rf_in.value =                       conf.w_rf_in;
-    base_estimator.set_imu_weight(conf.w_imu);
-    base_estimator.set_stiffness_right_foot(conf.K);
-    base_estimator.set_stiffness_left_foot(conf.K);
+    plug(robot.device_filters.estimator_kin.dx,          base_estimator.joint_velocities)
+    plug(robot.imu_filters.imu_quat,                     base_estimator.imu_quaternion)
+    plug(robot.device_filters.gyro_filter.x_filtered,    base_estimator.gyroscope)
+    plug(robot.device_filters.acc_filter.x_filtered,     base_estimator.accelerometer)
+    base_estimator.K_fb_feet_poses.value =               conf.K_fb_feet_poses
+    base_estimator.w_lf_in.value =                       conf.w_lf_in
+    base_estimator.w_rf_in.value =                       conf.w_rf_in
+    base_estimator.set_imu_weight(conf.w_imu)
+    base_estimator.set_stiffness_right_foot(conf.K)
+    base_estimator.set_stiffness_left_foot(conf.K)
     base_estimator.set_zmp_std_dev_right_foot(conf.std_dev_zmp)
     base_estimator.set_zmp_std_dev_left_foot(conf.std_dev_zmp)
     base_estimator.set_normal_force_std_dev_right_foot(conf.std_dev_fz)
@@ -205,9 +221,8 @@ def create_base_estimator(robot, dt, conf, robot_name="robot"):
     base_estimator.set_normal_force_margin_left_foot(conf.normal_force_margin)
     base_estimator.set_right_foot_sizes(conf.RIGHT_FOOT_SIZES)
     base_estimator.set_left_foot_sizes(conf.LEFT_FOOT_SIZES)
-    
 
-    return base_estimator;
+    return base_estimator
 
 def create_imu_filters(robot, dt):
     imu_filter = MadgwickAHRS('imu_filter');

@@ -4,6 +4,7 @@ from sot_talos_balance.meta_task_joint import MetaTaskKineJoint
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 
+
 N_JOINTS = 32
 N_CONFIG = N_JOINTS + 6
 
@@ -23,11 +24,11 @@ robot.taskJoint.task.controlGain.value = 100
 # --- Admittance controller
 Kp = [0.5]
 robot.admittance_control = create_joint_admittance_controller(JOINT,Kp,dt,robot)
-plug(robot.admittance_control.qRef,robot.taskJoint.featureDes.errorIN)
+plug(robot.admittance_control.qRef, robot.taskJoint.featureDes.errorIN)
 
 # --- CONTACTS
 #define contactLF and contactRF
-robot.contactLF = MetaTaskKine6d('contactLF',robot.dynamic,'LF',robot.OperationalPointsMap['left-ankle'])
+robot.contactLF = MetaTaskKine6d('contactLF', robot.dynamic, 'LF', robot.OperationalPointsMap['left-ankle'])
 robot.contactLF.feature.frame('desired')
 robot.contactLF.gain.setConstant(100)
 robot.contactLF.keep()

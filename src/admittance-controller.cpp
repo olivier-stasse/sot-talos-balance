@@ -55,14 +55,14 @@ namespace dynamicgraph
       /* --- CONSTRUCTION -------------------------------------------------- */
       /* ------------------------------------------------------------------- */
       AdmittanceController::AdmittanceController(const std::string& name)
-                      : Entity(name)
-                      , CONSTRUCT_SIGNAL_IN(Kp, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_IN(state, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_IN(tau, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_IN(tauDes, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_OUT(dqRef, dynamicgraph::Vector, INPUT_SIGNALS)
-                      , CONSTRUCT_SIGNAL_OUT(qRef, dynamicgraph::Vector, m_dqRefSOUT)
-                      , m_initSucceeded(false)
+          : Entity(name)
+          , CONSTRUCT_SIGNAL_IN(Kp, dynamicgraph::Vector)
+          , CONSTRUCT_SIGNAL_IN(state, dynamicgraph::Vector)
+          , CONSTRUCT_SIGNAL_IN(tau, dynamicgraph::Vector)
+          , CONSTRUCT_SIGNAL_IN(tauDes, dynamicgraph::Vector)
+          , CONSTRUCT_SIGNAL_OUT(dqRef, dynamicgraph::Vector, INPUT_SIGNALS)
+          , CONSTRUCT_SIGNAL_OUT(qRef, dynamicgraph::Vector, m_dqRefSOUT)
+          , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 

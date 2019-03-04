@@ -50,9 +50,9 @@ namespace dynamicgraph {
       /* --------------------------------------------------------------------- */
 
       class ADMITTANCECONTROLLER_EXPORT AdmittanceController
-	                         : public ::dynamicgraph::Entity
+          : public ::dynamicgraph::Entity
       {
-        DYNAMIC_GRAPH_ENTITY_DECL();
+      DYNAMIC_GRAPH_ENTITY_DECL();
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -70,8 +70,8 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(tau, dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(tauDes, dynamicgraph::Vector);
 
-        DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
-        DECLARE_SIGNAL_OUT(qRef, dynamicgraph::Vector);
+      DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
+      DECLARE_SIGNAL_OUT(qRef, dynamicgraph::Vector);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
