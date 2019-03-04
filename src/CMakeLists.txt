@@ -42,6 +42,7 @@ SET(plugins
     dummy-dcm-estimator
     com-admittance-controller
     admittance-controller
+    admittance-controller-end-effector
     joint-position-controller
     nd-trajectory-generator
     base-estimator
