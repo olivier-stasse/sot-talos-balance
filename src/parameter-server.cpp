@@ -20,7 +20,7 @@
 #include <dynamic-graph/factory.h>
 
 
-#include <sot/talos_balance/utils/commands-helper.hh>
+#include <dynamic-graph/all-commands.h>
 #include <sot/talos_balance/utils/stop-watch.hh>
 #include <sot/talos_balance/utils/statistics.hh>
 
