@@ -7,7 +7,7 @@ import numpy                                as np
 from IPython import embed
 
 # pub_base = GazeboLinkStatePublisher('base_link',1000)
-pub_torso = GazeboLinkStatePublisher('torso_2_link',1000,local_frame = False)
+pub_torso = GazeboLinkStatePublisher('base_link',1000,local_frame = False)
 
 print("Starting Gazebo link state publisher...")
 # pub_base.start()
@@ -18,9 +18,9 @@ raw_input("Wait before running the test")
 run_test('appli_dcm_estimator.py')
 
 sleep(2.0)
-runCommandClient('robot.comTrajGen.move(1,-0.025,4.0)')
+runCommandClient('robot.comTrajGen.move(1,-0.025,3.0)')
 sleep(5.0)
-runCommandClient('robot.comTrajGen.startSinusoid(1,0.05,8.0)')
+runCommandClient('robot.comTrajGen.startSinusoid(1,0.05,1.0)')
 sleep(5.0)
 runCommandClient("write_pdf_graph('/tmp/')")
 
