@@ -9,8 +9,8 @@
 
 #include "sot/talos_balance/dcm-estimator.hh"
 #include <sot/core/debug.hh>
+#include <dynamic-graph/all-commands.h>
 #include <dynamic-graph/factory.h>
-#include "sot/talos_balance/utils/commands-helper.hh"
 #include <sot/talos_balance/utils/stop-watch.hh>
 #include "pinocchio/algorithm/frames.hpp"
 #include "pinocchio/algorithm/center-of-mass.hpp"
@@ -25,7 +25,7 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
       using namespace std;
-      using namespace se3;
+      using namespace pinocchio;
       using boost::math::normal; // typedef provides default type is double.
  //Size to be aligned                         "-------------------------------------------------------"
      
@@ -33,8 +33,8 @@ namespace dynamicgraph
 #define PROFILE_BASE_VELOCITY_ESTIMATION      "base-est velocity estimation"
 #define PROFILE_BASE_KINEMATICS_COMPUTATION   "base-est kinematics computation"
 
-#define INPUT_SIGNALS     qSIN  << vSIN
-#define OUTPUT_SIGNALS    cSOUT << dcSOUT
+#define INPUT_SIGNALS     m_qSIN  << m_vSIN
+#define OUTPUT_SIGNALS    m_cSOUT << m_dcSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -49,9 +49,9 @@ namespace dynamicgraph
         : Entity(name)
         ,CONSTRUCT_SIGNAL_IN( q,   dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_IN( v,   dynamicgraph::Vector)        
-        ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, qSIN)
-        ,CONSTRUCT_SIGNAL_OUT(dc,  dynamicgraph::Vector, qSIN << vSIN)
-        ,m_data(se3::Model())
+        ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, m_qSIN)
+        ,CONSTRUCT_SIGNAL_OUT(dc,  dynamicgraph::Vector, m_qSIN << m_vSIN)
+        ,m_data(pinocchio::Model())
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
@@ -80,8 +80,8 @@ namespace dynamicgraph
             return;
           }
 
-          se3::urdf::buildModel(m_robot_util->m_urdf_filename,
-                                se3::JointModelFreeFlyer(), m_model);
+          pinocchio::urdf::buildModel(m_robot_util->m_urdf_filename,
+                                pinocchio::JointModelFreeFlyer(), m_model);
 
           assert(m_model.existFrame(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name));
           assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
@@ -93,7 +93,7 @@ namespace dynamicgraph
           SEND_MSG("Init failed: Could load URDF :" + m_robot_util->m_urdf_filename, MSG_TYPE_ERROR);
           return;
         }
-        m_data = se3::Data(m_model);
+        m_data = pinocchio::Data(m_model);
         m_initSucceeded = true;
       }
     
@@ -108,8 +108,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal com before initialization!");
           return s;
         }
-        const Vector & q = qSIN(iter);
-        se3::centerOfMass(m_model,m_data,q);
+        const Vector & q = m_qSIN(iter);
+        pinocchio::centerOfMass(m_model,m_data,q);
         s = m_data.com[0];
         return s;
       }
@@ -121,9 +121,9 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcom before initialization!");
           return s;
         }
-        const Vector & q = qSIN(iter);
-        const Vector & v = vSIN(iter);
-        se3::centerOfMass(m_model,m_data,q,v);
+        const Vector & q = m_qSIN(iter);
+        const Vector & v = m_vSIN(iter);
+        pinocchio::centerOfMass(m_model,m_data,q,v);
         s = m_data.vcom[0];
         return s;
       }

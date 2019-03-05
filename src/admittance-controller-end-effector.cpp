@@ -11,9 +11,7 @@
 #include "sot/talos_balance/admittance-controller-end-effector.hh"
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
-#include <dynamic-graph/command-bind.h>
-
-#include "sot/talos_balance/utils/commands-helper.hh"
+#include <dynamic-graph/all-commands.h>
 #include "sot/talos_balance/utils/stop-watch.hh"
 
 namespace dynamicgraph
@@ -24,7 +22,7 @@ namespace dynamicgraph
     {
       namespace dg = ::dynamicgraph;
       using namespace dg;
-      using namespace se3;
+      using namespace pinocchio;
       using namespace dg::command;
 
 //Size to be aligned                                   "-------------------------------------------------------"
@@ -33,11 +31,11 @@ namespace dynamicgraph
 
 #define PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_FORCEWORLDFRAME_COMPUTATION "AdmittanceControllerEndEffector: forceWorldFrame computation          "
 
-#define INPUT_SIGNALS     KpSIN << forceSIN << forceDesSIN << jointPositionSIN
+#define INPUT_SIGNALS     m_KpSIN << m_forceSIN << m_forceDesSIN << m_jointPositionSIN
 
 #define INNER_SIGNALS     m_forceWorldFrameSINNER
 
-#define OUTPUT_SIGNALS    dqRefSOUT
+#define OUTPUT_SIGNALS    m_dqRefSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -57,7 +55,7 @@ namespace dynamicgraph
           , CONSTRUCT_SIGNAL_IN(forceDes, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_IN(jointPosition, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_OUT(dqRef, dynamicgraph::Vector, INPUT_SIGNALS << INNER_SIGNALS)
-          , CONSTRUCT_SIGNAL_INNER(forceWorldFrame, dynamicgraph::Vector, forceSIN)
+          , CONSTRUCT_SIGNAL_INNER(forceWorldFrame, dynamicgraph::Vector, m_forceSIN)
           , m_initSucceeded(false)
           , m_robot_util()
           , m_model()
@@ -75,13 +73,13 @@ namespace dynamicgraph
 
       void AdmittanceControllerEndEffector::init(const double & dt, const std::string & sensorFrameName)
       {
-        if(!KpSIN.isPlugged())
+        if(!m_KpSIN.isPlugged())
           return SEND_MSG("Init failed: signal Kp is not plugged", MSG_TYPE_ERROR);
-        if(!forceSIN.isPlugged())
+        if(!m_forceSIN.isPlugged())
           return SEND_MSG("Init failed: signal force is not plugged", MSG_TYPE_ERROR);
-        if(!forceDesSIN.isPlugged())
+        if(!m_forceDesSIN.isPlugged())
           return SEND_MSG("Init failed: signal forceDes is not plugged", MSG_TYPE_ERROR);
-        if(!jointPositionSIN.isPlugged())
+        if(!m_jointPositionSIN.isPlugged())
           return SEND_MSG("Init failed: signal jointPosition is not plugged", MSG_TYPE_ERROR);
 
         m_n = 6;
@@ -103,11 +101,11 @@ namespace dynamicgraph
             return;
           }
 
-          se3::urdf::buildModel(m_robot_util->m_urdf_filename, se3::JointModelFreeFlyer(), m_model);
-          m_data = new se3::Data(m_model);
+          pinocchio::urdf::buildModel(m_robot_util->m_urdf_filename, pinocchio::JointModelFreeFlyer(), m_model);
+          m_data = new pinocchio::Data(m_model);
           m_q.setZero(m_model.nq);
 
-          se3::FrameIndex sensorFrameId = m_model.getFrameId(sensorFrameName);
+          pinocchio::FrameIndex sensorFrameId = m_model.getFrameId(sensorFrameName);
           assert(m_model.existFrame(sensorFrameId));
 
           m_parentId = m_model.frames[sensorFrameId].parent;
@@ -143,8 +141,8 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_FORCEWORLDFRAME_COMPUTATION);
 
-        const Vector & forceVector = forceSIN(iter);
-        const Vector & q = jointPositionSIN(iter);
+        const Vector & forceVector = m_forceSIN(iter);
+        const Vector & q = m_jointPositionSIN(iter);
 
         assert(forceVector.size()==m_n            && "Unexpected size of signal force");
         assert(q.size()==m_robot_util->m_nbJoints && "Unexpected size of signal joint_positions");
@@ -153,14 +151,14 @@ namespace dynamicgraph
         m_q.head<6>().setZero();
         m_q[6]= 1.;
         m_robot_util->joints_sot_to_urdf(q, m_q.tail(m_robot_util->m_nbJoints));
-        se3::forwardKinematics(m_model, *m_data, m_q);
+        pinocchio::forwardKinematics(m_model, *m_data, m_q);
 
         // Compute sensorPlacement
-        se3::SE3 parentPlacement = m_data->oMi[m_parentId];
-        se3::SE3 sensorPlacement =  parentPlacement * m_sensorFrame;
+        pinocchio::SE3 parentPlacement = m_data->oMi[m_parentId];
+        pinocchio::SE3 sensorPlacement =  parentPlacement * m_sensorFrame;
 
-        se3::Force force = se3::Force(forceVector);
-        se3::Force forceWorldFrame = sensorPlacement.act(force);
+        pinocchio::Force force = pinocchio::Force(forceVector);
+        pinocchio::Force forceWorldFrame = sensorPlacement.act(force);
         const Vector & forceWorldFrameVector = forceWorldFrame.toVector();
 
         s = forceWorldFrameVector;
@@ -181,9 +179,9 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQREF_COMPUTATION);
 
-        const Vector & forceDes = forceDesSIN(iter);
+        const Vector & forceDes = m_forceDesSIN(iter);
         const Vector & forceWorldFrame = m_forceWorldFrameSINNER(iter);
-        const Vector & Kp = KpSIN(iter);
+        const Vector & Kp = m_KpSIN(iter);
 
         assert(forceWorldFrame.size()==m_n       && "Unexpected size of signal force");
         assert(forceDes.size()==m_n              && "Unexpected size of signal forceDes");

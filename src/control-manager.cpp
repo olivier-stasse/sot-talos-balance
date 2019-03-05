@@ -19,11 +19,9 @@
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
 
-
-#include <sot/talos_balance/utils/commands-helper.hh>
+#include <dynamic-graph/all-commands.h>
 #include <sot/talos_balance/utils/stop-watch.hh>
 #include <sot/talos_balance/utils/statistics.hh>
-
 
 
 using namespace sot::talos_balance;
@@ -45,9 +43,9 @@ namespace dynamicgraph
 #define PROFILE_PWM_DESIRED_COMPUTATION       "Control manager                                        "
 #define PROFILE_DYNAMIC_GRAPH_PERIOD          "Control period                                         "
 
-#define INPUT_SIGNALS  i_maxSIN << u_maxSIN << tau_maxSIN << \
-                       tauSIN << tau_predictedSIN << i_measuredSIN
-#define OUTPUT_SIGNALS uSOUT << u_safeSOUT
+#define INPUT_SIGNALS  m_i_maxSIN << m_u_maxSIN << m_tau_maxSIN << \
+                       m_tauSIN << m_tau_predictedSIN << m_i_measuredSIN
+#define OUTPUT_SIGNALS m_uSOUT << m_u_safeSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -69,9 +67,9 @@ namespace dynamicgraph
         ,CONSTRUCT_SIGNAL_IN(i_max,           dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_IN(u_max,           dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_IN(tau_max,         dynamicgraph::Vector)
-        ,CONSTRUCT_SIGNAL_OUT(u,              dynamicgraph::Vector, i_measuredSIN)
+        ,CONSTRUCT_SIGNAL_OUT(u,              dynamicgraph::Vector, m_i_measuredSIN)
         ,CONSTRUCT_SIGNAL_OUT(u_safe,         dynamicgraph::Vector, INPUT_SIGNALS <<
-                                                                    uSOUT)
+                                                                    m_uSOUT)
         ,m_robot_util(RefVoidRobotUtil())
         ,m_initSucceeded(false)
         ,m_emergency_stop_triggered(false)
@@ -167,10 +165,10 @@ namespace dynamicgraph
                    makeCommandVoid0(*this, &ControlManager::displayRobotUtil,
                                     docCommandVoid0("Display the current robot util data set.")));
 
-        addCommand("setStreamPrintPeriod",
-                   makeCommandVoid1(*this, &ControlManager::setStreamPrintPeriod,
-                                    docCommandVoid1("Set the period used for printing in streaming.",
-                                                    "Print period in seconds (double)")));
+//        addCommand("setStreamPrintPeriod",
+//                   makeCommandVoid1(*this, &ControlManager::setStreamPrintPeriod,
+//                                    docCommandVoid1("Set the period used for printing in streaming.",
+//                                                    "Print period in seconds (double)")));
 
         addCommand("setSleepTime",
                    makeCommandVoid1(*this, &ControlManager::setSleepTime,
@@ -193,7 +191,7 @@ namespace dynamicgraph
         m_emergency_stop_triggered = false; 
         m_initSucceeded = true;
         vector<string> package_dirs;
-        m_robot = new robots::RobotWrapper(urdfFile, package_dirs, se3::JointModelFreeFlyer());
+        m_robot = new robots::RobotWrapper(urdfFile, package_dirs, pinocchio::JointModelFreeFlyer());
 
         std::string localName(robotRef);
         if (!isNameInRobotUtil(localName))
@@ -305,13 +303,13 @@ namespace dynamicgraph
           return s;
         }
 
-        const dynamicgraph::Vector& u                      = uSOUT(iter);
-        const dynamicgraph::Vector& tau_max                = tau_maxSIN(iter);
-        const dynamicgraph::Vector& ctrl_max               = u_maxSIN(iter);
-        const dynamicgraph::Vector& i_max                  = i_maxSIN(iter);
-        const dynamicgraph::Vector& tau                    = tauSIN(iter);
-        const dynamicgraph::Vector& i_real                 = i_measuredSIN(iter);
-        const dynamicgraph::Vector& tau_predicted          = tau_predictedSIN(iter);
+        const dynamicgraph::Vector& u                      = m_uSOUT(iter);
+        const dynamicgraph::Vector& tau_max                = m_tau_maxSIN(iter);
+        const dynamicgraph::Vector& ctrl_max               = m_u_maxSIN(iter);
+        const dynamicgraph::Vector& i_max                  = m_i_maxSIN(iter);
+        const dynamicgraph::Vector& tau                    = m_tauSIN(iter);
+        const dynamicgraph::Vector& i_real                 = m_i_measuredSIN(iter);
+        const dynamicgraph::Vector& tau_predicted          = m_tau_predictedSIN(iter);
 
         for(int i=0;i<m_emergencyStopSIN.size();i++)
         {
@@ -388,8 +386,8 @@ namespace dynamicgraph
         m_ctrlModes.push_back(name);
 
         // register the new signals and add the new signal dependecy
-	Eigen::VectorXd::Index i = m_ctrlModes.size()-1;
-        uSOUT.addDependency(*m_ctrlInputsSIN[i]);
+	      Eigen::VectorXd::Index i = m_ctrlModes.size()-1;
+        m_uSOUT.addDependency(*m_ctrlInputsSIN[i]);
         Entity::signalRegistration(*m_ctrlInputsSIN[i]);
         Entity::signalRegistration(*m_jointsCtrlModesSOUT[i]);
         updateJointCtrlModesOutputSignal();
@@ -480,10 +478,10 @@ namespace dynamicgraph
         getStatistics().reset_all();
       }
 
-      void ControlManager::setStreamPrintPeriod(const double & s)
-      {
-        getLogger().setStreamPrintPeriod(s);
-      }
+//      void ControlManager::setStreamPrintPeriod(const double & s)
+//      {
+//        getLogger().setStreamPrintPeriod(s);
+//      }
 
       void ControlManager::setSleepTime(const double &seconds)
       {
@@ -501,78 +499,78 @@ namespace dynamicgraph
 
         // register the new signals and add the new signal dependecy
         unsigned int i = m_emergencyStopSIN.size()-1;
-        u_safeSOUT.addDependency(*m_emergencyStopSIN[i]);
+        m_u_safeSOUT.addDependency(*m_emergencyStopSIN[i]);
         Entity::signalRegistration(*m_emergencyStopSIN[i]);
       }
 
       void ControlManager::setNameToId(const std::string &jointName,
                                       const double & jointId)
       {
-	if(!m_initSucceeded)
-	  {
-	    SEND_WARNING_STREAM_MSG("Cannot set joint name from joint id  before initialization!");
-	    return;
-	  }
-	m_robot_util->set_name_to_id(jointName,jointId);
+	      if(!m_initSucceeded)
+	        {
+	          SEND_WARNING_STREAM_MSG("Cannot set joint name from joint id  before initialization!");
+	          return;
+	        }
+	      m_robot_util->set_name_to_id(jointName,jointId);
       }
 
       void ControlManager::setJointLimitsFromId( const double &jointId,
 					       const double &lq,
 					       const double &uq)
       {
-	if(!m_initSucceeded)
-	  {
-	    SEND_WARNING_STREAM_MSG("Cannot set joints limits from joint id  before initialization!");
-	    return;
-	  }
-	
-	m_robot_util->set_joint_limits_for_id((Index)jointId,lq,uq);
+	      if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot set joints limits from joint id  before initialization!");
+          return;
+        }
+
+	      m_robot_util->set_joint_limits_for_id((Index)jointId,lq,uq);
       }
 
       void ControlManager::setForceLimitsFromId( const double &jointId,
 						 const dynamicgraph::Vector &lq,
 						 const dynamicgraph::Vector &uq)
       {
-	if(!m_initSucceeded)
+	      if(!m_initSucceeded)
         {
           SEND_WARNING_STREAM_MSG("Cannot set force limits from force id  before initialization!");
           return;
         }
 
-	m_robot_util->m_force_util.set_force_id_to_limits((Index)jointId,lq,uq);
+	      m_robot_util->m_force_util.set_force_id_to_limits((Index)jointId,lq,uq);
       }
 
       void ControlManager::setForceNameToForceId(const std::string &forceName,
 						 const double & forceId)
       {
-	if(!m_initSucceeded)
-	  {
-	    SEND_WARNING_STREAM_MSG("Cannot set force sensor name from force sensor id  before initialization!");
-	    return;
-	  }
+	      if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot set force sensor name from force sensor id  before initialization!");
+          return;
+        }
 
-	m_robot_util->m_force_util.set_name_to_force_id(forceName,forceId);
+	      m_robot_util->m_force_util.set_name_to_force_id(forceName,forceId);
       }
 
       void ControlManager::setJoints(const dg::Vector & urdf_to_sot)
       {
-	if(!m_initSucceeded)
+	      if(!m_initSucceeded)
         {
           SEND_WARNING_STREAM_MSG("Cannot set mapping to sot before initialization!");
           return;
         }
-	m_robot_util->set_urdf_to_sot(urdf_to_sot);
+	      m_robot_util->set_urdf_to_sot(urdf_to_sot);
       }
 
       void ControlManager::setRightFootSoleXYZ( const dynamicgraph::Vector &xyz)
       {
-	if(!m_initSucceeded)
+	      if(!m_initSucceeded)
         {
           SEND_WARNING_STREAM_MSG("Cannot set right foot sole XYZ before initialization!");
           return;
         }
 
-	m_robot_util->m_foot_util.m_Right_Foot_Sole_XYZ = xyz;
+	      m_robot_util->m_foot_util.m_Right_Foot_Sole_XYZ = xyz;
       }
 
       void ControlManager::setRightFootForceSensorXYZ(const dynamicgraph::Vector &xyz)
@@ -589,17 +587,17 @@ namespace dynamicgraph
       void ControlManager::setFootFrameName( const std::string &FootName,
 					     const std::string &FrameName)
       {
-	if(!m_initSucceeded)
+	      if(!m_initSucceeded)
         {
           SEND_WARNING_STREAM_MSG("Cannot set foot frame name!");
           return;
         }
-	if (FootName=="Left")
-	  m_robot_util->m_foot_util.m_Left_Foot_Frame_Name = FrameName;
-	else if (FootName=="Right")
-	  m_robot_util->m_foot_util.m_Right_Foot_Frame_Name = FrameName;
-	else 
-	  SEND_WARNING_STREAM_MSG("Did not understand the foot name !" + FootName);
+	      if (FootName=="Left")
+	        m_robot_util->m_foot_util.m_Left_Foot_Frame_Name = FrameName;
+	      else if (FootName=="Right")
+	        m_robot_util->m_foot_util.m_Right_Foot_Frame_Name = FrameName;
+	      else 
+	        SEND_WARNING_STREAM_MSG("Did not understand the foot name !" + FootName);
       }
       
       void ControlManager::setImuJointName(const std::string &JointName)
@@ -614,18 +612,18 @@ namespace dynamicgraph
       
       void ControlManager::displayRobotUtil()
       {
-	m_robot_util->display(std::cout);
+	      m_robot_util->display(std::cout);
       }
 
       /* --- PROTECTED MEMBER METHODS ---------------------------------------------------------- */
 
       void ControlManager::updateJointCtrlModesOutputSignal()
       {
-	if (m_robot_util->m_nbJoints==0)
-	  {
-	    SEND_MSG("You should call init first. The size of the vector is unknown.", MSG_TYPE_ERROR);
-	    return;
-	  }
+	      if (m_robot_util->m_nbJoints==0)
+        {
+          SEND_MSG("You should call init first. The size of the vector is unknown.", MSG_TYPE_ERROR);
+          return;
+        }
 
         dynamicgraph::Vector cm(m_robot_util->m_nbJoints);
         for(unsigned int i=0; i<m_jointsCtrlModesSOUT.size(); i++)
@@ -662,12 +660,12 @@ namespace dynamicgraph
       bool ControlManager::convertJointNameToJointId(const std::string& name, unsigned int& id)
       {
         // Check if the joint name exists
-	se3::Model::JointIndex jid = m_robot_util->get_id_from_name(name);
+	      pinocchio::Model::JointIndex jid = m_robot_util->get_id_from_name(name);
         if (jid<0)
         {
           SEND_MSG("The specified joint name does not exist: "+name, MSG_TYPE_ERROR);
           std::stringstream ss;
-          for(se3::Model::JointIndex it=0; it< m_robot_util->m_nbJoints;it++)
+          for(pinocchio::Model::JointIndex it=0; it< m_robot_util->m_nbJoints;it++)
             ss<< m_robot_util->get_name_from_id(it) <<", ";
           SEND_MSG("Possible joint names are: "+ss.str(), MSG_TYPE_INFO);
           return false;
@@ -678,16 +676,16 @@ namespace dynamicgraph
 
       bool ControlManager::isJointInRange(unsigned int id, double q)
       {
-	const JointLimits & JL = m_robot_util->
-	  get_joint_limits_from_id((Index)id);
+	      const JointLimits & JL = m_robot_util->
+	        get_joint_limits_from_id((Index)id);
 
-	double jl= JL.lower;
+	      double jl= JL.lower;
         if(q<jl)
         {
           SEND_MSG("Desired joint angle "+toString(q)+" is smaller than lower limit: "+toString(jl),MSG_TYPE_ERROR);
           return false;
         }
-	double ju = JL.upper;
+	      double ju = JL.upper;
         if(q>ju)
         {
           SEND_MSG("Desired joint angle "+toString(q)+" is larger than upper limit: "+toString(ju),MSG_TYPE_ERROR);
