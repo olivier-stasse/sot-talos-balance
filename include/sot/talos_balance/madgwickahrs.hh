@@ -48,9 +48,8 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#include <sot/talos_balance/utils/signal-helper.hh>
-#include <sot/talos_balance/utils/vector-conversions.hh>
-#include <sot/talos_balance/utils/logger.hh>
+#include <dynamic-graph/signal-helper.h>
+#include <sot/core/matrix-geometry.hh>
 #include <map>
 #include "boost/assign.hpp"
 
@@ -93,10 +92,6 @@ namespace dynamicgraph {
         float invSqrt(float x);
         void madgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, float az) ;
         //void madgwickAHRSupdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
-        void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
-        {
-          getLogger().sendMsg("[MadgwickAHRS-"+name+"] "+msg, t, file, line);
-        }
 
       protected:
         bool              m_initSucceeded;                                      /// true if the entity has been successfully initialized

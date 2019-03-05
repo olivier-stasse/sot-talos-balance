@@ -36,9 +36,8 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#include <sot/talos_balance/utils/signal-helper.hh>
-#include <sot/talos_balance/utils/vector-conversions.hh>
-#include <sot/talos_balance/utils/logger.hh>
+#include <dynamic-graph/signal-helper.h>
+#include <sot/core/matrix-geometry.hh>
 #include <map>
 #include "boost/assign.hpp"
 
@@ -79,10 +78,6 @@ namespace dynamicgraph {
 
         /* --- METHODS --- */
         void update_offset_impl(int iter);
-        void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
-        {
-          getLogger().sendMsg("[ImuOffsetCompensation-"+name+"] "+msg, t, file, line);
-        }
 
       protected:
         bool            m_initSucceeded;      /// true if the entity has been successfully initialized

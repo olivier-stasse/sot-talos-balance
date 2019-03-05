@@ -85,12 +85,8 @@ SET(SOTTALOSBALANCE_LIB_NAME ${PROJECT_NAME})
 SET(LIBRARY_NAME ${SOTTALOSBALANCE_LIB_NAME})
 
 SET(${LIBRARY_NAME}_HEADERS
-  include/sot/talos_balance/utils/logger.hh
-  include/sot/talos_balance/stc-commands.hh
   include/sot/talos_balance/utils/commands-helper.hh
-  include/sot/talos_balance/utils/signal-helper.hh
   include/sot/talos_balance/utils/stop-watch.hh
-  include/sot/talos_balance/utils/vector-conversions.hh
   include/sot/talos_balance/utils/causal-filter.hh
   include/sot/talos_balance/utils/statistics.hh
   include/sot/talos_balance/math/fwd.hh
@@ -103,7 +99,6 @@ SET(${LIBRARY_NAME}_HEADERS
 #  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_WRITE)
 
 SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
-    src/utils/logger.cpp    
     src/utils/causal-filter.cpp
     src/utils/statistics.cpp
     src/utils/stop-watch.cpp
