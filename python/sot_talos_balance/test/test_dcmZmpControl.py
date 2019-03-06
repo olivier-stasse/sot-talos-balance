@@ -13,11 +13,11 @@ sleep(5.0)
 
 # Connect ZMP reference and reset controllers
 print('Connect ZMP reference')
-runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
-runCommandClient('robot.com_admittance_control.setState(robot.dynamic.com.value,[0.0,0.0,0.0])')
-runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
-runCommandClient('robot.dcm_control.resetDcmIntegralError()')
-runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
+#runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
+#runCommandClient('robot.com_admittance_control.setState(robot.dynamic.com.value,[0.0,0.0,0.0])')
+#runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
+#runCommandClient('robot.dcm_control.resetDcmIntegralError()')
+#runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
 
 sleep(5.0)
 
@@ -30,41 +30,61 @@ sleep(5.0)
 runCommandClient('dump_tracer(robot.tracer)')
 
 # --- DISPLAY
-dcm_data    = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.estimator.name') + '-dcm.dat')
-zmp_data    = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dynamic.name') + '-zmp.dat')
-zmpDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-zmpRef.dat')
-com_data    = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dynamic.name') + '-com.dat')
-comDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.com_admittance_control.name') + '-comRef.dat')
+comDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-dcmDes.dat')             # desired CoM (workaround)
+comEst_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.cdc_estimator.name') + '-c.dat')                # estimated CoM
+comRef_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.com_admittance_control.name') + '-comRef.dat')  # reference CoM
+comSOT_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dynamic.name') + '-com.dat')                    # resulting SOT CoM
+
+dcmDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-dcmDes.dat')             # desired DCM
+dcmEst_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.estimator.name') + '-dcm.dat')                  # estimated DCM
+
+zmpDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-zmpDes.dat')             # desired ZMP
+zmpEst_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.zmp_estimator.name') + '-zmp.dat')              # estimated ZMP
+zmpRef_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-zmpRef.dat')             # reference ZMP
+
 
 plt.ion()
 
 plt.figure()
-plt.plot(dcm_data[:,1],'b-')
-plt.plot(dcm_data[:,2],'r-')
-plt.title('DCM')
-plt.legend(['x','y'])
-
-plt.figure()
-plt.plot(com_data[:,1],'b-')
 plt.plot(comDes_data[:,1],'b--')
-plt.plot(com_data[:,2],'r-')
+plt.plot(comEst_data[:,1],'b-')
+plt.plot(comRef_data[:,1],'b:')
+plt.plot(comSOT_data[:,1],'b-.')
 plt.plot(comDes_data[:,2],'r--')
-plt.plot(com_data[:,3],'g-')
+plt.plot(comEst_data[:,2],'r-')
+plt.plot(comRef_data[:,2],'r:')
+plt.plot(comSOT_data[:,2],'r-.')
 plt.plot(comDes_data[:,3],'g--')
-plt.title('COM real vs desired')
-plt.legend(['Real x','Desired x','Real y','Desired y','Real z','Desired z'])
+plt.plot(comEst_data[:,3],'g-')
+plt.plot(comRef_data[:,3],'g:')
+plt.plot(comSOT_data[:,3],'g-.')
+plt.title('COM')
+plt.legend(['Desired x', 'Estimated x', 'Reference x', 'SOT x',
+            'Desired y', 'Estimated y', 'Reference y', 'SOT y',
+            'Desired z', 'Estimated z', 'Reference z', 'SOT z'])
 
 plt.figure()
-plt.plot(zmp_data[:,1],'b-')
+plt.plot(dcmDes_data[:,1],'b--')
+plt.plot(dcmEst_data[:,1],'b-')
+plt.plot(dcmDes_data[:,2],'r--')
+plt.plot(dcmEst_data[:,2],'r-')
+plt.title('DCM')
+plt.legend(['Desired x', 'Estimated x', 'Desired y', 'Estimated y'])
+
+plt.figure()
 plt.plot(zmpDes_data[:,1],'b--')
-plt.plot(zmp_data[:,2],'r-')
+plt.plot(zmpEst_data[:,1],'b-')
+plt.plot(zmpRef_data[:,1],'b:')
 plt.plot(zmpDes_data[:,2],'r--')
-plt.title('ZMP real vs desired')
-plt.legend(['Real x','Desired x','Real y','Desired y'])
+plt.plot(zmpEst_data[:,2],'r-')
+plt.plot(zmpRef_data[:,2],'r:')
+plt.title('ZMP')
+plt.legend(['Desired x', 'Estimated x', 'Reference x',
+            'Desired y', 'Estimated y', 'Reference y'])
 
 plt.figure()
-plt.plot(zmp_data[:,1] - zmpDes_data[:,1],'b-')
-plt.plot(zmp_data[:,2] - zmpDes_data[:,2],'r-')
+plt.plot(zmpEst_data[:,1] - zmpDes_data[:,1],'b-')
+plt.plot(zmpEst_data[:,2] - zmpDes_data[:,2],'r-')
 plt.title('ZMP error')
 plt.legend(['Error on x','Error on y'])
 
