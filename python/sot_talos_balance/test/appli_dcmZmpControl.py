@@ -16,8 +16,11 @@ dt = robot.timeStep;
 # --- Desired values
 robot.dynamic.com.recompute(0)
 comDes = robot.dynamic.com.value
-dcmDes = comDes
-zmpDes = comDes[:2] + (0.0,)
+#dcmDes = comDes
+#zmpDes = comDes[:2] + (0.0,)
+robot.dynamic.zmp.recompute(0)
+dcmDes = robot.dynamic.zmp.value
+zmpDes = robot.dynamic.zmp.value
 ddcomDes = (0.0,0.0,0.0)
 
 # --- Pendulum parameters
@@ -29,29 +32,40 @@ omega = sqrt(g/h)
 # -------------------------- ESTIMATION --------------------------
 
 # --- General Estimation
-robot.param_server = create_parameter_server(param_server_conf,dt)
-robot_name='robot'
-cdc_estimator = DcmEstimator('dcm_estimator')
-cdc_estimator.init(dt, robot_name)
-plug(robot.device.state, cdc_estimator.q)
-plug(robot.device.velocity, cdc_estimator.v)
-robot.cdc_estimator = cdc_estimator # cdc_estimator.c == robot.dynamic.com
+# robot.param_server = create_parameter_server(param_server_conf,dt)
+# robot_name='robot'
+# cdc_estimator = DcmEstimator('dcm_estimator')
+# cdc_estimator.init(dt, robot_name)
+# plug(robot.device.state, cdc_estimator.q)
+# plug(robot.device.velocity, cdc_estimator.v)
+# robot.cdc_estimator = cdc_estimator # cdc_estimator.c == robot.dynamic.com
+robot.cdc_estimator = robot.dynamic
 
 # --- DCM Estimation
-robot.estimator = create_cdc_dcm_estimator(robot)
+estimator = DummyDcmEstimator("dummy")
+estimator.omega.value = omega
+# estimator.mass.value = 1.0
+# plug(robot.cdc_estimator.c, estimator.com)
+# plug(robot.cdc_estimator.dc,estimator.momenta)
+estimator.mass.value = mass
+plug(robot.cdc_estimator.com,estimator.com)
+plug(robot.cdc_estimator.momenta,estimator.momenta)
+estimator.init()
+robot.estimator = estimator
 
 # --- ZMP estimation
-zmp_estimator = SimpleZmpEstimator("zmpEst")
-robot.dynamic.createOpPoint('LF',robot.OperationalPointsMap['left-ankle'])
-robot.dynamic.createOpPoint('RF',robot.OperationalPointsMap['right-ankle'])
-plug(robot.dynamic.LF,zmp_estimator.poseLeft)
-plug(robot.dynamic.RF,zmp_estimator.poseRight)
-# plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
-# plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
-plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
-plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
-zmp_estimator.init()
-robot.zmp_estimator = zmp_estimator
+#zmp_estimator = SimpleZmpEstimator("zmpEst")
+#robot.dynamic.createOpPoint('LF',robot.OperationalPointsMap['left-ankle'])
+#robot.dynamic.createOpPoint('RF',robot.OperationalPointsMap['right-ankle'])
+#plug(robot.dynamic.LF,zmp_estimator.poseLeft)
+#plug(robot.dynamic.RF,zmp_estimator.poseRight)
+## plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
+## plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
+#plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
+#plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
+#zmp_estimator.init()
+#robot.zmp_estimator = zmp_estimator
+robot.zmp_estimator = robot.dynamic
 
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
@@ -68,7 +82,7 @@ dcm_controller.decayFactor.value = gamma_dcm
 dcm_controller.mass.value = mass
 dcm_controller.omega.value = omega
 
-plug(robot.cdc_estimator.c,dcm_controller.com)
+plug(robot.cdc_estimator.com,dcm_controller.com)
 plug(robot.estimator.dcm,dcm_controller.dcm)
 
 dcm_controller.zmpDes.value = zmpDes # plug a signal here
@@ -138,7 +152,13 @@ rospub_signalName = '{0}_{1}'.format('fake', 'comDes')
 topicname = '/sot/{0}/{1}'.format('fake', 'comDes')
 robot.publisher.add('vector',rospub_signalName,topicname)
 plug(robot.dcm_control.dcmDes, robot.publisher.signal(rospub_signalName))                                 # desired CoM (workaround)
-create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM
+
+rospub_signalName = '{0}_{1}'.format(robot.cdc_estimator.name, 'c')
+topicname = '/sot/{0}/{1}'.format(robot.cdc_estimator.name, 'c')
+robot.publisher.add('vector',rospub_signalName,topicname)
+plug(robot.cdc_estimator.com, robot.publisher.signal(rospub_signalName))                                  # estimated CoM (workaround)
+# create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM (to be modified)
+
 create_topic(robot.publisher, robot.com_admittance_control, 'comRef', robot = robot, data_type='vector')  # reference CoM
 create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')                    # resulting SOT CoM
 
@@ -156,9 +176,10 @@ robot.tracer.open('/tmp','dg_','.dat')
 robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
 addTrace(robot.tracer, robot.dcm_control, 'dcmDes')             # desired CoM (workaround)
-addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
+addTrace(robot.tracer, robot.dynamic, 'com')                    # estimated CoM (workaround)
+# addTrace(robot.tracer, robot.cdc_estimator, 'com')              # estimated CoM (to be modified)
 addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
-addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
+# addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM (already added)
 
 # addTrace(robot.tracer, robot.dcm_control, 'dcmDes')           # desired DCM (already added)
 addTrace(robot.tracer, robot.estimator, 'dcm')                  # estimated DCM

@@ -13,11 +13,11 @@ sleep(5.0)
 
 # Connect ZMP reference and reset controllers
 print('Connect ZMP reference')
-#runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
-#runCommandClient('robot.com_admittance_control.setState(robot.dynamic.com.value,[0.0,0.0,0.0])')
-#runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
-#runCommandClient('robot.dcm_control.resetDcmIntegralError()')
-#runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
+runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
+runCommandClient('robot.com_admittance_control.setState(robot.dynamic.com.value,[0.0,0.0,0.0])')
+runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
+runCommandClient('robot.dcm_control.resetDcmIntegralError()')
+runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
 
 sleep(5.0)
 
@@ -31,7 +31,8 @@ runCommandClient('dump_tracer(robot.tracer)')
 
 # --- DISPLAY
 comDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-dcmDes.dat')             # desired CoM (workaround)
-comEst_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.cdc_estimator.name') + '-c.dat')                # estimated CoM
+comEst_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dynamic.name') + '-com.dat')                    # estimated CoM (workaround)
+# comEst_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.cdc_estimator.name') + '-c.dat')                # estimated CoM (to be modified)
 comRef_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.com_admittance_control.name') + '-comRef.dat')  # reference CoM
 comSOT_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dynamic.name') + '-com.dat')                    # resulting SOT CoM
 
