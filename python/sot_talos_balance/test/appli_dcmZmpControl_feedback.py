@@ -1,4 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
+import sot_talos_balance.control_manager_conf          as param_server_conf
+import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph import plug
@@ -12,16 +14,24 @@ dt = robot.timeStep;
 # --- filters
 robot.device_filters = create_device_filters(robot,dt)
 
-# --- Dummy estimator
-robot.estimator = create_dummy_dcm_estimator(robot)
+
+# --- ESTIMATION
+robot.param_server            = create_parameter_server(param_server_conf,dt)
+robot.device_filters          = create_device_filters(robot, dt)
+robot.imu_filters             = create_imu_filters(robot, dt)
+robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf) 
+robot.be_filters              = create_be_filters(robot, dt)
+robot.cdc_estimator           = create_dcm_estimator(robot, dt)
+
+robot.estimator = create_cdc_dcm_estimator(robot)
 
 # --- DCM controller
-Kp_dcm = [5.0,5.0,5.0]
+Kp_dcm = [0.0,0.0,0.0]
 Ki_dcm = [0.0,0.0,0.0] # to be set later
 robot.dcm_control = create_dcm_controller(Kp_dcm,[0.0]*3,dt,robot,robot.estimator.dcm)
 
 # --- Admittance controller
-Kp_adm = [0.01,0.01,0.0] # to be set later
+Kp_adm = [0.0,0.0,0.0] # to be set later
 robot.com_admittance_control = create_com_admittance_controller([0.0]*3,dt,robot)
 
 # --- CONTACTS
@@ -72,6 +82,7 @@ robot.device.after.addSignal('{0}.comRef'.format(robot.com_admittance_control.na
 addTrace(robot.tracer, robot.zmp_estimator, 'zmp')
 addTrace(robot.tracer, robot.dcm_control, 'zmpRef')
 addTrace(robot.tracer, robot.estimator, 'dcm')
+addTrace(robot.tracer, robot.cdc_estimator, 'c')
 addTrace(robot.tracer, robot.dynamic, 'com')
 addTrace(robot.tracer, robot.com_admittance_control, 'comRef')
 
@@ -80,6 +91,7 @@ robot.publisher = create_rospublish(robot, 'robot_publisher')
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.estimator, 'dcm', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.com_admittance_control, 'comRef', robot = robot, data_type='vector')
 

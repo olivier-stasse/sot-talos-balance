@@ -302,6 +302,21 @@ def create_dummy_dcm_estimator(robot):
     estimator.init()
     return estimator
 
+def create_cdc_dcm_estimator(robot):
+    from math import sqrt
+    estimator = DummyDcmEstimator("dummy")
+    robot.dynamic.com.recompute(0)
+    h = robot.dynamic.com.value[2]
+    g = 9.81
+    omega = sqrt(g/h)
+
+    estimator.mass.value = 1.0
+    estimator.omega.value = omega
+    plug(robot.cdc_estimator.c, estimator.com)
+    plug(robot.cdc_estimator.dc,estimator.momenta)
+    estimator.init()
+    return estimator
+
 def create_com_admittance_controller(Kp,dt,robot):
     controller = ComAdmittanceController("comAdmCtrl")
     controller.Kp.value = Kp
