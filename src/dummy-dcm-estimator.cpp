@@ -20,7 +20,7 @@
 #include <dynamic-graph/factory.h>
 #include <dynamic-graph/command-bind.h>
 
-#include "sot/talos_balance/utils/commands-helper.hh"
+#include <dynamic-graph/all-commands.h>
 #include "sot/talos_balance/utils/stop-watch.hh"
 
 namespace dynamicgraph

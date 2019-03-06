@@ -30,8 +30,7 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#include "utils/signal-helper.hh"
-#include "utils/logger.hh"
+#include <dynamic-graph/signal-helper.h>
 #include <map>
 #include "boost/assign.hpp"
 
@@ -40,8 +39,6 @@
 #include "pinocchio/spatial/se3.hpp"
 #include <sot/core/robot-utils.hh>
 #include <pinocchio/algorithm/kinematics.hpp>
-
-
 
 
 namespace dynamicgraph {
@@ -102,11 +99,6 @@ namespace dynamicgraph {
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
 
-        void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
-        {
-          getLogger().sendMsg("[AdmittanceControllerEndEffector-"+name+"] "+msg, t, file, line);
-        }
-
       protected:
         /// Dimension of the force signals and of the output
         int                    m_n;
@@ -120,13 +112,13 @@ namespace dynamicgraph {
         /// Robot Util instance to get the sensor frame
         RobotUtil*             m_robot_util;
         /// Pinocchio robot model
-        se3::Model             m_model;
+        pinocchio::Model             m_model;
         /// Pinocchio robot data
-        se3::Data             *m_data;
+        pinocchio::Data             *m_data;
         /// Force sensor frame placement wrt the parent frame
-        se3::SE3               m_sensorFrame;
+        pinocchio::SE3               m_sensorFrame;
         /// Id of the parent joint of the force sensor frame
-        se3::JointIndex        m_parentId;
+        pinocchio::JointIndex        m_parentId;
         /// robot configuration according to pinocchio convention
         dynamicgraph::Vector   m_q;
 

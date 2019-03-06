@@ -36,9 +36,8 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#include <sot/talos_balance/utils/signal-helper.hh>
-#include <sot/talos_balance/utils/vector-conversions.hh>
-#include <sot/talos_balance/utils/logger.hh>
+#include <dynamic-graph/signal-helper.h>
+#include <sot/core/matrix-geometry.hh>
 #include <sot/core/robot-utils.hh>
 #include <map>
 #include "boost/assign.hpp"
@@ -120,38 +119,32 @@ namespace dynamicgraph {
 	
         void resetProfiler();
 	
-	/// Commands related to joint name and joint id
-	void setNameToId(const std::string& jointName, const double & jointId);
-	void setJointLimitsFromId(const double &jointId, 
+	      /// Commands related to joint name and joint id
+	      void setNameToId(const std::string& jointName, const double & jointId);
+	      void setJointLimitsFromId(const double &jointId, 
 				const double &lq, const double &uq);
 
-	/// Command related to ForceUtil
-	void setForceLimitsFromId(const double &jointId, 
-				  const dynamicgraph::Vector &lq, 
-				  const dynamicgraph::Vector &uq);
-	void setForceNameToForceId(const std::string& forceName, 
-				   const double & forceId);
+	      /// Command related to ForceUtil
+	      void setForceLimitsFromId(const double &jointId, 
+				const dynamicgraph::Vector &lq, 
+				const dynamicgraph::Vector &uq);
+	      void setForceNameToForceId(const std::string& forceName, const double & forceId);
 	
-	/// Commands related to FootUtil
-	void setRightFootSoleXYZ(const dynamicgraph::Vector &);
+	      /// Commands related to FootUtil
+	      void setRightFootSoleXYZ(const dynamicgraph::Vector &);
         void setRightFootForceSensorXYZ(const dynamicgraph::Vector &);
-	void setFootFrameName(const std::string &, const std::string &);
+	      void setFootFrameName(const std::string &, const std::string &);
         void setImuJointName(const std::string &);
-	void displayRobotUtil();
-	/// Set the mapping between urdf and sot.
-	void setJoints(const dynamicgraph::Vector &);
+	      void displayRobotUtil();
+	      /// Set the mapping between urdf and sot.
+	      void setJoints(const dynamicgraph::Vector &);
 
-        void setStreamPrintPeriod(const double & s);
+//        void setStreamPrintPeriod(const double & s);
         void setSleepTime(const double &seconds);
         void addEmergencyStopSIN(const std::string& name);
 
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
-
-        void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
-        {
-          getLogger().sendMsg("[ControlManager-"+name+"] "+msg, t, file, line);
-        }
 
       protected:
         RobotUtil *                   m_robot_util;

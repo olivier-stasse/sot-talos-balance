@@ -18,9 +18,7 @@
 
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
-#include <dynamic-graph/command-bind.h>
-
-#include "sot/talos_balance/utils/commands-helper.hh"
+#include <dynamic-graph/all-commands.h>
 #include "sot/talos_balance/utils/stop-watch.hh"
 
 
@@ -38,9 +36,9 @@ namespace dynamicgraph
 #define PROFILE_EXAMPLE_SUM_COMPUTATION      "Example: sum computation                               "
 #define PROFILE_EXAMPLE_NBJOINTS_COMPUTATION "Example: nbJoints extraction                           "
 
-#define INPUT_SIGNALS     firstAddendSIN << secondAddendSIN
+#define INPUT_SIGNALS     m_firstAddendSIN << m_secondAddendSIN
 
-#define OUTPUT_SIGNALS sumSOUT << nbJointsSOUT
+#define OUTPUT_SIGNALS m_sumSOUT << m_nbJointsSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -69,9 +67,9 @@ namespace dynamicgraph
 
       void Example::init(const std::string& robotName)
       {
-        if(!firstAddendSIN.isPlugged())
+        if(!m_firstAddendSIN.isPlugged())
           return SEND_MSG("Init failed: signal firstAddend is not plugged", MSG_TYPE_ERROR);
-        if(!secondAddendSIN.isPlugged())
+        if(!m_secondAddendSIN.isPlugged())
           return SEND_MSG("Init failed: signal secondAddend is not plugged", MSG_TYPE_ERROR);
 
         /*std::string & robotName_nonconst = const_cast<std::string &>(robotName);*/
@@ -112,8 +110,8 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_EXAMPLE_SUM_COMPUTATION);
 
-        double firstAddend  = firstAddendSIN(iter);
-        double secondAddend = secondAddendSIN(iter);
+        double firstAddend  = m_firstAddendSIN(iter);
+        double secondAddend = m_secondAddendSIN(iter);
 
         s = firstAddend + secondAddend;
 

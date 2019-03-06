@@ -25,7 +25,7 @@
 #include <sot/talos_balance/filter-differentiator.hh>
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
-#include <sot/talos_balance/utils/commands-helper.hh>
+#include <dynamic-graph/all-commands.h>
 //#include <sot/torque_control/motor-model.hh>
 #include <Eigen/Dense>
 

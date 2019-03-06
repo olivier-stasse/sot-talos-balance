@@ -16,7 +16,7 @@
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
 
-#include <sot/talos_balance/utils/commands-helper.hh>
+#include <dynamic-graph/all-commands.h>
 #include <sot/talos_balance/utils/stop-watch.hh>
 
 
@@ -31,7 +31,7 @@ namespace dynamicgraph
       using namespace dg::command;
       using namespace std;
 
-      typedef Eigen::Vector6d Vector6;
+      typedef Vector6d Vector6;
 
 #define PROFILE_MADGWICKAHRS_COMPUTATION          "MadgwickAHRS computation"
 

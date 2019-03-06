@@ -29,9 +29,8 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#include <sot/talos_balance/utils/signal-helper.hh>
-#include <sot/talos_balance/utils/vector-conversions.hh>
-#include <sot/talos_balance/utils/logger.hh>
+#include <dynamic-graph/signal-helper.h>
+#include <sot/core/matrix-geometry.hh>
 #include <map>
 #include "boost/assign.hpp"
 #include <boost/math/distributions/normal.hpp> // for normal_distribution
@@ -56,12 +55,12 @@ namespace dynamicgraph
       class DCMESTIMATOR_EXPORT DcmEstimator
 	                         :public::dynamicgraph::Entity
       {
-        typedef se3::SE3 SE3;
+        typedef pinocchio::SE3 SE3;
         typedef Eigen::Vector2d Vector2;
         typedef Eigen::Vector3d Vector3;
         typedef Eigen::Vector4d Vector4;
-        typedef Eigen::Vector6d Vector6;
-        typedef Eigen::Vector7d Vector7;
+        typedef Vector6d Vector6;
+        typedef Vector7d Vector7;
         typedef Eigen::Matrix3d Matrix3;
         typedef boost::math::normal normal;
 
@@ -85,19 +84,14 @@ namespace dynamicgraph
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
 
-        void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
-        {
-          getLogger().sendMsg("[DcmEstimator-"+name+"] "+msg, t, file, line);
-        }
-
       protected:
         bool      m_initSucceeded;            /// true if the entity has been successfully initialized
         RobotUtil*   m_robot_util;
-        se3::Data         m_data;            /// Pinocchio robot data
+        pinocchio::Data         m_data;            /// Pinocchio robot data
         Eigen::VectorXd   m_q_pin;            /// robot configuration according to pinocchio convention
         Eigen::VectorXd   m_v_pin;            /// robot velocities according to pinocchio convention
         double               m_dt;            /// sampling time step
-        se3::Model        m_model;            /// Pinocchio robot model
+        pinocchio::Model        m_model;            /// Pinocchio robot model
 
       }; // class DCMEstimator
 

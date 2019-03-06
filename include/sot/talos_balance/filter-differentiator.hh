@@ -38,10 +38,9 @@
 /* --------------------------------------------------------------------- */
 
 /* HELPER */
-#include <sot/talos_balance/utils/signal-helper.hh>
+#include <dynamic-graph/signal-helper.h>
 #include <sot/talos_balance/utils/stop-watch.hh>
 #include <sot/talos_balance/utils/causal-filter.hh>
-#include <sot/talos_balance/utils/logger.hh>
 
 namespace dynamicgraph {
   namespace sot {
@@ -104,11 +103,6 @@ namespace dynamicgraph {
 
 
       protected:
-
-        void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
-        {
-          getLogger().sendMsg("["+name+"] "+msg, t, file, line);
-        }
 
       public: /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;

@@ -36,11 +36,7 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-// #include "utils/signal-helper.hh"
 #include <dynamic-graph/signal-helper.h>
-
-// #include "utils/logger.hh"
-#include <dynamic-graph/logger.h>
 
 #include <map>
 #include "boost/assign.hpp"
@@ -77,11 +73,6 @@ namespace dynamicgraph {
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
-
-        // void sendMsg(const std::string& msg, MsgType t=MSG_TYPE_INFO, const char* file="", int line=0)
-        // {
-        //   getLogger().sendMsg("[Example-"+name+"] "+msg, t, file, line);
-        // }
 
       protected:
         bool  m_initSucceeded;    /// true if the entity has been successfully initialized
