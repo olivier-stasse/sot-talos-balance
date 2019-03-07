@@ -145,7 +145,8 @@ namespace dynamicgraph
         const Vector & q = m_jointPositionSIN(iter);
 
         assert(forceVector.size()==m_n            && "Unexpected size of signal force");
-        assert(q.size()==m_robot_util->m_nbJoints && "Unexpected size of signal joint_positions");
+        assert(q.size()==static_cast<dg::Index>(m_robot_util->m_nbJoints) 
+			&& "Unexpected size of signal joint_positions");
 
         // Fill m_q with the current joint configuration and compute forward kinematics
         m_q.head<6>().setZero();

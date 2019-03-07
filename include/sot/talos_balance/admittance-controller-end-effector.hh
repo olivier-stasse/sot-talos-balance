@@ -78,10 +78,10 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(jointPosition, dynamicgraph::Vector);
 
         /// \brief     Velocity reference for the end-effector computed by the controller
-      DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
 
         /// \brief     6d force given by the sensor in he global frame
-      DECLARE_SIGNAL_INNER(forceWorldFrame, dynamicgraph::Vector);
+        DECLARE_SIGNAL_INNER(forceWorldFrame, dynamicgraph::Vector);
 
         /* --- COMMANDS --- */
         /**
@@ -112,13 +112,13 @@ namespace dynamicgraph {
         /// Robot Util instance to get the sensor frame
         RobotUtilShrPtr             m_robot_util;
         /// Pinocchio robot model
-        pinocchio::Model             m_model;
+        pinocchio::Model       m_model;
         /// Pinocchio robot data
-        pinocchio::Data             *m_data;
+        pinocchio::Data       *m_data;
         /// Force sensor frame placement wrt the parent frame
-        pinocchio::SE3               m_sensorFrame;
+        pinocchio::SE3         m_sensorFrame;
         /// Id of the parent joint of the force sensor frame
-        pinocchio::JointIndex        m_parentId;
+        pinocchio::JointIndex  m_parentId;
         /// robot configuration according to pinocchio convention
         dynamicgraph::Vector   m_q;
 

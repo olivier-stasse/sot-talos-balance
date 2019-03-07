@@ -181,6 +181,8 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_comAdmittance.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_single_joint.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/appli_admittance_single_joint.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_end_effector.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_admittance_end_effector.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_single_joint_velocity_based.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/appli_admittance_single_joint_velocity_based.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_singleTraj.py
