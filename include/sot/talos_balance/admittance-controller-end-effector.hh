@@ -70,6 +70,8 @@ namespace dynamicgraph {
         /* --- SIGNALS --- */
         /// \brief     Gain (6d) for the integration of the error on the force
         DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
+        /// \brief     Value of the saturation to apply on the velocity output
+        DECLARE_SIGNAL_IN(velocitySaturation, dynamicgraph::Vector);
         /// \brief     6d force given by the sensor in its local frame
         DECLARE_SIGNAL_IN(force, dynamicgraph::Vector);
         /// \brief     6d desired force of the end-effector in the world frame

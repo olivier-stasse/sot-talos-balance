@@ -31,7 +31,7 @@ namespace dynamicgraph
 
 #define PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_FORCEWORLDFRAME_COMPUTATION "AdmittanceControllerEndEffector: forceWorldFrame computation          "
 
-#define INPUT_SIGNALS     m_KpSIN << m_forceSIN << m_forceDesSIN << m_jointPositionSIN
+#define INPUT_SIGNALS     m_KpSIN << m_velocitySaturationSIN << m_forceSIN << m_forceDesSIN << m_jointPositionSIN
 
 #define INNER_SIGNALS     m_forceWorldFrameSINNER
 
@@ -51,6 +51,7 @@ namespace dynamicgraph
       AdmittanceControllerEndEffector::AdmittanceControllerEndEffector(const std::string& name)
           : Entity(name)
           , CONSTRUCT_SIGNAL_IN(Kp, dynamicgraph::Vector)
+          , CONSTRUCT_SIGNAL_IN(velocitySaturation, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_IN(force, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_IN(forceDes, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_IN(jointPosition, dynamicgraph::Vector)
@@ -74,6 +75,8 @@ namespace dynamicgraph
       void AdmittanceControllerEndEffector::init(const double & dt, const std::string & sensorFrameName)
       {
         if(!m_KpSIN.isPlugged())
+          return SEND_MSG("Init failed: signal velocitySaturation is not plugged", MSG_TYPE_ERROR);
+        if(!m_velocitySaturationSIN.isPlugged())
           return SEND_MSG("Init failed: signal Kp is not plugged", MSG_TYPE_ERROR);
         if(!m_forceSIN.isPlugged())
           return SEND_MSG("Init failed: signal force is not plugged", MSG_TYPE_ERROR);
@@ -183,15 +186,29 @@ namespace dynamicgraph
         const Vector & forceDes = m_forceDesSIN(iter);
         const Vector & forceWorldFrame = m_forceWorldFrameSINNER(iter);
         const Vector & Kp = m_KpSIN(iter);
+        const Vector & velocitySaturation = m_velocitySaturationSIN(iter);
 
         assert(forceWorldFrame.size()==m_n       && "Unexpected size of signal force");
         assert(forceDes.size()==m_n              && "Unexpected size of signal forceDes");
         assert(Kp.size()==m_n                    && "Unexpected size of signal Kp");
+        assert(velocitySaturation.size()==m_n    && "Unexpected size of signal velocitySaturation");
 
 
         m_dq += Kp.cwiseProduct(forceDes - forceWorldFrame);
 
-        s = m_dq;
+	for(int i = 0; i < m_n; i++)
+	{
+          if(m_dq[i] > velocitySaturation[i])
+          {
+            m_dq[i] = velocitySaturation[i];
+	  }
+          if(m_dq[i] < -velocitySaturation[i])
+          {
+            m_dq[i] = -velocitySaturation[i];
+	  }
+	}
+        
+	s = m_dq;
 
         getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQREF_COMPUTATION);
 

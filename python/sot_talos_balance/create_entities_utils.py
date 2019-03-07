@@ -88,6 +88,7 @@ def create_end_effector_admittance_controller(Kp, timeStep, robot):
     plug(robot.device.forceRARM, controller.force)
 
     controller.forceDes.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    controller.velocitySaturation.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     controller.init(timeStep, "wrist_left_ft_link")
     return controller
 
