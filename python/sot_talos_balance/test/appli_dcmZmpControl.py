@@ -16,11 +16,8 @@ dt = robot.timeStep;
 # --- Desired values
 robot.dynamic.com.recompute(0)
 comDes = robot.dynamic.com.value
-#dcmDes = comDes
-#zmpDes = comDes[:2] + (0.0,)
-robot.dynamic.zmp.recompute(0)
-dcmDes = robot.dynamic.zmp.value
-zmpDes = robot.dynamic.zmp.value
+dcmDes = comDes
+zmpDes = comDes[:2] + (0.0,)
 ddcomDes = (0.0,0.0,0.0)
 
 # --- Pendulum parameters
@@ -70,7 +67,7 @@ robot.zmp_estimator = robot.dynamic
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [500.0,500.0,500.0]
+Kp_dcm = [1.0,1.0,1.0]
 Ki_dcm = [0.0,0.0,0.0] # zero (to be set later)
 gamma_dcm = 0.2
 
@@ -92,7 +89,7 @@ dcm_controller.init(dt)
 
 robot.dcm_control = dcm_controller
 
-Ki_dcm = [1.0,1.0,0.0] # to be set later
+Ki_dcm = [0.1,0.1,0.0] # this value is employed later
 
 # --- CoM admittance controller
 Kp_adm = [0.0,0.0,0.0] # zero (to be set later)
@@ -108,7 +105,7 @@ com_admittance_control.setState(comDes,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [20.0,10.0,0.0] # to be set later
+Kp_adm = [1.0,1.0,0.0] # this value is employed later
 
 # -------------------------- SOT CONTROL --------------------------
 
@@ -142,6 +139,14 @@ robot.sot.push(robot.contactRF.task.name)
 robot.sot.push(robot.contactLF.task.name)
 robot.sot.push(robot.taskCom.task.name)
 robot.device.control.recompute(0)
+
+# --- Fix robot.dynamic inputs
+plug(robot.sot.control,robot.dynamic.velocity)
+from dynamic_graph.sot.core import Derivator_of_Vector
+robot.dvdt = Derivator_of_Vector("dv_dt")
+robot.dvdt.dt.value = dt
+plug(robot.sot.control,robot.dvdt.sin)
+plug(robot.dvdt.sout,robot.dynamic.acceleration)
 
 # -------------------------- PLOTS --------------------------
 
