@@ -14,18 +14,20 @@ sleep(5.0)
 # Connect ZMP reference and reset controllers
 print('Connect ZMP reference')
 runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
-runCommandClient('robot.com_admittance_control.setState(robot.dynamic.com.value,[0.0,0.0,0.0])')
+runCommandClient('robot.com_admittance_control.setState(comDes,[0.0,0.0,0.0])')
 runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
 runCommandClient('robot.dcm_control.resetDcmIntegralError()')
 runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
 
-sleep(5.0)
+#sleep(5.0)
 
-print('Kick the robot...')
-apply_force([-1000.0,0,0],0.01)
-print('... kick!')
+#print('Kick the robot...')
+#apply_force([-1000.0,0,0],0.01)
+#print('... kick!')
 
-sleep(5.0)
+#sleep(5.0)
+
+sleep(30.0)
 
 runCommandClient('dump_tracer(robot.tracer)')
 

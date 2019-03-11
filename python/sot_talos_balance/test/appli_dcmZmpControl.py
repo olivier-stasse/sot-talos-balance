@@ -1,6 +1,7 @@
 from sot_talos_balance.create_entities_utils import *
 import sot_talos_balance.control_manager_conf          as param_server_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
+from dynamic_graph.sot.core import Task, FeaturePosture
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
@@ -15,7 +16,11 @@ dt = robot.timeStep;
 
 # --- Desired values
 robot.dynamic.com.recompute(0)
-comDes = robot.dynamic.com.value
+# comDes = robot.dynamic.com.value
+comDes = list(robot.dynamic.com.value)
+comDes[0] += 0.001
+comDes[1] += 0.001
+comDes = tuple(comDes)
 dcmDes = comDes
 zmpDes = comDes[:2] + (0.0,)
 ddcomDes = (0.0,0.0,0.0)
@@ -89,7 +94,7 @@ dcm_controller.init(dt)
 
 robot.dcm_control = dcm_controller
 
-Ki_dcm = [0.1,0.1,0.0] # this value is employed later
+Ki_dcm = [0.0,0.0,0.0] # this value is employed later
 
 # --- CoM admittance controller
 Kp_adm = [0.0,0.0,0.0] # zero (to be set later)
@@ -108,6 +113,40 @@ robot.com_admittance_control = com_admittance_control
 Kp_adm = [1.0,1.0,0.0] # this value is employed later
 
 # -------------------------- SOT CONTROL --------------------------
+
+# --- Upper body
+robot.taskUpperBody = Task ('task_upper_body')
+robot.taskUpperBody.feature = FeaturePosture('feature_upper_body')
+
+q = list(robot.dynamic.position.value)
+robot.taskUpperBody.feature.state.value = q
+robot.taskUpperBody.feature.posture.value = q
+
+# robotDim = robot.dynamic.getDimension() # 38
+robot.taskUpperBody.feature.selectDof(18,True)
+robot.taskUpperBody.feature.selectDof(19,True)
+robot.taskUpperBody.feature.selectDof(20,True)
+robot.taskUpperBody.feature.selectDof(21,True)
+robot.taskUpperBody.feature.selectDof(22,True)
+robot.taskUpperBody.feature.selectDof(23,True)
+robot.taskUpperBody.feature.selectDof(24,True)
+robot.taskUpperBody.feature.selectDof(25,True)
+robot.taskUpperBody.feature.selectDof(26,True)
+robot.taskUpperBody.feature.selectDof(27,True)
+robot.taskUpperBody.feature.selectDof(28,True)
+robot.taskUpperBody.feature.selectDof(29,True)
+robot.taskUpperBody.feature.selectDof(30,True)
+robot.taskUpperBody.feature.selectDof(31,True)
+robot.taskUpperBody.feature.selectDof(32,True)
+robot.taskUpperBody.feature.selectDof(33,True)
+robot.taskUpperBody.feature.selectDof(34,True)
+robot.taskUpperBody.feature.selectDof(35,True)
+robot.taskUpperBody.feature.selectDof(36,True)
+robot.taskUpperBody.feature.selectDof(37,True)
+
+robot.taskUpperBody.controlGain.value = 100.0
+robot.taskUpperBody.add(robot.taskUpperBody.feature.name)
+plug(robot.dynamic.position, robot.taskUpperBody.feature.state)
 
 # --- CONTACTS
 #define contactLF and contactRF
@@ -130,14 +169,62 @@ plug(robot.com_admittance_control.dcomRef,robot.taskCom.featureDes.errordotIN)
 robot.taskCom.task.controlGain.value = 0
 robot.taskCom.task.setWithDerivative(True)
 
+# --- Posture
+robot.taskPos = Task ('task_pos')
+robot.taskPos.feature = FeaturePosture('feature_pos')
+
+q = list(robot.dynamic.position.value)
+robot.taskPos.feature.state.value = q
+robot.taskPos.feature.posture.value = q
+
+# robotDim = robot.dynamic.getDimension() # 38
+robot.taskPos.feature.selectDof(6,True)
+robot.taskPos.feature.selectDof(7,True)
+robot.taskPos.feature.selectDof(8,True)
+robot.taskPos.feature.selectDof(9,True)
+robot.taskPos.feature.selectDof(10,True)
+robot.taskPos.feature.selectDof(11,True)
+robot.taskPos.feature.selectDof(12,True)
+robot.taskPos.feature.selectDof(13,True)
+robot.taskPos.feature.selectDof(14,True)
+robot.taskPos.feature.selectDof(15,True)
+robot.taskPos.feature.selectDof(16,True)
+robot.taskPos.feature.selectDof(17,True)
+robot.taskPos.feature.selectDof(18,True)
+robot.taskPos.feature.selectDof(19,True)
+robot.taskPos.feature.selectDof(20,True)
+robot.taskPos.feature.selectDof(21,True)
+robot.taskPos.feature.selectDof(22,True)
+robot.taskPos.feature.selectDof(23,True)
+robot.taskPos.feature.selectDof(24,True)
+robot.taskPos.feature.selectDof(25,True)
+robot.taskPos.feature.selectDof(26,True)
+robot.taskPos.feature.selectDof(27,True)
+robot.taskPos.feature.selectDof(28,True)
+robot.taskPos.feature.selectDof(29,True)
+robot.taskPos.feature.selectDof(30,True)
+robot.taskPos.feature.selectDof(31,True)
+robot.taskPos.feature.selectDof(32,True)
+robot.taskPos.feature.selectDof(33,True)
+robot.taskPos.feature.selectDof(34,True)
+robot.taskPos.feature.selectDof(35,True)
+robot.taskPos.feature.selectDof(36,True)
+robot.taskPos.feature.selectDof(37,True)
+
+robot.taskPos.controlGain.value = 100.0
+robot.taskPos.add(robot.taskPos.feature.name)
+plug(robot.dynamic.position, robot.taskPos.feature.state)
+
 # --- SOT solver
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 plug(robot.sot.control,robot.device.control)
 
+robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
 robot.sot.push(robot.contactLF.task.name)
 robot.sot.push(robot.taskCom.task.name)
+robot.sot.push(robot.taskPos.name)
 robot.device.control.recompute(0)
 
 # --- Fix robot.dynamic inputs
