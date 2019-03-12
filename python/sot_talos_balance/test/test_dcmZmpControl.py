@@ -42,6 +42,7 @@ dcmDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name'
 dcmEst_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.estimator.name') + '-dcm.dat')                  # estimated DCM
 
 zmpDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-zmpDes.dat')             # desired ZMP
+zmpSOT_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dynamic.name') + '-zmp.dat')                    # SOT ZMP
 zmpEst_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.zmp_estimator.name') + '-zmp.dat')              # estimated ZMP
 zmpRef_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-zmpRef.dat')             # reference ZMP
 
@@ -76,19 +77,21 @@ plt.legend(['Desired x', 'Estimated x', 'Desired y', 'Estimated y'])
 
 plt.figure()
 plt.plot(zmpDes_data[:,1],'b--')
-plt.plot(zmpEst_data[:,1],'b-')
+plt.plot(zmpSOT_data[:,1],'b-')
 plt.plot(zmpRef_data[:,1],'b:')
 plt.plot(zmpDes_data[:,2],'r--')
-plt.plot(zmpEst_data[:,2],'r-')
+plt.plot(zmpSOT_data[:,2],'r-')
 plt.plot(zmpRef_data[:,2],'r:')
 plt.title('ZMP')
-plt.legend(['Desired x', 'Estimated x', 'Reference x',
-            'Desired y', 'Estimated y', 'Reference y'])
+plt.legend(['Desired x', 'SOT x', 'Reference x',
+            'Desired y', 'SOT y', 'Reference y'])
+
+zmpErrSOT = zmpSOT_data - zmpDes_data
 
 plt.figure()
-plt.plot(zmpEst_data[:,1] - zmpDes_data[:,1],'b-')
-plt.plot(zmpEst_data[:,2] - zmpDes_data[:,2],'r-')
-plt.title('ZMP error')
+plt.plot(zmpErrSOT[:,1],'b-')
+plt.plot(zmpErrSOT[:,2],'r-')
+plt.title('ZMP SOT error')
 plt.legend(['Error on x','Error on y'])
 
 raw_input("Wait before leaving the simulation")

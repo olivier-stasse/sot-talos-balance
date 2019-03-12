@@ -10,7 +10,6 @@ perspectives=@Variant(\0\0\0\t\0\0\0\x1\0\0\0\n\0\0\0\x1e\0@\0r\0q\0t\0_\0p\0l\0
 %40rqt_plot__Plot\pluginmanager\plugin__rqt_plot__Plot__0\dock_widget__DataPlotWidget\parent=__NoneType__
 %40rqt_plot__Plot\pluginmanager\plugin__rqt_plot__Plot__0\plugin\autoscroll=true
 %40rqt_plot__Plot\pluginmanager\plugin__rqt_plot__Plot__0\plugin\plot_type=1
-%40rqt_plot__Plot\pluginmanager\plugin__rqt_plot__Plot__0\plugin\topics=/sot/base_estimator/q/data[3], /sot/base_estimator/q_imu/data[3], /sot/base_link/position/data[3]
 %40rqt_plot__Plot\pluginmanager\plugin__rqt_plot__Plot__0\plugin\x_limits=0.0, 10.0
 %40rqt_plot__Plot\pluginmanager\plugin__rqt_plot__Plot__0\plugin\y_limits=-0.00001, 0.00001
 %40rqt_plot__Plot\pluginmanager\running-plugins=@Variant(\0\0\0\b\0\0\0\x1\0\0\0\x1a\0r\0q\0t\0_\0p\0l\0o\0t\0/\0P\0l\0o\0t\0\0\0\t\0\0\0\x1\0\0\0\x2\0\0\0\0)

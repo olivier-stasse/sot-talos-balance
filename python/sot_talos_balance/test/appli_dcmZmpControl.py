@@ -55,24 +55,23 @@ plug(robot.cdc_estimator.momenta,estimator.momenta)
 estimator.init()
 robot.estimator = estimator
 
-# --- ZMP estimation
-#zmp_estimator = SimpleZmpEstimator("zmpEst")
-#robot.dynamic.createOpPoint('LF',robot.OperationalPointsMap['left-ankle'])
-#robot.dynamic.createOpPoint('RF',robot.OperationalPointsMap['right-ankle'])
-#plug(robot.dynamic.LF,zmp_estimator.poseLeft)
-#plug(robot.dynamic.RF,zmp_estimator.poseRight)
-## plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
-## plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
-#plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
-#plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
-#zmp_estimator.init()
-#robot.zmp_estimator = zmp_estimator
-robot.zmp_estimator = robot.dynamic
+# --- ZMP estimation (disconnected)
+zmp_estimator = SimpleZmpEstimator("zmpEst")
+robot.dynamic.createOpPoint('LF',robot.OperationalPointsMap['left-ankle'])
+robot.dynamic.createOpPoint('RF',robot.OperationalPointsMap['right-ankle'])
+plug(robot.dynamic.LF,zmp_estimator.poseLeft)
+plug(robot.dynamic.RF,zmp_estimator.poseRight)
+# plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
+# plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
+plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
+plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
+zmp_estimator.init()
+robot.zmp_estimator = zmp_estimator
 
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [1.0,1.0,1.0]
+Kp_dcm = [8.0,8.0,8.0]
 Ki_dcm = [0.0,0.0,0.0] # zero (to be set later)
 gamma_dcm = 0.2
 
@@ -101,7 +100,7 @@ Kp_adm = [0.0,0.0,0.0] # zero (to be set later)
 
 com_admittance_control = ComAdmittanceController("comAdmCtrl")
 com_admittance_control.Kp.value = Kp_adm
-plug(robot.zmp_estimator.zmp,com_admittance_control.zmp)
+plug(robot.dynamic.zmp,com_admittance_control.zmp)
 com_admittance_control.zmpDes.value = zmpDes     # should be plugged to robot.dcm_control.zmpRef
 com_admittance_control.ddcomDes.value = ddcomDes # plug a signal here
 
@@ -110,7 +109,7 @@ com_admittance_control.setState(comDes,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [1.0,1.0,0.0] # this value is employed later
+Kp_adm = [8.0,8.0,0.0] # this value is employed later
 
 # -------------------------- SOT CONTROL --------------------------
 
@@ -258,8 +257,9 @@ create_topic(robot.publisher, robot.dcm_control, 'dcmDes', robot = robot, data_t
 create_topic(robot.publisher, robot.estimator, 'dcm', robot = robot, data_type='vector')                  # estimated DCM
 
 create_topic(robot.publisher, robot.dcm_control, 'zmpDes', robot = robot, data_type='vector')             # desired ZMP
+create_topic(robot.publisher, robot.dynamic, 'zmp', robot = robot, data_type='vector')                    # SOT ZMP
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot = robot, data_type='vector')              # estimated ZMP
-create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_type='vector')             # resulting SOT CoM
+create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_type='vector')             # reference ZMP
 
 # --- TRACER
 robot.tracer = TracerRealTime("zmp_tracer")
@@ -279,6 +279,7 @@ addTrace(robot.tracer, robot.estimator, 'dcm')                  # estimated DCM
 addTrace(robot.tracer, robot.dcm_control, 'zmpDes')             # desired ZMP
 addTrace(robot.tracer, robot.zmp_estimator, 'zmp')              # estimated ZMP
 addTrace(robot.tracer, robot.dcm_control, 'zmpRef')             # reference ZMP
+addTrace(robot.tracer, robot.dynamic, 'zmp')                    # SOT ZMP
 
 # -------------------------- SIMULATION --------------------------
 

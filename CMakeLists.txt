@@ -146,6 +146,7 @@ IF(BUILD_PYTHON_INTERFACE)
                 python/${SOTTALOSBALANCE_PYNAME}/motor_parameters.py
                 DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
   INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/utils/__init__.py
+                python/${SOTTALOSBALANCE_PYNAME}/utils/control_utils.py
                 python/${SOTTALOSBALANCE_PYNAME}/utils/plot_utils.py
                 python/${SOTTALOSBALANCE_PYNAME}/utils/sot_utils.py
                 python/${SOTTALOSBALANCE_PYNAME}/utils/filter_utils.py
