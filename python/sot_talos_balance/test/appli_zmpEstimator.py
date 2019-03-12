@@ -1,21 +1,41 @@
-from sot_talos_balance.create_entities_utils import create_com_trajectory_generator
-from sot_talos_balance.create_entities_utils import create_zmp_estimator
+from sot_talos_balance.create_entities_utils import *
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 
 from dynamic_graph.tracer_real_time import TracerRealTime
-from sot_talos_balance.create_entities_utils import addTrace, dump_tracer
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep;
+
+# -------------------------- DESIRED TRAJECTORY --------------------------
+
 robot.comTrajGen = create_com_trajectory_generator(dt,robot);
 
-# --- COM
-robot.taskCom = MetaTaskKineCom(robot.dynamic)
-robot.dynamic.com.recompute(0)
-robot.taskCom.featureDes.errorIN.value = robot.dynamic.com.value
-robot.taskCom.task.controlGain.value = 10
+# -------------------------- ESTIMATION --------------------------
+
+# --- filters
+filters = Bunch();    
+filters.ft_RF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_RF_filter", dt, 6)
+filters.ft_LF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_LF_filter", dt, 6)
+plug(robot.device.forceRLEG, filters.ft_RF_filter.x)
+plug(robot.device.forceLLEG, filters.ft_LF_filter.x)
+robot.device_filters = filters
+
+# --- ZMP estimation (disconnected)
+zmp_estimator = SimpleZmpEstimator("zmpEst")
+robot.dynamic.createOpPoint('sole_LF','left_sole_link')
+robot.dynamic.createOpPoint('sole_RF','right_sole_link')
+plug(robot.dynamic.sole_LF,zmp_estimator.poseLeft)
+plug(robot.dynamic.sole_RF,zmp_estimator.poseRight)
+plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
+plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
+#plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
+#plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
+zmp_estimator.init()
+robot.zmp_estimator = zmp_estimator
+
+# -------------------------- SOT CONTROL --------------------------
 
 # --- CONTACTS
 #define contactLF and contactRF
@@ -31,10 +51,13 @@ robot.contactRF.gain.setConstant(100)
 robot.contactRF.keep()
 locals()['contactRF'] = robot.contactRF
 
-# -- estimator
-# -- this NEEDS to be called AFTER the operational points LF and RF are created
-robot.zmp_estimator = create_zmp_estimator(robot)
+# --- COM
+robot.taskCom = MetaTaskKineCom(robot.dynamic)
+robot.dynamic.com.recompute(0)
+robot.taskCom.featureDes.errorIN.value = robot.dynamic.com.value
+robot.taskCom.task.controlGain.value = 10
 
+# --- SOT solver
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 plug(robot.sot.control,robot.device.control)
@@ -52,6 +75,8 @@ robot.dvdt = Derivator_of_Vector("dv_dt")
 robot.dvdt.dt.value = dt
 plug(robot.sot.control,robot.dvdt.sin)
 plug(robot.dvdt.sout,robot.dynamic.acceleration)
+
+# -------------------------- PLOTS --------------------------
 
 # --- TRACER
 robot.tracer = TracerRealTime("zmp_tracer")
