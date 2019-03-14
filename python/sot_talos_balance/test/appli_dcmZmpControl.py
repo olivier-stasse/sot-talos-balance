@@ -227,11 +227,11 @@ robot.sot.push(robot.taskPos.name)
 robot.device.control.recompute(0)
 
 # --- Fix robot.dynamic inputs
-plug(robot.sot.control,robot.dynamic.velocity)
+plug(robot.device.velocity,robot.dynamic.velocity)
 from dynamic_graph.sot.core import Derivator_of_Vector
 robot.dvdt = Derivator_of_Vector("dv_dt")
 robot.dvdt.dt.value = dt
-plug(robot.sot.control,robot.dvdt.sin)
+plug(robot.device.velocity,robot.dvdt.sin)
 plug(robot.dvdt.sout,robot.dynamic.acceleration)
 
 # -------------------------- PLOTS --------------------------
