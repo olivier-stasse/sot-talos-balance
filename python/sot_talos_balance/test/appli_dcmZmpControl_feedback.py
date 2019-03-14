@@ -79,7 +79,7 @@ robot.zmp_estimator = zmp_estimator
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [1e-3,1e-3,1e-3]
+Kp_dcm = [1.0,1.0,1.0]
 Ki_dcm = [0.0,0.0,0.0] # zero (to be set later)
 gamma_dcm = 0.2
 
@@ -117,7 +117,7 @@ com_admittance_control.setState(comDes,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [1e-3,1e-3,0.0] # this value is employed later
+Kp_adm = [1.0,1.0,0.0] # this value is employed later
 
 # -------------------------- SOT CONTROL --------------------------
 
@@ -176,51 +176,59 @@ plug(robot.com_admittance_control.dcomRef,robot.taskCom.featureDes.errordotIN)
 robot.taskCom.task.controlGain.value = 0
 robot.taskCom.task.setWithDerivative(True)
 
-# --- Posture
-robot.taskPos = Task ('task_pos')
-robot.taskPos.feature = FeaturePosture('feature_pos')
+# --- Waist
+robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
+robot.keepWaist.feature.frame('desired')
+robot.keepWaist.gain.setConstant(300)
+robot.keepWaist.keep()
+robot.keepWaist.feature.selec.value = '111000'
+locals()['keepWaist'] = robot.keepWaist
 
-q = list(robot.dynamic.position.value)
-robot.taskPos.feature.state.value = q
-robot.taskPos.feature.posture.value = q
+# # --- Posture
+# robot.taskPos = Task ('task_pos')
+# robot.taskPos.feature = FeaturePosture('feature_pos')
+#
+# q = list(robot.dynamic.position.value)
+# robot.taskPos.feature.state.value = q
+# robot.taskPos.feature.posture.value = q
 
 # robotDim = robot.dynamic.getDimension() # 38
-robot.taskPos.feature.selectDof(6,True)
-robot.taskPos.feature.selectDof(7,True)
-robot.taskPos.feature.selectDof(8,True)
-robot.taskPos.feature.selectDof(9,True)
-robot.taskPos.feature.selectDof(10,True)
-robot.taskPos.feature.selectDof(11,True)
-robot.taskPos.feature.selectDof(12,True)
-robot.taskPos.feature.selectDof(13,True)
-robot.taskPos.feature.selectDof(14,True)
-robot.taskPos.feature.selectDof(15,True)
-robot.taskPos.feature.selectDof(16,True)
-robot.taskPos.feature.selectDof(17,True)
-robot.taskPos.feature.selectDof(18,True)
-robot.taskPos.feature.selectDof(19,True)
-robot.taskPos.feature.selectDof(20,True)
-robot.taskPos.feature.selectDof(21,True)
-robot.taskPos.feature.selectDof(22,True)
-robot.taskPos.feature.selectDof(23,True)
-robot.taskPos.feature.selectDof(24,True)
-robot.taskPos.feature.selectDof(25,True)
-robot.taskPos.feature.selectDof(26,True)
-robot.taskPos.feature.selectDof(27,True)
-robot.taskPos.feature.selectDof(28,True)
-robot.taskPos.feature.selectDof(29,True)
-robot.taskPos.feature.selectDof(30,True)
-robot.taskPos.feature.selectDof(31,True)
-robot.taskPos.feature.selectDof(32,True)
-robot.taskPos.feature.selectDof(33,True)
-robot.taskPos.feature.selectDof(34,True)
-robot.taskPos.feature.selectDof(35,True)
-robot.taskPos.feature.selectDof(36,True)
-robot.taskPos.feature.selectDof(37,True)
+#robot.taskPos.feature.selectDof(6,True)
+#robot.taskPos.feature.selectDof(7,True)
+#robot.taskPos.feature.selectDof(8,True)
+#robot.taskPos.feature.selectDof(9,True)
+#robot.taskPos.feature.selectDof(10,True)
+#robot.taskPos.feature.selectDof(11,True)
+#robot.taskPos.feature.selectDof(12,True)
+#robot.taskPos.feature.selectDof(13,True)
+#robot.taskPos.feature.selectDof(14,True)
+#robot.taskPos.feature.selectDof(15,True)
+#robot.taskPos.feature.selectDof(16,True)
+#robot.taskPos.feature.selectDof(17,True)
+#robot.taskPos.feature.selectDof(18,True)
+#robot.taskPos.feature.selectDof(19,True)
+#robot.taskPos.feature.selectDof(20,True)
+#robot.taskPos.feature.selectDof(21,True)
+#robot.taskPos.feature.selectDof(22,True)
+#robot.taskPos.feature.selectDof(23,True)
+#robot.taskPos.feature.selectDof(24,True)
+#robot.taskPos.feature.selectDof(25,True)
+#robot.taskPos.feature.selectDof(26,True)
+#robot.taskPos.feature.selectDof(27,True)
+#robot.taskPos.feature.selectDof(28,True)
+#robot.taskPos.feature.selectDof(29,True)
+#robot.taskPos.feature.selectDof(30,True)
+#robot.taskPos.feature.selectDof(31,True)
+#robot.taskPos.feature.selectDof(32,True)
+#robot.taskPos.feature.selectDof(33,True)
+#robot.taskPos.feature.selectDof(34,True)
+#robot.taskPos.feature.selectDof(35,True)
+#robot.taskPos.feature.selectDof(36,True)
+#robot.taskPos.feature.selectDof(37,True)
 
-robot.taskPos.controlGain.value = 100.0
-robot.taskPos.add(robot.taskPos.feature.name)
-plug(robot.dynamic.position, robot.taskPos.feature.state)
+#robot.taskPos.controlGain.value = 100.0
+#robot.taskPos.add(robot.taskPos.feature.name)
+#plug(robot.dynamic.position, robot.taskPos.feature.state)
 
 # --- SOT solver
 robot.sot = SOT('sot')
@@ -231,7 +239,8 @@ robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
 robot.sot.push(robot.contactLF.task.name)
 robot.sot.push(robot.taskCom.task.name)
-robot.sot.push(robot.taskPos.name)
+robot.sot.push(robot.keepWaist.task.name)
+# robot.sot.push(robot.taskPos.name)
 robot.device.control.recompute(0)
 
 # --- Fix robot.dynamic inputs

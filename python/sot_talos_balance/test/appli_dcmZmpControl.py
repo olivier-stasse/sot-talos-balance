@@ -55,16 +55,24 @@ plug(robot.cdc_estimator.momenta,estimator.momenta)
 estimator.init()
 robot.estimator = estimator
 
-# --- ZMP estimation (disconnected)
+# --- filters
+filters = Bunch()
+filters.ft_RF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_RF_filter", dt, 6)
+filters.ft_LF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_LF_filter", dt, 6)
+plug(robot.device.forceRLEG, filters.ft_RF_filter.x)
+plug(robot.device.forceLLEG, filters.ft_LF_filter.x)
+robot.device_filters = filters
+
+# --- ZMP estimation
 zmp_estimator = SimpleZmpEstimator("zmpEst")
-robot.dynamic.createOpPoint('LF',robot.OperationalPointsMap['left-ankle'])
-robot.dynamic.createOpPoint('RF',robot.OperationalPointsMap['right-ankle'])
-plug(robot.dynamic.LF,zmp_estimator.poseLeft)
-plug(robot.dynamic.RF,zmp_estimator.poseRight)
-# plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
-# plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
-plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
-plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
+robot.dynamic.createOpPoint('sole_LF','left_sole_link')
+robot.dynamic.createOpPoint('sole_RF','right_sole_link')
+plug(robot.dynamic.sole_LF,zmp_estimator.poseLeft)
+plug(robot.dynamic.sole_RF,zmp_estimator.poseRight)
+plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
+plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
+#plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
+#plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
 zmp_estimator.init()
 robot.zmp_estimator = zmp_estimator
 
@@ -168,51 +176,59 @@ plug(robot.com_admittance_control.dcomRef,robot.taskCom.featureDes.errordotIN)
 robot.taskCom.task.controlGain.value = 0
 robot.taskCom.task.setWithDerivative(True)
 
-# --- Posture
-robot.taskPos = Task ('task_pos')
-robot.taskPos.feature = FeaturePosture('feature_pos')
+# --- Waist
+robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
+robot.keepWaist.feature.frame('desired')
+robot.keepWaist.gain.setConstant(300)
+robot.keepWaist.keep()
+robot.keepWaist.feature.selec.value = '111000'
+locals()['keepWaist'] = robot.keepWaist
 
-q = list(robot.dynamic.position.value)
-robot.taskPos.feature.state.value = q
-robot.taskPos.feature.posture.value = q
+# # --- Posture
+# robot.taskPos = Task ('task_pos')
+# robot.taskPos.feature = FeaturePosture('feature_pos')
+#
+# q = list(robot.dynamic.position.value)
+# robot.taskPos.feature.state.value = q
+# robot.taskPos.feature.posture.value = q
 
 # robotDim = robot.dynamic.getDimension() # 38
-robot.taskPos.feature.selectDof(6,True)
-robot.taskPos.feature.selectDof(7,True)
-robot.taskPos.feature.selectDof(8,True)
-robot.taskPos.feature.selectDof(9,True)
-robot.taskPos.feature.selectDof(10,True)
-robot.taskPos.feature.selectDof(11,True)
-robot.taskPos.feature.selectDof(12,True)
-robot.taskPos.feature.selectDof(13,True)
-robot.taskPos.feature.selectDof(14,True)
-robot.taskPos.feature.selectDof(15,True)
-robot.taskPos.feature.selectDof(16,True)
-robot.taskPos.feature.selectDof(17,True)
-robot.taskPos.feature.selectDof(18,True)
-robot.taskPos.feature.selectDof(19,True)
-robot.taskPos.feature.selectDof(20,True)
-robot.taskPos.feature.selectDof(21,True)
-robot.taskPos.feature.selectDof(22,True)
-robot.taskPos.feature.selectDof(23,True)
-robot.taskPos.feature.selectDof(24,True)
-robot.taskPos.feature.selectDof(25,True)
-robot.taskPos.feature.selectDof(26,True)
-robot.taskPos.feature.selectDof(27,True)
-robot.taskPos.feature.selectDof(28,True)
-robot.taskPos.feature.selectDof(29,True)
-robot.taskPos.feature.selectDof(30,True)
-robot.taskPos.feature.selectDof(31,True)
-robot.taskPos.feature.selectDof(32,True)
-robot.taskPos.feature.selectDof(33,True)
-robot.taskPos.feature.selectDof(34,True)
-robot.taskPos.feature.selectDof(35,True)
-robot.taskPos.feature.selectDof(36,True)
-robot.taskPos.feature.selectDof(37,True)
+#robot.taskPos.feature.selectDof(6,True)
+#robot.taskPos.feature.selectDof(7,True)
+#robot.taskPos.feature.selectDof(8,True)
+#robot.taskPos.feature.selectDof(9,True)
+#robot.taskPos.feature.selectDof(10,True)
+#robot.taskPos.feature.selectDof(11,True)
+#robot.taskPos.feature.selectDof(12,True)
+#robot.taskPos.feature.selectDof(13,True)
+#robot.taskPos.feature.selectDof(14,True)
+#robot.taskPos.feature.selectDof(15,True)
+#robot.taskPos.feature.selectDof(16,True)
+#robot.taskPos.feature.selectDof(17,True)
+#robot.taskPos.feature.selectDof(18,True)
+#robot.taskPos.feature.selectDof(19,True)
+#robot.taskPos.feature.selectDof(20,True)
+#robot.taskPos.feature.selectDof(21,True)
+#robot.taskPos.feature.selectDof(22,True)
+#robot.taskPos.feature.selectDof(23,True)
+#robot.taskPos.feature.selectDof(24,True)
+#robot.taskPos.feature.selectDof(25,True)
+#robot.taskPos.feature.selectDof(26,True)
+#robot.taskPos.feature.selectDof(27,True)
+#robot.taskPos.feature.selectDof(28,True)
+#robot.taskPos.feature.selectDof(29,True)
+#robot.taskPos.feature.selectDof(30,True)
+#robot.taskPos.feature.selectDof(31,True)
+#robot.taskPos.feature.selectDof(32,True)
+#robot.taskPos.feature.selectDof(33,True)
+#robot.taskPos.feature.selectDof(34,True)
+#robot.taskPos.feature.selectDof(35,True)
+#robot.taskPos.feature.selectDof(36,True)
+#robot.taskPos.feature.selectDof(37,True)
 
-robot.taskPos.controlGain.value = 100.0
-robot.taskPos.add(robot.taskPos.feature.name)
-plug(robot.dynamic.position, robot.taskPos.feature.state)
+#robot.taskPos.controlGain.value = 100.0
+#robot.taskPos.add(robot.taskPos.feature.name)
+#plug(robot.dynamic.position, robot.taskPos.feature.state)
 
 # --- SOT solver
 robot.sot = SOT('sot')
@@ -223,7 +239,8 @@ robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
 robot.sot.push(robot.contactLF.task.name)
 robot.sot.push(robot.taskCom.task.name)
-robot.sot.push(robot.taskPos.name)
+robot.sot.push(robot.keepWaist.task.name)
+# robot.sot.push(robot.taskPos.name)
 robot.device.control.recompute(0)
 
 # --- Fix robot.dynamic inputs
