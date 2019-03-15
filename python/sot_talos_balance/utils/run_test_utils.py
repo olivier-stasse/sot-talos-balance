@@ -11,11 +11,23 @@ from std_srvs.srv import *
 from dynamic_graph_bridge.srv import *
 from dynamic_graph_bridge_msgs.srv import *
 
-_runCommandClient = rospy.ServiceProxy('run_command', RunCommand)
+runCommandClient = rospy.ServiceProxy('run_command', RunCommand)
 
-def runCommandClient(code):
-    out = _runCommandClient(code)
-    if out.standardoutput or out.standarderror:
+def runVerboseCommandClient(code, verbosity=1):
+    """
+    Auxiliary function to manage the verbosity of runCommandClient
+    verbosity = 0: simply execute runCommandClient
+    verbosity = 1 (default): if runCommandClient returns something on the standard output or standard error, print it
+    verbosity = 2: print the whole answer returned by runCommandClient
+    """
+    if verbosity>1:
+        print(code)
+
+    out = runCommandClient(code)
+
+    if verbosity>1:
+        print(out)
+    elif verbosity==1 and (out.standardoutput or out.standarderror):
         print("command: " + code)
         if out.standardoutput:
             print("standardoutput: " + out.standardoutput)
@@ -24,9 +36,13 @@ def runCommandClient(code):
     return out
 
 def evalCommandClient(code):
+    """
+    Auxiliary function to quickly extract return values from runCommandClient.
+    This will only work when the result in a plain object data type (such as an in or float) or a string
+    """
     return eval(runCommandClient(code).result)
 
-def launch_script(code,title,description = ""):
+def launch_script(code,title,description = "",verbosity=1):
     raw_input(title+':   '+description)
     rospy.loginfo(title)
     rospy.loginfo(code)
@@ -38,20 +54,16 @@ def launch_script(code,title,description = ""):
                 codeblock += '\n' + line
                 continue
             else:
-                print(codeblock)
-                answer = runCommandClient(str(codeblock))
+                answer = runVerboseCommandClient(str(codeblock),verbosity)
                 rospy.logdebug(answer)
-                print(answer)
                 indenting = False
         if line != '' and line[0] != '#':
             if line.endswith(':'):
                 indenting = True
                 codeblock = line
             else:
-                # print(line)
-                answer = runCommandClient(str(line))
+                answer = runVerboseCommandClient(str(line),verbosity)
                 rospy.logdebug(answer)
-                # print(answer)
     rospy.loginfo("...done with "+title)
 
 def run_test(appli):
