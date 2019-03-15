@@ -150,48 +150,10 @@ def create_be_filters(robot, dt):
     
 def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
     ctrl_manager = ControlManager("ctrl_man");        
-
-    ctrl_manager.tau_predicted.value    = N_JOINTS*(0.0,);
-    ctrl_manager.i_measured.value       = N_JOINTS*(0.0,);
-    ctrl_manager.tau_max.value          = N_JOINTS*(conf.TAU_MAX,);
-    ctrl_manager.i_max.value            = N_JOINTS*(conf.CURRENT_MAX,);
-    ctrl_manager.u_max.value            = N_JOINTS*(conf.CTRL_MAX,);
-    
+    ctrl_manager.u_max.value            = N_JOINTS*(conf.CTRL_MAX,);  
     # Init should be called before addCtrlMode 
     # because the size of state vector must be known.
     ctrl_manager.init(dt, conf.urdfFileName, robot_name)
-
-    # Set the map from joint name to joint ID
-    for key in conf.mapJointNameToID:
-      ctrl_manager.setNameToId(key,conf.mapJointNameToID[key])
-            
-    # Set the map joint limits for each id
-    for key in conf.mapJointLimits:
-      ctrl_manager.setJointLimitsFromId(key,conf.mapJointLimits[key][0], \
-                              conf.mapJointLimits[key][1])
-          
-    # Set the force limits for each id
-    for key in conf.mapForceIdToForceLimits:
-      ctrl_manager.setForceLimitsFromId(key,tuple(conf.mapForceIdToForceLimits[key][0]), \
-                              tuple(conf.mapForceIdToForceLimits[key][1]))
-
-    # Set the force sensor id for each sensor name
-    for key in conf.mapNameToForceId:
-      ctrl_manager.setForceNameToForceId(key,conf.mapNameToForceId[key])
-
-    # Set the map from the urdf joint list to the sot joint list
-    ctrl_manager.setJointsUrdfToSot(conf.urdftosot)
-
-    # Set the foot frame name
-    for key in conf.footFrameNames:
-      ctrl_manager.setFootFrameName(key,conf.footFrameNames[key])
-    
-    # Set IMU hosting joint name
-    ctrl_manager.setImuJointName(conf.ImuJointName)
-    
-    ctrl_manager.setRightFootForceSensorXYZ(conf.rightFootSensorXYZ);
-    ctrl_manager.setRightFootSoleXYZ(conf.rightFootSoleXYZ);
-
     return ctrl_manager;
 
 def create_base_estimator(robot, dt, conf, robot_name="robot"):    

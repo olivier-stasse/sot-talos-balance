@@ -46,8 +46,6 @@
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
-#include <sot/talos_balance/robot/robot-wrapper.hh>
-
 namespace dynamicgraph {
   namespace sot {
     namespace talos_balance {
@@ -95,18 +93,12 @@ namespace dynamicgraph {
 
         /* --- SIGNALS --- */
         std::vector<dynamicgraph::SignalPtr<dynamicgraph::Vector,int>*> m_ctrlInputsSIN;
-        std::vector< dynamicgraph::SignalPtr<bool,int>* >               m_emergencyStopSIN; /// emergency stop inputs. If one is true, control is set to zero forever
+        std::vector< dynamicgraph::SignalPtr<bool,int>* >               m_emergencyStopVector; /// emergency stop inputs. If one is true, control is set to zero forever
         std::vector<dynamicgraph::Signal<dynamicgraph::Vector,int>*>    m_jointsCtrlModesSOUT;
 
-        DECLARE_SIGNAL_IN(i_measured,                            dynamicgraph::Vector);  /// motor currents
-        DECLARE_SIGNAL_IN(tau,                                   dynamicgraph::Vector);  /// estimated joint torques (using dynamic robot model + F/T sensors)
-        DECLARE_SIGNAL_IN(tau_predicted,                         dynamicgraph::Vector);  /// predicted joint torques (using motor model)
-        DECLARE_SIGNAL_IN(i_max,                                 dynamicgraph::Vector);  /// max current allowed before stopping the controller (in Ampers)
-        DECLARE_SIGNAL_IN(u_max,                                 dynamicgraph::Vector);  /// max desired current allowed before stopping the controller (in Ampers)
-        DECLARE_SIGNAL_IN(tau_max,                               dynamicgraph::Vector);  /// max torque allowed before stopping the controller
-
-        DECLARE_SIGNAL_OUT(u,                                    dynamicgraph::Vector);
-        DECLARE_SIGNAL_OUT(u_safe,                               dynamicgraph::Vector);  /// same as u when everything is fine, 0 otherwise
+        DECLARE_SIGNAL_IN(u_max,                       dynamicgraph::Vector);  /// max motor control
+        DECLARE_SIGNAL_OUT(u,                          dynamicgraph::Vector);  /// raw motor control
+        DECLARE_SIGNAL_OUT(u_safe,                     dynamicgraph::Vector);  /// safe motor control
 
         /* --- COMMANDS --- */
 
@@ -135,7 +127,6 @@ namespace dynamicgraph {
         void setRightFootForceSensorXYZ(const dynamicgraph::Vector &);
 	      void setFootFrameName(const std::string &, const std::string &);
         void setImuJointName(const std::string &);
-	      void displayRobotUtil();
 	      /// Set the mapping between urdf and sot.
 	      void setJoints(const dynamicgraph::Vector &);
 
@@ -148,7 +139,6 @@ namespace dynamicgraph {
 
       protected:
         RobotUtil *                   m_robot_util;
-        dynamicgraph::sot::talos_balance::robots::RobotWrapper *  m_robot;
         bool    m_initSucceeded;    /// true if the entity has been successfully initialized
         double  m_dt;               /// control loop time period
         bool    m_emergency_stop_triggered;  /// true if an emergency condition as been triggered either by an other entity, or by control limit violation
