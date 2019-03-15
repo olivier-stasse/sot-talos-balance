@@ -43,8 +43,7 @@
 #include "boost/assign.hpp"
 
 
-#include <pinocchio/multibody/model.hpp>
-#include <pinocchio/parsers/urdf.hpp>
+//#include <pinocchio/multibody/model.hpp>
 
 namespace dynamicgraph {
   namespace sot {
@@ -77,6 +76,7 @@ namespace dynamicgraph {
       class SOTCONTROLMANAGER_EXPORT ControlManager
         :public::dynamicgraph::Entity
       {
+        typedef Eigen::VectorXd::Index Index;
         typedef ControlManager EntityClassName;
         DYNAMIC_GRAPH_ENTITY_DECL();
 
@@ -88,7 +88,6 @@ namespace dynamicgraph {
 	/// @param dt: control interval
 	/// @param urdfFile: path to the URDF model of the robot
         void init(const double & dt,
-                  const std::string & urdfFile,
                   const std::string & robotRef);
 
         /* --- SIGNALS --- */

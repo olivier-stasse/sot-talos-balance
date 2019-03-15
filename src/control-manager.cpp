@@ -61,7 +61,7 @@ namespace dynamicgraph
         : Entity(name)
         ,CONSTRUCT_SIGNAL_IN(u_max,        dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_OUT(u,           dynamicgraph::Vector, m_u_maxSIN)
-        ,CONSTRUCT_SIGNAL_OUT(u_safe,      dynamicgraph::Vector, m_u_maxSIN)
+        ,CONSTRUCT_SIGNAL_OUT(u_safe,      dynamicgraph::Vector, m_uSOUT << m_u_maxSIN)
         ,m_robot_util(RefVoidRobotUtil())
         ,m_initSucceeded(false)
         ,m_emergency_stop_triggered(false)
@@ -74,10 +74,9 @@ namespace dynamicgraph
 
         /* Commands. */
         addCommand("init",
-                   makeCommandVoid3(*this, &ControlManager::init,
-                                    docCommandVoid3("Initialize the entity.",
+                   makeCommandVoid2(*this, &ControlManager::init,
+                                    docCommandVoid2("Initialize the entity.",
                                                     "Time period in seconds (double)",
-						    "URDF file path (string)",
                                                     "Robot reference (string)")));
         addCommand("addCtrlMode",
                    makeCommandVoid1(*this, &ControlManager::addCtrlMode,
@@ -110,7 +109,6 @@ namespace dynamicgraph
       }
 
       void ControlManager::init(const double & dt,
-                                const std::string & urdfFile,
                                 const std::string &robotRef)
       {
         if(dt<=0.0)
@@ -194,15 +192,15 @@ namespace dynamicgraph
           }
         }
 
-        usleep(1e6*m_sleep_time);
-        if(m_sleep_time>=0.1)
-        {
-          for(unsigned int i=0; i<m_ctrlInputsSIN.size(); i++)
-          {
-            const dynamicgraph::Vector& ctrl = (*m_ctrlInputsSIN[i])(iter);
-            SEND_MSG(toString(iter)+") tau =" +toString(ctrl,1,4," ")+m_ctrlModes[i], MSG_TYPE_ERROR);
-          }
-        }
+        // usleep(1e6*m_sleep_time);
+        // if(m_sleep_time>=0.1)
+        // {
+        //   for(unsigned int i=0; i<m_ctrlInputsSIN.size(); i++)
+        //   {
+        //     const dynamicgraph::Vector& ctrl = (*m_ctrlInputsSIN[i])(iter);
+        //     SEND_MSG(toString(iter)+") tau =" +toString(ctrl,1,4," ")+m_ctrlModes[i], MSG_TYPE_ERROR);
+        //   }
+        // }
 
         return s;
       }
@@ -227,8 +225,6 @@ namespace dynamicgraph
           }
         }
 
-        s = u;
-
         if(!m_emergency_stop_triggered)
         {
           for(unsigned int i=0; i<m_robot_util->m_nbJoints; i++)
@@ -242,6 +238,8 @@ namespace dynamicgraph
             }
           }
         }
+
+        s = u;
 
         if(m_emergency_stop_triggered)
           s.setZero();
@@ -434,12 +432,12 @@ namespace dynamicgraph
       bool ControlManager::convertJointNameToJointId(const std::string& name, unsigned int& id)
       {
         // Check if the joint name exists
-	      pinocchio::Model::JointIndex jid = m_robot_util->get_id_from_name(name);
+	      Index jid = m_robot_util->get_id_from_name(name);
         if (jid<0)
         {
           SEND_MSG("The specified joint name does not exist: "+name, MSG_TYPE_ERROR);
           std::stringstream ss;
-          for(pinocchio::Model::JointIndex it=0; it< m_robot_util->m_nbJoints;it++)
+          for(Index it=0; it< m_robot_util->m_nbJoints;it++)
             ss<< m_robot_util->get_name_from_id(it) <<", ";
           SEND_MSG("Possible joint names are: "+ss.str(), MSG_TYPE_INFO);
           return false;

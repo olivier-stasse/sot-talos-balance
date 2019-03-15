@@ -1,18 +1,20 @@
 '''Test CoM admittance control as described in paper.'''
 from sot_talos_balance.utils.run_test_utils import run_test, runCommandClient, evalCommandClient
 from time import sleep
-
+from sot_talos_balance.utils.plot_utils import write_pdf_graph
 from sot_talos_balance.utils.gazebo_utils import apply_force
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-run_test('appli_dcmZmpControl_feedback.py')
+run_test('appli_dcmControl_CtrlMngr.py')
 
 sleep(5.0)
 
 # Connect ZMP reference and reset controllers
+## Wait for wrench initialization before plugging zmp signals
 print('Connect ZMP reference')
+runCommandClient('plug(robot.zmp_estimator.emergencyStop,robot.cm.emergencyStop_zmp)')
 runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
 runCommandClient('robot.com_admittance_control.setState(comDes,[0.0,0.0,0.0])')
 runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
@@ -30,6 +32,7 @@ runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
 sleep(10.0)
 
 runCommandClient('dump_tracer(robot.tracer)')
+runCommandClient("write_pdf_graph('/tmp/')")
 
 # --- DISPLAY
 comDes_data = np.loadtxt('/tmp/dg_' + evalCommandClient('robot.dcm_control.name') + '-dcmDes.dat')             # desired CoM (workaround)

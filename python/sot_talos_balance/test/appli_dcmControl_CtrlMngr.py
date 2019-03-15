@@ -1,5 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
-import sot_talos_balance.control_manager_conf          as param_server_conf
+import sot_talos_balance.talos.parameter_server_conf          as ps_conf
+import sot_talos_balance.talos.control_manager_conf           as cm_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core import Task, FeaturePosture
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
@@ -34,13 +35,8 @@ omega = sqrt(g/h)
 # -------------------------- ESTIMATION --------------------------
 
 # --- General Estimation
-# robot.param_server = create_parameter_server(param_server_conf,dt)
-# robot_name='robot'
-# cdc_estimator = DcmEstimator('dcm_estimator')
-# cdc_estimator.init(dt, robot_name)
-# plug(robot.device.state, cdc_estimator.q)
-# plug(robot.device.velocity, cdc_estimator.v)
-# robot.cdc_estimator = cdc_estimator # cdc_estimator.c == robot.dynamic.com
+robot.param_server = create_parameter_server(ps_conf,dt)
+robot_name='robot'
 robot.cdc_estimator = robot.dynamic
 
 # --- DCM Estimation
@@ -118,6 +114,12 @@ com_admittance_control.setState(comDes,[0.0,0.0,0.0])
 robot.com_admittance_control = com_admittance_control
 
 Kp_adm = [1e-3,1e-3,0.0] # this value is employed later
+
+# --- Control Manager
+robot.cm = create_ctrl_manager(cm_conf, dt, robot_name='robot')
+robot.cm.addCtrlMode('sot_input')
+robot.cm.setCtrlMode('all','sot_input')
+robot.cm.addEmergencyStopSIN('zmp')
 
 # -------------------------- SOT CONTROL --------------------------
 
@@ -233,7 +235,13 @@ locals()['keepWaist'] = robot.keepWaist
 # --- SOT solver
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
+
+# --- PLUG SOT to CM
+plug(robot.sot.control,robot.cm.ctrl_sot_input)
+
+# --- PLUG CM to Device
 plug(robot.sot.control,robot.device.control)
+# plug(robot.cm.u_safe,robot.device.control)
 
 robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
@@ -277,6 +285,9 @@ create_topic(robot.publisher, robot.dcm_control, 'zmpDes', robot = robot, data_t
 create_topic(robot.publisher, robot.dynamic, 'zmp', robot = robot, data_type='vector')                    # SOT ZMP
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot = robot, data_type='vector')              # estimated ZMP
 create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_type='vector')             # reference ZMP
+create_topic(robot.publisher, robot.cm, 'u', robot = robot, data_type='vector')                           # raw motor control 
+create_topic(robot.publisher, robot.cm, 'u_safe', robot = robot, data_type='vector')                      # secured motor control 
+create_topic(robot.publisher, robot.cm, 'emergencyStop_zmp', robot = robot, data_type='boolean')           
 
 # --- TRACER
 robot.tracer = TracerRealTime("zmp_tracer")

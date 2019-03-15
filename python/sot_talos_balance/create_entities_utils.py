@@ -148,12 +148,12 @@ def create_be_filters(robot, dt):
     plug(robot.base_estimator.q, be_filters.test.x);
     return be_filters
     
-def create_ctrl_manager(conf, motor_params, dt, robot_name='robot'):
-    ctrl_manager = ControlManager("ctrl_man");        
+def create_ctrl_manager(conf, dt, robot_name='robot'):
+    ctrl_manager = ControlManager("ctrl_man");
+    ctrl_manager.init(dt, robot_name)
     ctrl_manager.u_max.value            = N_JOINTS*(conf.CTRL_MAX,);  
     # Init should be called before addCtrlMode 
     # because the size of state vector must be known.
-    ctrl_manager.init(dt, conf.urdfFileName, robot_name)
     return ctrl_manager;
 
 def create_base_estimator(robot, dt, conf, robot_name="robot"):    
