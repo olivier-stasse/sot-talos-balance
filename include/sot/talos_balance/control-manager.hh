@@ -42,9 +42,6 @@
 #include <map>
 #include "boost/assign.hpp"
 
-
-//#include <pinocchio/multibody/model.hpp>
-
 namespace dynamicgraph {
   namespace sot {
     namespace talos_balance {
@@ -84,9 +81,9 @@ namespace dynamicgraph {
         /* --- CONSTRUCTOR ---- */
         ControlManager( const std::string & name);
 
-	/// Initialize
-	/// @param dt: control interval
-	/// @param urdfFile: path to the URDF model of the robot
+	      /// Initialize
+	      /// @param dt: control interval
+	      /// @param urdfFile: path to the URDF model of the robot
         void init(const double & dt,
                   const std::string & robotRef);
 
@@ -101,7 +98,7 @@ namespace dynamicgraph {
 
         /* --- COMMANDS --- */
 
-	/// Commands related to the control mode.
+	      /// Commands related to the control mode.
         void addCtrlMode(const std::string& name);
         void ctrlModes();
         void getCtrlMode(const std::string& jointName);
@@ -111,25 +108,14 @@ namespace dynamicgraph {
         void resetProfiler();
 	
 	      /// Commands related to joint name and joint id
-	      void setNameToId(const std::string& jointName, const double & jointId);
-	      void setJointLimitsFromId(const double &jointId, 
-				const double &lq, const double &uq);
+	      // void setNameToId(const std::string& jointName, const double & jointId);
+	      // void setJointLimitsFromId(const double &jointId, const double &lq, const double &uq);
 
-	      /// Command related to ForceUtil
-	      void setForceLimitsFromId(const double &jointId, 
-				const dynamicgraph::Vector &lq, 
-				const dynamicgraph::Vector &uq);
-	      void setForceNameToForceId(const std::string& forceName, const double & forceId);
-	
-	      /// Commands related to FootUtil
-	      void setRightFootSoleXYZ(const dynamicgraph::Vector &);
-        void setRightFootForceSensorXYZ(const dynamicgraph::Vector &);
-	      void setFootFrameName(const std::string &, const std::string &);
-        void setImuJointName(const std::string &);
 	      /// Set the mapping between urdf and sot.
-	      void setJoints(const dynamicgraph::Vector &);
+	      // void setJoints(const dynamicgraph::Vector &);
 
-//        void setStreamPrintPeriod(const double & s);
+        // void setStreamPrintPeriod(const double & s);
+
         void setSleepTime(const double &seconds);
         void addEmergencyStopSIN(const std::string& name);
 
@@ -138,6 +124,7 @@ namespace dynamicgraph {
 
       protected:
         RobotUtil *                   m_robot_util;
+        unsigned int m_numDofs;
         bool    m_initSucceeded;    /// true if the entity has been successfully initialized
         double  m_dt;               /// control loop time period
         bool    m_emergency_stop_triggered;  /// true if an emergency condition as been triggered either by an other entity, or by control limit violation
@@ -152,7 +139,7 @@ namespace dynamicgraph {
 
         bool convertStringToCtrlMode(const std::string& name, CtrlMode& cm);
         bool convertJointNameToJointId(const std::string& name, unsigned int& id);
-        bool isJointInRange(unsigned int id, double q);
+        //bool isJointInRange(unsigned int id, double q);
         void updateJointCtrlModesOutputSignal();
 
       }; // class ControlManager

@@ -79,7 +79,7 @@ robot.zmp_estimator = zmp_estimator
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [1e-3,1e-3,1e-3]
+Kp_dcm = [1.0,1.0,1.0]
 Ki_dcm = [0.0,0.0,0.0] # zero (to be set later)
 gamma_dcm = 0.2
 
@@ -117,7 +117,7 @@ com_admittance_control.setState(comDes,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [1e-3,1e-3,0.0] # this value is employed later
+Kp_adm = [1.0,1.0,0.0] # this value is employed later
 
 # -------------------------- SOT CONTROL --------------------------
 

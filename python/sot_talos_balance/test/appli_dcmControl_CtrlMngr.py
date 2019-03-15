@@ -36,7 +36,6 @@ omega = sqrt(g/h)
 
 # --- General Estimation
 robot.param_server = create_parameter_server(ps_conf,dt)
-robot_name='robot'
 robot.cdc_estimator = robot.dynamic
 
 # --- DCM Estimation
@@ -75,7 +74,7 @@ robot.zmp_estimator = zmp_estimator
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [1e-3,1e-3,1e-3]
+Kp_dcm = [1.0,1.0,1.0]
 Ki_dcm = [0.0,0.0,0.0] # zero (to be set later)
 gamma_dcm = 0.2
 
@@ -113,7 +112,7 @@ com_admittance_control.setState(comDes,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [1e-3,1e-3,0.0] # this value is employed later
+Kp_adm = [1.0,1.0,0.0] # this value is employed later
 
 # --- Control Manager
 robot.cm = create_ctrl_manager(cm_conf, dt, robot_name='robot')
@@ -238,10 +237,10 @@ robot.sot.setSize(robot.dynamic.getDimension())
 
 # --- PLUG SOT to CM
 plug(robot.sot.control,robot.cm.ctrl_sot_input)
+robot.cm.emergencyStop_zmp.value = 0
 
 # --- PLUG CM to Device
-plug(robot.sot.control,robot.device.control)
-# plug(robot.cm.u_safe,robot.device.control)
+plug(robot.cm.u_safe,robot.device.control)
 
 robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
@@ -285,9 +284,9 @@ create_topic(robot.publisher, robot.dcm_control, 'zmpDes', robot = robot, data_t
 create_topic(robot.publisher, robot.dynamic, 'zmp', robot = robot, data_type='vector')                    # SOT ZMP
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot = robot, data_type='vector')              # estimated ZMP
 create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_type='vector')             # reference ZMP
-create_topic(robot.publisher, robot.cm, 'u', robot = robot, data_type='vector')                           # raw motor control 
-create_topic(robot.publisher, robot.cm, 'u_safe', robot = robot, data_type='vector')                      # secured motor control 
-create_topic(robot.publisher, robot.cm, 'emergencyStop_zmp', robot = robot, data_type='boolean')           
+create_topic(robot.publisher, robot.cm, 'u', robot = robot, data_type='vector')                           # raw motor control
+create_topic(robot.publisher, robot.cm, 'u_safe', robot = robot, data_type='vector')                      # secured motor control
+create_topic(robot.publisher, robot.cm, 'emergencyStop_zmp', robot = robot, data_type='boolean')
 
 # --- TRACER
 robot.tracer = TracerRealTime("zmp_tracer")

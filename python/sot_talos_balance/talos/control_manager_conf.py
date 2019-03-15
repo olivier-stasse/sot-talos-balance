@@ -5,5 +5,5 @@ Created on Mon Feb  9 13:55:16 2015
 """
 import numpy as np
 
-NJ = 32
+NJ = 38
 CTRL_MAX = 1e20  # max desired control (security check of ControlManager)

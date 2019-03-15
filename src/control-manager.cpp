@@ -69,7 +69,6 @@ namespace dynamicgraph
         ,m_iter(0)
         ,m_sleep_time(0.0)
       {
-
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS);
 
         /* Commands. */
@@ -126,10 +125,12 @@ namespace dynamicgraph
         {
           m_robot_util = getRobotUtil(localName);
         }
-        ControlManager::setLoggerVerbosityLevel((dynamicgraph::LoggerVerbosity) 4);
-        m_jointCtrlModes_current.resize(m_robot_util->m_nbJoints);
-        m_jointCtrlModes_previous.resize(m_robot_util->m_nbJoints);
-        m_jointCtrlModesCountDown.resize(m_robot_util->m_nbJoints,0);
+        m_numDofs = m_robot_util->m_nbJoints + 6;
+
+        //ControlManager::setLoggerVerbosityLevel((dynamicgraph::LoggerVerbosity) 4);
+        m_jointCtrlModes_current.resize(m_numDofs);
+        m_jointCtrlModes_previous.resize(m_numDofs);
+        m_jointCtrlModesCountDown.resize(m_numDofs,0);
       }
 
 
@@ -148,15 +149,15 @@ namespace dynamicgraph
         if(m_is_first_iter)
           m_is_first_iter = false;
 
-        if(s.size()!=(Eigen::VectorXd::Index) m_robot_util->m_nbJoints)
-          s.resize(m_robot_util->m_nbJoints);
+        if(s.size()!=(Eigen::VectorXd::Index) m_numDofs)
+          s.resize(m_numDofs);
         {
           // trigger computation of all ctrl inputs
           for(unsigned int i=0; i<m_ctrlInputsSIN.size(); i++)
             (*m_ctrlInputsSIN[i])(iter);
 
           int cm_id, cm_id_prev;
-          for(unsigned int i=0; i<m_robot_util->m_nbJoints; i++)
+          for(unsigned int i=0; i<m_numDofs; i++)
           {
             cm_id = m_jointCtrlModes_current[i].id;
             if(cm_id<0)
@@ -166,7 +167,7 @@ namespace dynamicgraph
             }
 
             const dynamicgraph::Vector& ctrl = (*m_ctrlInputsSIN[cm_id])(iter);
-            assert(ctrl.size()==m_robot_util->m_nbJoints);
+            assert(ctrl.size()==m_numDofs);
 
             if(m_jointCtrlModesCountDown[i]==0)
               s(i) = ctrl(i);
@@ -174,7 +175,7 @@ namespace dynamicgraph
             {
               cm_id_prev = m_jointCtrlModes_previous[i].id;
               const dynamicgraph::Vector& ctrl_prev = (*m_ctrlInputsSIN[cm_id_prev])(iter);
-              assert(ctrl_prev.size()==m_robot_util->m_nbJoints);
+              assert(ctrl_prev.size()==m_numDofs);
 
               double alpha = m_jointCtrlModesCountDown[i]/CTRL_MODE_TRANSITION_TIME_STEP;
 //              SEND_MSG("Joint "+toString(i)+" changing ctrl mode from "+toString(cm_id_prev)+
@@ -227,13 +228,13 @@ namespace dynamicgraph
 
         if(!m_emergency_stop_triggered)
         {
-          for(unsigned int i=0; i<m_robot_util->m_nbJoints; i++)
+          for(unsigned int i=0; i<m_numDofs; i++)
           {
           
             if(fabs(u(i)) > ctrl_max(i))
             {
               m_emergency_stop_triggered = true;
-              SEND_MSG("Joint " + m_robot_util->get_name_from_id(i) + " desired control is too large: "+ toString(u(i))+" > "+toString(ctrl_max(i)), MSG_TYPE_ERROR_STREAM);
+              SEND_MSG("Joint " + toString(i) + " desired control is too large: "+ toString(u(i))+" > "+toString(ctrl_max(i)), MSG_TYPE_ERROR_STREAM);
               break;
             }
           }
@@ -291,7 +292,7 @@ namespace dynamicgraph
           
         if(jointName=="all")
         {
-          for(unsigned int i=0; i<m_robot_util->m_nbJoints; i++)
+          for(unsigned int i=0; i<m_numDofs; i++)
             setCtrlMode(i,cm);
         }
         else
@@ -316,12 +317,12 @@ namespace dynamicgraph
       void ControlManager::setCtrlMode(const int jid, const CtrlMode& cm)
       {
         if(m_jointCtrlModesCountDown[jid]!=0)
-          return SEND_MSG("Cannot change control mode of joint "+m_robot_util->get_name_from_id(jid)+
+          return SEND_MSG("Cannot change control mode of joint "+toString(jid)+
                           " because its previous ctrl mode transition has not terminated yet: "+
                           toString(m_jointCtrlModesCountDown[jid]), MSG_TYPE_ERROR);
 
         if(cm.id==m_jointCtrlModes_current[jid].id)
-          return SEND_MSG("Cannot change control mode of joint "+m_robot_util->get_name_from_id(jid)+
+          return SEND_MSG("Cannot change control mode of joint "+toString(jid)+
                           " because it has already the specified ctrl mode", MSG_TYPE_ERROR);
 
         if(m_jointCtrlModes_current[jid].id<0)
@@ -343,9 +344,8 @@ namespace dynamicgraph
         if(jointName=="all")
         {
           stringstream ss;
-          for(unsigned int i=0; i<m_robot_util->m_nbJoints; i++)
-            ss<<m_robot_util->get_name_from_id(i) <<" "
-	      <<m_jointCtrlModes_current[i]<<"; ";
+          for(unsigned int i=0; i<m_numDofs; i++)
+            ss<<toString(i) <<" "<<m_jointCtrlModes_current[i]<<"; ";
           SEND_MSG(ss.str(),MSG_TYPE_INFO);
           return;
         }
@@ -378,8 +378,7 @@ namespace dynamicgraph
       {
         SEND_MSG("New emergency signal input emergencyStop_" + name + " created",MSG_TYPE_INFO);
         // create a new input signal
-         m_emergencyStopVector.push_back(new SignalPtr<bool, int>(NULL,
-          getClassName()+"("+getName()+")::input(bool)::emergencyStop_"+name));
+        m_emergencyStopVector.push_back(new SignalPtr<bool, int>(NULL, getClassName()+"("+getName()+")::input(bool)::emergencyStop_"+name));
 
         // register the new signals and add the new signal dependecy
         unsigned int i =  m_emergencyStopVector.size()-1;
@@ -391,16 +390,16 @@ namespace dynamicgraph
 
       void ControlManager::updateJointCtrlModesOutputSignal()
       {
-	      if (m_robot_util->m_nbJoints==0)
+	      if (m_numDofs==0)
         {
           SEND_MSG("You should call init first. The size of the vector is unknown.", MSG_TYPE_ERROR);
           return;
         }
 
-        dynamicgraph::Vector cm(m_robot_util->m_nbJoints);
+        dynamicgraph::Vector cm(m_numDofs);
         for(unsigned int i=0; i<m_jointsCtrlModesSOUT.size(); i++)
         {
-          for(unsigned int j=0; j<m_robot_util->m_nbJoints; j++)
+          for(unsigned int j=0; j<m_numDofs; j++)
           {
             cm(j) = 0;
             if((unsigned int)m_jointCtrlModes_current[j].id == i)
@@ -432,13 +431,14 @@ namespace dynamicgraph
       bool ControlManager::convertJointNameToJointId(const std::string& name, unsigned int& id)
       {
         // Check if the joint name exists
-	      Index jid = m_robot_util->get_id_from_name(name);
+	      int jid = m_robot_util->get_id_from_name(name);
+        jid -= 6; // HACK !!! TEMP!!!
         if (jid<0)
         {
           SEND_MSG("The specified joint name does not exist: "+name, MSG_TYPE_ERROR);
           std::stringstream ss;
-          for(Index it=0; it< m_robot_util->m_nbJoints;it++)
-            ss<< m_robot_util->get_name_from_id(it) <<", ";
+          for(Index it=0; it< m_numDofs;it++)
+            ss<< toString(it) <<", ";
           SEND_MSG("Possible joint names are: "+ss.str(), MSG_TYPE_INFO);
           return false;
         }
@@ -446,10 +446,10 @@ namespace dynamicgraph
         return true;
       }
 
+/*
       bool ControlManager::isJointInRange(unsigned int id, double q)
       {
-	      const JointLimits & JL = m_robot_util->
-	        get_joint_limits_from_id((Index)id);
+	      const JointLimits & JL = m_robot_util->get_joint_limits_from_id((Index)id);
 
 	      double jl= JL.lower;
         if(q<jl)
@@ -465,6 +465,7 @@ namespace dynamicgraph
         }
         return true;
       }
+*/
 
 
       /* ------------------------------------------------------------------- */

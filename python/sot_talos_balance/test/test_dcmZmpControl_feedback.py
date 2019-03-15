@@ -27,7 +27,7 @@ runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
 
 #sleep(5.0)
 
-sleep(10.0)
+sleep(30.0)
 
 runCommandClient('dump_tracer(robot.tracer)')
 
