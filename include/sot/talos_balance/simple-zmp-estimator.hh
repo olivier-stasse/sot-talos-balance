@@ -59,7 +59,7 @@ namespace dynamicgraph {
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         /* --- CONSTRUCTOR ---- */
-        SimpleZmpEstimator(const std::string & name, const double & eps=0.1);
+        SimpleZmpEstimator(const std::string & name, const double & eps=1.0);
 
         void init();
 
@@ -73,6 +73,7 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_OUT(copLeft, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(copRight, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(zmp, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(emergencyStop, bool);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -82,6 +83,7 @@ namespace dynamicgraph {
 
       protected:
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
+        bool m_emergency_stop_triggered;
         double m_eps;
 
       }; // class SimpleZmpEstimator

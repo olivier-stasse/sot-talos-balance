@@ -40,7 +40,7 @@ namespace dynamicgraph
 
 #define INPUT_SIGNALS m_wrenchLeftSIN << m_wrenchRightSIN << m_poseLeftSIN << m_poseRightSIN
 
-#define OUTPUT_SIGNALS m_copLeftSOUT << m_copRightSOUT << m_zmpSOUT
+#define OUTPUT_SIGNALS m_copLeftSOUT << m_copRightSOUT << m_zmpSOUT << m_emergencyStopSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -62,6 +62,7 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSIN << m_poseLeftSIN)
                       , CONSTRUCT_SIGNAL_OUT(copRight, dynamicgraph::Vector, m_wrenchRightSIN << m_poseRightSIN)
                       , CONSTRUCT_SIGNAL_OUT(zmp, dynamicgraph::Vector, m_wrenchLeftSIN << m_wrenchRightSIN << m_copLeftSOUT << m_copRightSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(emergencyStop, bool, m_zmpSOUT)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -100,8 +101,8 @@ namespace dynamicgraph
           const double tx = wrench[3];
           const double ty = wrench[4];
 
-          const double px = fz > m_eps ? (- ty - fx*h)/fz : 0.0;
-          const double py = fz > m_eps ? (  tx - fy*h)/fz : 0.0;
+          const double px = fz >= m_eps ? (- ty - fx*h)/fz : 0.0;
+          const double py = fz >= m_eps ? (  tx - fy*h)/fz : 0.0;
           const double pz = - h;
 
           dg::Vector copLocal(3);
@@ -162,6 +163,7 @@ namespace dynamicgraph
       {
         if(!m_initSucceeded)
         {
+          m_emergency_stop_triggered = true;
           SEND_WARNING_STREAM_MSG("Cannot compute signal zmp before initialization!");
           return s;
         }
@@ -180,18 +182,28 @@ namespace dynamicgraph
         const double fzLeft = wrenchLeft[2];
         const double fzRight = wrenchRight[2];
 
-        if(fzLeft > m_eps  || fzRight > m_eps)
+        if(fzLeft >= m_eps  || fzRight >= m_eps)
         {
+          m_emergency_stop_triggered = false;
           s = ( copLeft*fzLeft + copRight*fzRight ) / ( fzLeft + fzRight );
         }
         else
         {
+          m_emergency_stop_triggered = true;
           SEND_WARNING_STREAM_MSG("Foot forces on the z-axis are both zero!");
           s.setZero(3);
         }
 
         getProfiler().stop(PROFILE_SIMPLEZMPESTIMATOR_ZMP_COMPUTATION);
 
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(emergencyStop, bool)
+      {
+        const dynamicgraph::Vector & zmp = m_zmpSOUT(iter); // dummy to trigger zmp computation
+        (void) zmp;                                         // disable unused variable warning
+        s = m_emergency_stop_triggered;
         return s;
       }
 

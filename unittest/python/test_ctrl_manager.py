@@ -104,4 +104,4 @@ elif (cm2.u_safe.value == (0.,)*N_JOINTS):
     print("Safe control = zero")
     print("Control set to 0 forever")
 print("*****************")
-embed()
+

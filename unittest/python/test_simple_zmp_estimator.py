@@ -1,5 +1,6 @@
 from __future__ import print_function
 from sot_talos_balance.simple_zmp_estimator import SimpleZmpEstimator
+import numpy as np
 from numpy.testing import assert_almost_equal as assertApprox
 import numpy as np
 
@@ -12,10 +13,10 @@ estimator = SimpleZmpEstimator("ciao")
 print("\nSignals (at creation):")
 estimator.displaySignals()
 
-# --- First test
+# --- Test vs precomputed values
 
 print()
-print("--- First test ---")
+print("--- Test vs precomputed ---")
 
 estimator.wrenchLeft.value  = [0.0,0.0,10.0,0.0,0.0,0.0]
 estimator.wrenchRight.value = [0.0,0.0,10.0,0.0,0.0,0.0]
@@ -53,10 +54,35 @@ assertApprox(estimator.copRight.value, copRight)
 print( "zmp:      %s" % (estimator.zmp.value,) )
 assertApprox(estimator.zmp.value, zmp)
 
-# --- Second test
+# --- Test emergency stop
 
 print()
-print("--- Second test ---")
+print("--- Test emergency stop ---")
+print()
+
+estimator.emergencyStop.recompute(0)
+stop = estimator.emergencyStop.value
+print("emergencyStop: %d" % stop)
+np.testing.assert_equal(stop,0)
+
+estimator.wrenchLeft.value  = [0.0,0.0,0.01,0.0,0.0,0.0]
+estimator.emergencyStop.recompute(1)
+stop = estimator.emergencyStop.value
+print("emergencyStop: %d" % stop)
+np.testing.assert_equal(stop,0)
+
+estimator.wrenchRight.value = [0.0,0.0,0.01,0.0,0.0,0.0]
+estimator.emergencyStop.recompute(2)
+stop = estimator.emergencyStop.value
+print("emergencyStop: %d" % stop)
+np.testing.assert_equal(stop,1)
+
+# --- Test vs CoM
+
+print()
+print("--- Test vs CoM ---")
+
+estimator = SimpleZmpEstimator("ciao2")
 
 import pinocchio as pin
 
@@ -98,7 +124,7 @@ print( "poseRight:\n%s" % (np.matrix(estimator.poseRight.value),) )
 
 estimator.init()
 
-estimator.zmp.recompute(1)
+estimator.zmp.recompute(0)
 
 print( "copLeft:  %s" % (estimator.copLeft.value,) )
 print( "copRight: %s" % (estimator.copRight.value,) )
