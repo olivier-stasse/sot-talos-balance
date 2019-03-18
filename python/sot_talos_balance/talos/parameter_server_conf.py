@@ -6,9 +6,6 @@ Created on Mon Feb  9 13:55:16 2015
 import numpy as np
 
 NJ = 32;
-TAU_MAX                     = 1.*1e2;   # max joint torques (security check of ControlManager)
-CURRENT_MAX                 = 20.0;   # max motor current (security check of ControlManager)
-CTRL_MAX                    = 20.0;   # max desired current (security check of ControlManager)
 model_path                  = ["/opt/openrobots/share"];
 urdfFileName                = model_path[0] + "/talos_data/robots/talos_reduced.urdf";
 ImuJointName                = "imu_joint";
@@ -49,7 +46,7 @@ mapJointNameToID={
 }
 
 
-    
+
 mapJointLimits={
     0 : [-0.349065850399, 1.57079632679],
     1 : [-0.5236, 0.5236],
@@ -84,7 +81,7 @@ mapJointLimits={
     30  : [-0.261799387799, 0.785398163397],
     31  : [-1.308996939, 1.308996939]
 }
-    
+
 vfMax=np.array([100.0,100.0,300.0,80.0,80.0,30.0])
 vfMin=-vfMax
 mapForceIdToForceLimits={
@@ -92,22 +89,22 @@ mapForceIdToForceLimits={
     1: [vfMin,vfMax],
     2: [vfMin,vfMax],
     3: [vfMin,vfMax]
- }
-    
+}
+
 mapNameToForceId={
     "rf": 0,
     "lf": 1,
     "rh": 2,
     "lh": 3
- }
-    
+}
+
 indexOfForceSensors= () 
 
 footFrameNames= { 
     "Right": "leg_right_6_joint",
     "Left" : "leg_left_6_joint"
 }
-      
+
 rightFootSensorXYZ = (0.0,0.0,-0.085)
 rightFootSoleXYZ   = (0.0,0.0,-0.105)
 

@@ -6,7 +6,7 @@ Created on Mon Feb  9 13:55:16 2015
 """
 import numpy as np
 
-NJ = 32;
+NJ = 38
 TAU_MAX                     = 1.*1e2;   # max joint torques (security check of ControlManager)
 CURRENT_MAX                 = 20.0;   # max motor current (security check of ControlManager)
 CTRL_MAX                    = 20.0;   # max desired current (security check of ControlManager)
