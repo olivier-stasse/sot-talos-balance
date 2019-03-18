@@ -151,7 +151,7 @@ def create_be_filters(robot, dt):
 def create_ctrl_manager(conf, dt, robot_name='robot'):
     ctrl_manager = ControlManager("ctrl_man");
     ctrl_manager.init(dt, robot_name)
-    ctrl_manager.u_max.value            = conf.NJ*(conf.CTRL_MAX,);  
+    ctrl_manager.u_max.value  = conf.NJ*(conf.CTRL_MAX,);  
     # Init should be called before addCtrlMode 
     # because the size of state vector must be known.
     return ctrl_manager;

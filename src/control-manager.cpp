@@ -432,7 +432,7 @@ namespace dynamicgraph
       {
         // Check if the joint name exists
 	      int jid = m_robot_util->get_id_from_name(name);
-        jid -= 6; // HACK !!! TEMP!!!
+        jid += 6; // Take into account the FF
         if (jid<0)
         {
           SEND_MSG("The specified joint name does not exist: "+name, MSG_TYPE_ERROR);

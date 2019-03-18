@@ -11,7 +11,9 @@ import sot_talos_balance.talos.control_manager_conf            as control_manage
 dt = 0.001
 conf = Bunch()
 robot_name = 'robot'
-N_JOINTS = 32
+N_JOINTS = 38
+u_max = 1.
+
 
 conf.param_server    = param_server_conf
 conf.control_manager = control_manager_conf
@@ -24,10 +26,10 @@ for key in conf.param_server.mapJointNameToID:
     param_server.setNameToId(key,conf.param_server.mapJointNameToID[key])
 
 cm = ControlManager("ControlManager")
-cm.init(dt, conf.param_server.urdfFileName, robot_name)
+cm.init(dt, robot_name)
 print("***Control manager initialized***")
-cm.u_max.value = N_JOINTS*(conf.control_manager.CTRL_MAX,)  
-print("u_max is set at {0} for all joints".format(conf.control_manager.CTRL_MAX)) 
+cm.u_max.value = N_JOINTS*(u_max,)  
+print("u_max is set at {0} for all joints".format(u_max,)) 
 
 ### Control is Ok  
 print("*****************")
@@ -39,10 +41,8 @@ cm.ctrl_input.value = u
 print("Control input is set at {0} for all joints".format(control_value)) 
 cm.u.recompute(1)
 cm.u_safe.recompute(1)
-if (cm.u_safe.value == (control_value,)*N_JOINTS):
-    print("Safe control = control input")
-elif (cm.u_safe.value == (0,)*N_JOINTS):
-    print("Safe control = zero")
+assert cm.u_safe.value == (control_value,)*N_JOINTS
+print("Safe control = control input")
 print("*****************")
 ### Control is too big
 control_value = 2.
@@ -51,19 +51,16 @@ cm.ctrl_input.value = u
 print("Control input is set at {0} for all joints".format(control_value)) 
 cm.u.recompute(2)
 cm.u_safe.recompute(2)
-if (cm.u_safe.value == (control_value,)*N_JOINTS):
-    print("Safe control = control input")
-elif (cm.u_safe.value == (0.,)*N_JOINTS):
-    print("Safe control = zero")
+assert cm.u_safe.value == (0.,)*N_JOINTS
+print("Safe control = zero")
 print("Control set to 0 forever")
 print("*****************")
 
-
 cm2 = ControlManager("ControlManager")
-cm2.init(dt, conf.param_server.urdfFileName, robot_name)
-print("***Control manager initialized***")
-cm2.u_max.value = N_JOINTS*(conf.control_manager.CTRL_MAX,)  
-print("u_max is set at {0} for all joints".format(conf.control_manager.CTRL_MAX)) 
+cm2.init(dt, robot_name)
+print("***New Control manager initialized***")
+cm.u_max.value = N_JOINTS*(u_max,)  
+print("u_max is set at {0} for all joints".format(u_max))
 
 ### Control is Ok 
 print("*****************")
@@ -75,33 +72,26 @@ cm2.ctrl_input.value = u
 print("Control input is set at {0} for all joints".format(control_value)) 
 cm2.u.recompute(3)
 cm2.u_safe.recompute(3)
-if (cm2.u_safe.value == (control_value,)*N_JOINTS):
-    print("Safe control = control input")
-elif (cm2.u_safe.value == (0,)*N_JOINTS):
-    print("Safe control = zero")
+assert cm2.u_safe.value == (control_value,)*N_JOINTS
+print("Safe control = control input")
 print("*****************")
 
 ### Fake emergency signal
 emergency = 0
-print("NO EMERGENCY")
+print("EMERGENCY = 0")
 cm2.addEmergencyStopSIN('test')
 cm2.emergencyStop_test.value = emergency
 cm2.u.recompute(4)
 cm2.u_safe.recompute(4)
-if (cm2.u_safe.value == (control_value,)*N_JOINTS):
-    print("Safe control = control input")
-elif (cm2.u_safe.value == (0.,)*N_JOINTS):
-    print("Safe control = zero")
-    print("Control set to 0 forever")
+assert cm2.u_safe.value == (control_value,)*N_JOINTS
+print("Safe control = control input")
 emergency = 1
 print('EMERGENCY = 1')
 cm2.emergencyStop_test.value = emergency
 cm2.u.recompute(5)
 cm2.u_safe.recompute(5)
-if (cm2.u_safe.value == (control_value,)*N_JOINTS):
-    print("Safe control = control input")
-elif (cm2.u_safe.value == (0.,)*N_JOINTS):
-    print("Safe control = zero")
-    print("Control set to 0 forever")
+assert cm2.u_safe.value == (0.,)*N_JOINTS
+print("Safe control = zero")
+print("Control set to 0 forever")
 print("*****************")
 
