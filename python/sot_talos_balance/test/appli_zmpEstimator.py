@@ -78,13 +78,21 @@ plug(robot.dvdt.sout,robot.dynamic.acceleration)
 
 # -------------------------- PLOTS --------------------------
 
+# --- ROS PUBLISHER
+robot.publisher = create_rospublish(robot, 'robot_publisher')        
+
+create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot = robot, data_type='vector')              # estimated ZMP
+create_topic(robot.publisher, robot.zmp_estimator, 'emergencyStop', robot = robot, data_type='boolean')   # ZMP emergency stop
+create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')                    # SOT CoM
+create_topic(robot.publisher, robot.dynamic, 'zmp', robot = robot, data_type='vector')                    # SOT ZMP
+create_topic(robot.publisher, robot.device, 'forceLLEG', robot = robot, data_type='vector')               # force on left foot
+create_topic(robot.publisher, robot.device, 'forceRLEG', robot = robot, data_type='vector')               # force on right foot
+
 # --- TRACER
 robot.tracer = TracerRealTime("zmp_tracer")
 robot.tracer.setBufferSize(80*(2**20))
 robot.tracer.open('/tmp','dg_','.dat')
 robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
-robot.device.after.addSignal('{0}.zmp'.format(robot.zmp_estimator.name))
-robot.device.after.addSignal('{0}.zmp'.format(robot.dynamic.name))
 
 addTrace(robot.tracer, robot.zmp_estimator, 'zmp')
 addTrace(robot.tracer, robot.dynamic, 'com')

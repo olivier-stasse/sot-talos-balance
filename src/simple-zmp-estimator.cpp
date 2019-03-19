@@ -93,26 +93,35 @@ namespace dynamicgraph
       dynamicgraph::Vector
       SimpleZmpEstimator::computeCoP(const dg::Vector & wrench, const MatrixHomogeneous & pose) const
       {
-          const double h = pose(2,3);
+        const double h = pose(2,3);
 
-          const double fx = wrench[0];
-          const double fy = wrench[1];
-          const double fz = wrench[2];
-          const double tx = wrench[3];
-          const double ty = wrench[4];
+        const double fx = wrench[0];
+        const double fy = wrench[1];
+        const double fz = wrench[2];
+        const double tx = wrench[3];
+        const double ty = wrench[4];
 
-          const double px = fz >= m_eps ? (- ty - fx*h)/fz : 0.0;
-          const double py = fz >= m_eps ? (  tx - fy*h)/fz : 0.0;
-          const double pz = - h;
+        double px, py;
+        if(fz >= m_eps/2)
+        {
+          px = (- ty - fx*h)/fz;
+          py = (  tx - fy*h)/fz;
+        }
+        else
+        {
+          px = 0.0;
+          py = 0.0;
+        }
+        const double pz = - h;
 
-          dg::Vector copLocal(3);
-          copLocal[0] = px;
-          copLocal[1] = py;
-          copLocal[2] = pz;
+        dg::Vector copLocal(3);
+        copLocal[0] = px;
+        copLocal[1] = py;
+        copLocal[2] = pz;
 
-          dg::Vector cop = pose.linear()*copLocal + pose.translation();
+        dg::Vector cop = pose.linear()*copLocal + pose.translation();
 
-          return cop;
+        return cop;
       }
 
       DEFINE_SIGNAL_OUT_FUNCTION(copLeft, dynamicgraph::Vector)
@@ -182,10 +191,11 @@ namespace dynamicgraph
         const double fzLeft = wrenchLeft[2];
         const double fzRight = wrenchRight[2];
 
-        if(fzLeft >= m_eps  || fzRight >= m_eps)
+        const double fz = fzLeft + fzRight;
+        if(fz >= m_eps)
         {
           m_emergency_stop_triggered = false;
-          s = ( copLeft*fzLeft + copRight*fzRight ) / ( fzLeft + fzRight );
+          s = ( copLeft*fzLeft + copRight*fzRight ) / fz;
         }
         else
         {
