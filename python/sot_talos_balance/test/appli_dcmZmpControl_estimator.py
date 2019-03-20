@@ -10,6 +10,7 @@ from math import sqrt
 from dynamic_graph.tracer_real_time import TracerRealTime
 
 from sot_talos_balance.euler_to_quat import EulerToQuat
+from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep;
@@ -43,6 +44,13 @@ plug(robot.device.state,e2q.euler)
 robot.e2q = e2q
 
 # --- General Estimation
+robot.rdynamic = DynamicPinocchio("real_dynamics")
+robot.rdynamic.setModel(robot.dynamic.model)
+robot.rdynamic.setData(robot.rdynamic.model.createData())
+plug(robot.device.state,robot.rdynamic.position)
+robot.rdynamic.velocity.value = [0.0]*robotDim
+robot.rdynamic.acceleration.value = [0.0]*robotDim
+
 robot.param_server = create_parameter_server(param_server_conf,dt)
 cdc_estimator = DcmEstimator('cdc_estimator')
 cdc_estimator.init(dt, robot_name)
@@ -69,10 +77,10 @@ robot.device_filters = filters
 
 # --- ZMP estimation
 zmp_estimator = SimpleZmpEstimator("zmpEst")
-robot.dynamic.createOpPoint('sole_LF','left_sole_link')
-robot.dynamic.createOpPoint('sole_RF','right_sole_link')
-plug(robot.dynamic.sole_LF,zmp_estimator.poseLeft)
-plug(robot.dynamic.sole_RF,zmp_estimator.poseRight)
+robot.rdynamic.createOpPoint('sole_LF','left_sole_link')
+robot.rdynamic.createOpPoint('sole_RF','right_sole_link')
+plug(robot.rdynamic.sole_LF,zmp_estimator.poseLeft)
+plug(robot.rdynamic.sole_RF,zmp_estimator.poseRight)
 plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
 plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
 #plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
