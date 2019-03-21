@@ -6,7 +6,7 @@ from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 
 robot.timeStep = robot.device.getTimeStep()
-dt = robot.timeStep;
+dt = robot.timeStep
 robot.comTrajGen = create_com_trajectory_generator(dt,robot);
 
 # --- COM

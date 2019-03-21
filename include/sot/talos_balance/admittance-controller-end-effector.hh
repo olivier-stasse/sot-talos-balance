@@ -15,16 +15,15 @@
 /* --- API ------------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-#if defined (WIN32)
-#  if defined (admittance_controller_end_effector_EXPORTS)
-#    define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT __declspec(dllexport)
-#  else
-#    define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT __declspec(dllimport)
-#  endif
+#if defined(WIN32)
+#if defined(admittance_controller_end_effector_EXPORTS)
+#define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT __declspec(dllexport)
 #else
-#  define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT
+#define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT __declspec(dllimport)
 #endif
-
+#else
+#define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT
+#endif
 
 /* --------------------------------------------------------------------- */
 /* --- INCLUDE --------------------------------------------------------- */
@@ -37,63 +36,69 @@
 #include <pinocchio/parsers/urdf.hpp>
 #include <pinocchio/multibody/model.hpp>
 #include "pinocchio/spatial/se3.hpp"
+#include "pinocchio/spatial/motion.hpp"
 #include <sot/core/robot-utils.hh>
 #include <pinocchio/algorithm/kinematics.hpp>
+#include <pinocchio/algorithm/center-of-mass.hpp>
 
+namespace dynamicgraph
+{
+namespace sot
+{
+namespace talos_balance
+{
 
-namespace dynamicgraph {
-  namespace sot {
-    namespace talos_balance {
+/* --------------------------------------------------------------------- */
+/* --- CLASS ----------------------------------------------------------- */
+/* --------------------------------------------------------------------- */
 
-      /* --------------------------------------------------------------------- */
-      /* --- CLASS ----------------------------------------------------------- */
-      /* --------------------------------------------------------------------- */
-
-      /**
+/**
        * @brief      Admittance controller for an upper body end-effector (right or left wrist
        *
        *  This entity computes a velocity reference for an end-effector based on the force error in the world frame :
        *  dqRef = integral( Kp(forceDes-forceWorldFrame) )
        *
        */
-      class ADMITTANCECONTROLLERENDEFFECTOR_EXPORT AdmittanceControllerEndEffector
-          : public ::dynamicgraph::Entity
-      {
-      DYNAMIC_GRAPH_ENTITY_DECL();
+class ADMITTANCECONTROLLERENDEFFECTOR_EXPORT AdmittanceControllerEndEffector
+    : public ::dynamicgraph::Entity
+{
+  DYNAMIC_GRAPH_ENTITY_DECL();
 
-      public:
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-        /* --- CONSTRUCTOR ---- */
-        AdmittanceControllerEndEffector(const std::string & name);
+  /* --- CONSTRUCTOR ---- */
+  AdmittanceControllerEndEffector(const std::string &name);
 
-        /* --- SIGNALS --- */
-        /// \brief     Gain (6d) for the integration of the error on the force
-        DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
-        /// \brief     Value of the saturation to apply on the velocity output
-        DECLARE_SIGNAL_IN(velocitySaturation, dynamicgraph::Vector);
-        /// \brief     6d force given by the sensor in its local frame
-        DECLARE_SIGNAL_IN(force, dynamicgraph::Vector);
-        /// \brief     6d desired force of the end-effector in the world frame
-        DECLARE_SIGNAL_IN(forceDes, dynamicgraph::Vector);
-        /// \brief     Current joint configuration of the robot
-        DECLARE_SIGNAL_IN(jointPosition, dynamicgraph::Vector);
+  /* --- SIGNALS --- */
+  /// \brief     Gain (6d) for the integration of the error on the force
+  DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
+  /// \brief     Value of the saturation to apply on the velocity output
+  DECLARE_SIGNAL_IN(velocitySaturation, dynamicgraph::Vector);
+  /// \brief     6d force given by the sensor in its local frame
+  DECLARE_SIGNAL_IN(force, dynamicgraph::Vector);
+  /// \brief     6d desired force of the end-effector in the world frame
+  DECLARE_SIGNAL_IN(forceDes, dynamicgraph::Vector);
+  /// \brief     Current joint configuration of the robot
+  DECLARE_SIGNAL_IN(jointPosition, dynamicgraph::Vector);
 
-        /// \brief     Velocity reference for the end-effector computed by the controller
-        DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
+  /// \brief     6d force given by the sensor in he global frame
+  DECLARE_SIGNAL_INNER(forceWorldFrame, dynamicgraph::Vector);
+  /// \brief     Velocity reference for the end-effector computed in the global frame
+  DECLARE_SIGNAL_INNER(dqWorldFrame, dynamicgraph::Vector);
 
-        /// \brief     6d force given by the sensor in he global frame
-        DECLARE_SIGNAL_INNER(forceWorldFrame, dynamicgraph::Vector);
+  /// \brief     Velocity reference for the end-effector in the local frame
+  DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
 
-        /* --- COMMANDS --- */
-        /**
+  /* --- COMMANDS --- */
+  /**
         * @brief      Initialize the entity
         *
         * @param[in]  dt  Time step of the control
         * @param[in]  sensorFrameName  Name of the force sensor of the end-effector used in the pinocchio model
         */
-        void init(const double & dt, const std::string & sensorFrameName);
-        /**
+  void init(const double &dt, const std::string &sensorFrameName, const std::string &endeffectorName);
+  /**
          * @brief      Reset the velocity
          */
         void reset_dq();
