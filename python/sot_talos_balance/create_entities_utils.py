@@ -8,6 +8,8 @@ from sot_talos_balance.madgwickahrs                           import MadgwickAHR
 from sot_talos_balance.imu_offset_compensation                import ImuOffsetCompensation
 from sot_talos_balance.dcm_estimator                          import DcmEstimator
 
+from sot_talos_balance.euler_to_quat import EulerToQuat
+from sot_talos_balance.quat_to_euler import QuatToEuler
 
 from dynamic_graph.sot.core.operator import Mix_of_vector
 from dynamic_graph.sot.core.operator import Selec_of_vector
