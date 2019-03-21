@@ -558,7 +558,7 @@ namespace dynamicgraph
         const Vector3 w( 0.5*(pinocchio::log3(lfMff.rotation())+pinocchio::log3(rfMff.rotation())) );
         SE3 oMff = SE3(pinocchio::exp3(w), 0.5*(lfMff.translation()+rfMff.translation()));
         // add a constant offset to make the world frame match the one in OpenHRP
-        oMff.translation()(0) += 9.562e-03;
+        // oMff.translation()(0) += 9.562e-03;
 
         m_oMlfs = oMff * lfMff.inverse() * groundMfoot;
         m_oMrfs = oMff * rfMff.inverse() * groundMfoot;
