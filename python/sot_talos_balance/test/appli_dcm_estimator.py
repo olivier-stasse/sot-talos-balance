@@ -55,8 +55,16 @@ robot.device_filters          = create_device_filters(robot, dt)
 robot.imu_filters             = create_imu_filters(robot, dt)
 robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf) 
 robot.be_filters              = create_be_filters(robot, dt)
-robot.dcm_estimator           = create_dcm_estimator(robot, dt)
 
+robot_name='robot'
+e2q = EulerToQuat('e2q')
+plug(robot.base_estimator.q,e2q.euler)
+robot.e2q = e2q
+dcm_estimator = DcmEstimator('dcm_estimator')
+dcm_estimator.init(dt, robot_name)
+plug(robot.e2q.quaternion, dcm_estimator.q)
+plug(robot.base_estimator.v, dcm_estimator.v)
+robot.dcm_estimator = dcm_estimator
 
 # --- ROS PUBLISHER
 robot.publisher = create_rospublish(robot, 'robot_publisher')
@@ -69,6 +77,7 @@ create_topic(robot.publisher, robot.dcm_estimator, 'dc', robot = robot, data_typ
 create_topic(robot.publisher, robot.base_estimator, 'v', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'v_gyr', robot = robot, data_type='vector')
 
+create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')
 
 # --- ROS SUBSCRIBER
 robot.subscriber = RosSubscribe("base_subscriber")
