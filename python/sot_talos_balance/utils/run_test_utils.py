@@ -66,7 +66,7 @@ def launch_script(code,title,description = "",verbosity=1):
                 rospy.logdebug(answer)
     rospy.loginfo("...done with "+title)
 
-def run_test(appli):
+def run_test(appli,verbosity=1):
     try:
         rospy.loginfo("Waiting for run_command")
         rospy.wait_for_service('/run_command')
@@ -82,7 +82,7 @@ def run_test(appli):
     
         rospy.loginfo("Stack of Tasks launched")
 
-        launch_script(initCode,'initialize SoT')
+        launch_script(initCode,'initialize SoT',verbosity=verbosity)
         raw_input("Wait before starting the dynamic graph")
         runCommandStartDynamicGraph()
         print()
