@@ -8,6 +8,13 @@ from geometry_msgs.msg import Wrench
 from dynamic_graph_bridge_msgs.msg import Vector as VectorMsg
 from tf.transformations import euler_from_quaternion
 
+def is_gazebo_present():
+    list_of_topics =rospy.get_published_topics()
+    for a_topic in list_of_topics:
+        if a_topic[0].startswith('/gazebo'):
+            return True
+    return False
+
 def apply_force(force,duration, body_name = "talos::torso_2_link"):
     '''Gazebo service call for applying a force on a body.'''
     rospy.wait_for_service('/gazebo/apply_body_wrench')
