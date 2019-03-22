@@ -1,5 +1,5 @@
 from sot_talos_balance.create_entities_utils import *
-import sot_talos_balance.control_manager_conf          as param_server_conf
+import sot_talos_balance.talos.parameter_server_conf          as param_server_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core import Task, FeaturePosture
 from dynamic_graph.sot.core.matrix_util import matrixToTuple

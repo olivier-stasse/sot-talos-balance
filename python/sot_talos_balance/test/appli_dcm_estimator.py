@@ -1,13 +1,12 @@
 from sot_talos_balance.create_entities_utils           import *
 from sot_talos_balance.utils.plot_utils                import *
-import sot_talos_balance.control_manager_conf          as param_server_conf
+import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
 import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
 from dynamic_graph.sot.core.meta_tasks_kine            import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core.matrix_util                import matrixToTuple
 from dynamic_graph                                     import plug
 from dynamic_graph.sot.core                            import SOT
 from time                                              import sleep
-from IPython                                           import embed
 from dynamic_graph.ros                                 import RosSubscribe
 import os
 import numpy                                           as np

@@ -1,6 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
 from sot_talos_balance.meta_task_config import MetaTaskKineConfig
-import sot_talos_balance.control_manager_conf as param_server_conf
+import sot_talos_balance.talos.parameter_server_conf as param_server_conf
 from sot_talos_balance.talos import base_estimator_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph import plug

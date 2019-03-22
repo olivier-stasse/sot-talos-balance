@@ -1,4 +1,4 @@
-import sot_talos_balance.control_manager_conf as paramServerConfig
+import sot_talos_balance.talos.parameter_server_conf as paramServerConfig
 from sot_talos_balance.create_entities_utils import *
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom
 from dynamic_graph import plug
