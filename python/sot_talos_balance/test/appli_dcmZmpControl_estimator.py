@@ -1,5 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
 import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
+import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core import Task, FeaturePosture
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
@@ -38,24 +39,31 @@ omega = sqrt(g/h)
 
 # -------------------------- ESTIMATION --------------------------
 
+# --- Base Estimation
+robot.param_server            = create_parameter_server(param_server_conf,dt)
+robot.device_filters          = create_device_filters(robot, dt)
+robot.imu_filters             = create_imu_filters(robot, dt)
+robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf)
+# robot.be_filters              = create_be_filters(robot, dt)
+
 # --- Conversion
 e2q = EulerToQuat('e2q')
-plug(robot.device.state,e2q.euler)
+plug(robot.base_estimator.q,e2q.euler)
 robot.e2q = e2q
 
-# --- General Estimation
+# --- Feet pose
 robot.rdynamic = DynamicPinocchio("real_dynamics")
 robot.rdynamic.setModel(robot.dynamic.model)
 robot.rdynamic.setData(robot.rdynamic.model.createData())
-plug(robot.device.state,robot.rdynamic.position)
+plug(robot.base_estimator.q,robot.rdynamic.position)
 robot.rdynamic.velocity.value = [0.0]*robotDim
 robot.rdynamic.acceleration.value = [0.0]*robotDim
 
-robot.param_server = create_parameter_server(param_server_conf,dt)
+# --- CoM Estimation
 cdc_estimator = DcmEstimator('cdc_estimator')
 cdc_estimator.init(dt, robot_name)
 plug(robot.e2q.quaternion, cdc_estimator.q)
-plug(robot.device.velocity, cdc_estimator.v)
+plug(robot.base_estimator.v, cdc_estimator.v)
 robot.cdc_estimator = cdc_estimator
 
 # --- DCM Estimation
@@ -66,14 +74,6 @@ plug(robot.cdc_estimator.c, estimator.com)
 plug(robot.cdc_estimator.dc,estimator.momenta)
 estimator.init()
 robot.estimator = estimator
-
-# --- filters
-filters = Bunch()
-filters.ft_RF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_RF_filter", dt, 6)
-filters.ft_LF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_LF_filter", dt, 6)
-plug(robot.device.forceRLEG, filters.ft_RF_filter.x)
-plug(robot.device.forceLLEG, filters.ft_LF_filter.x)
-robot.device_filters = filters
 
 # --- ZMP estimation
 zmp_estimator = SimpleZmpEstimator("zmpEst")
@@ -91,7 +91,7 @@ robot.zmp_estimator = zmp_estimator
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [1.0,1.0,1.0]
+Kp_dcm = [0.0,0.0,0.0]
 Ki_dcm = [0.0,0.0,0.0] # zero (to be set later)
 gamma_dcm = 0.2
 
@@ -129,7 +129,7 @@ com_admittance_control.setState(comDes,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [1.0,1.0,0.0] # this value is employed later
+Kp_adm = [0.0,0.0,0.0] # this value is employed later
 
 # -------------------------- SOT CONTROL --------------------------
 
@@ -253,7 +253,7 @@ robot.sot.push(robot.contactLF.task.name)
 robot.sot.push(robot.taskCom.task.name)
 robot.sot.push(robot.keepWaist.task.name)
 # robot.sot.push(robot.taskPos.name)
-robot.device.control.recompute(0)
+# robot.device.control.recompute(0) # this crashes as it employs joint sensors which are not ready yet
 
 # --- Fix robot.dynamic inputs
 plug(robot.device.velocity,robot.dynamic.velocity)
@@ -292,7 +292,7 @@ robot.tracer.open('/tmp','dg_','.dat')
 robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
 addTrace(robot.tracer, robot.dcm_control, 'dcmDes')             # desired CoM (workaround)
-addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM (to be modified)
+addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
 addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
 addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
 
