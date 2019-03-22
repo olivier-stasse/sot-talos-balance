@@ -77,30 +77,6 @@ create_topic(robot.publisher, robot.base_estimator, 'v', robot = robot, data_typ
 create_topic(robot.publisher, robot.base_estimator, 'v_gyr', robot = robot, data_type='vector')
 
 create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')
-
-# --- ROS SUBSCRIBER
-robot.subscriber = RosSubscribe("base_subscriber")
-robot.subscriber.add("vector","position","/sot/base_link/position")
-robot.subscriber.add("vector","velocity","/sot/base_link/velocity")
-robot.subscriber.add("vector","q_est","/sot/base_estimator/q")
-robot.subscriber.add("vector","q_imu","/sot/base_estimator/q_imu")
-robot.subscriber.add("vector","gyro_f","/sot/gyro_filter/x_filtered")
-robot.subscriber.add("vector","acc_f","/sot/acc_filter/x_filtered")
-robot.subscriber.add("vector","com","/sot/dcm_estimator/c")
-robot.subscriber.add("vector","vcom","/sot/dcm_estimator/dc")
-robot.subscriber.add("vector","v_base","/sot/base_estimator/v")
-robot.subscriber.add("vector","v_gyr","/sot/base_estimator/v_gyr")
-
-
-robot.device.after.addSignal('{0}.position'.format(robot.subscriber.name)) # force recalculation
-robot.device.after.addSignal('{0}.velocity'.format(robot.subscriber.name)) # force recalculation
-robot.device.after.addSignal('{0}.com'.format(robot.subscriber.name)) # force recalculation
-robot.device.after.addSignal('{0}.vcom'.format(robot.subscriber.name)) # force recalculation
-robot.device.after.addSignal('{0}.v_base'.format(robot.subscriber.name)) # force recalculation
-
-# robot.device.after.addSignal('{0}.velocity'.format(robot.subscriber.name)) # force recalculation
-# robot.device.after.addSignal('{0}.q_est'.format(robot.subscriber.name))        # force recalculation
-# robot.device.after.addSignal('{0}.q_imu'.format(robot.subscriber.name))        # force recalculation
-# robot.device.after.addSignal('{0}.gyro'.format(robot.subscriber.name))        # force recalculation
-# robot.device.after.addSignal('{0}.gyro_f'.format(robot.subscriber.name))        # force recalculation
+create_topic(robot.publisher, robot.device, 'state', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'velocity', robot = robot, data_type='vector')
 
