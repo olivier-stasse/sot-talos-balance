@@ -174,14 +174,14 @@ namespace dynamicgraph
                                                  const Model::JointIndex index,
                                                  Data::Matrix6x & J) const
                 {
-                  return pinocchio::getJacobian<pinocchio::WORLD>(m_model, data, index, J);
+                  return pinocchio::getJointJacobian(m_model, data, index, pinocchio::WORLD, J);
                 }
                 
                 void RobotWrapper::jacobianLocal(const Data & data,
                                                  const Model::JointIndex index,
                                                  Data::Matrix6x & J) const
                 {
-                  return pinocchio::getJacobian<pinocchio::LOCAL>(m_model, data, index, J);
+                  return pinocchio::getJointJacobian(m_model, data, index, pinocchio::LOCAL, J);
                 }
                 
                 SE3 RobotWrapper::framePosition(const Data & data,
@@ -202,39 +202,34 @@ namespace dynamicgraph
                 Motion RobotWrapper::frameVelocity(const Data & data,
                                                    const Model::FrameIndex index) const
                 {
-                  const Frame & f = m_model.frames[index];
-                  return f.placement.actInv(data.v[f.parent]);
+                  return pinocchio::getFrameVelocity(m_model,data,index);
                 }
                 
                 void RobotWrapper::frameVelocity(const Data & data,
                                                  const Model::FrameIndex index,
                                                  Motion & frameVelocity) const
                 {
-                  const Frame & f = m_model.frames[index];
-                  frameVelocity = f.placement.actInv(data.v[f.parent]);
+                  frameVelocity = pinocchio::getFrameVelocity(m_model,data,index);
                 }
                 
                 Motion RobotWrapper::frameAcceleration(const Data & data,
                                                        const Model::FrameIndex index) const
                 {
-                  const Frame & f = m_model.frames[index];
-                  return f.placement.actInv(data.a[f.parent]);
+                  return pinocchio::getFrameAcceleration(m_model,data,index);
                 }
                 
                 void RobotWrapper::frameAcceleration(const Data & data,
                                                      const Model::FrameIndex index,
                                                      Motion & frameAcceleration) const
                 {
-                  const Frame & f = m_model.frames[index];
-                  frameAcceleration = f.placement.actInv(data.a[f.parent]);
+                  frameAcceleration = pinocchio::getFrameAcceleration(m_model,data,index);
                 }
                 
                 Motion RobotWrapper::frameClassicAcceleration(const Data & data,
                                                               const Model::FrameIndex index) const
                 {
-                  const Frame & f = m_model.frames[index];
-                  Motion a = f.placement.actInv(data.a[f.parent]);
-                  Motion v = f.placement.actInv(data.v[f.parent]);
+                  Motion a = pinocchio::getFrameAcceleration(m_model,data,index);
+                  Motion v = pinocchio::getFrameVelocity(m_model,data,index);
                   a.linear() += v.angular().cross(v.linear());
                   return a;
                 }
@@ -243,9 +238,8 @@ namespace dynamicgraph
                                                             const Model::FrameIndex index,
                                                             Motion & frameAcceleration) const
                 {
-                  const Frame & f = m_model.frames[index];
-                  frameAcceleration = f.placement.actInv(data.a[f.parent]);
-                  Motion v = f.placement.actInv(data.v[f.parent]);
+                  frameAcceleration = pinocchio::getFrameAcceleration(m_model,data,index);
+                  Motion v = pinocchio::getFrameVelocity(m_model,data,index);
                   frameAcceleration.linear() += v.angular().cross(v.linear());
                 }
                 
@@ -253,14 +247,14 @@ namespace dynamicgraph
                                                       const Model::FrameIndex index,
                                                       Data::Matrix6x & J) const
                 {
-                  return pinocchio::getJacobian<pinocchio::WORLD>(m_model, data, m_model.frames[index].parent, J);
+                  return pinocchio::getFrameJacobian(m_model, data, index, pinocchio::WORLD, J);
                 }
                 
                 void RobotWrapper::frameJacobianLocal(const Data & data,
                                                       const Model::FrameIndex index,
                                                       Data::Matrix6x & J) const
                 {
-                  return pinocchio::getFrameJacobian(m_model, data, index, J);
+                  return pinocchio::getFrameJacobian(m_model, data, index, pinocchio::LOCAL, J);
                 }
                 
                 //    const Vector3 & com(Data & data,const Vector & q,
