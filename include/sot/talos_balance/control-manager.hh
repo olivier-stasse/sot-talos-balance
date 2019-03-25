@@ -81,9 +81,9 @@ namespace dynamicgraph {
         /* --- CONSTRUCTOR ---- */
         ControlManager( const std::string & name);
 
-	      /// Initialize
-	      /// @param dt: control interval
-	      /// @param urdfFile: path to the URDF model of the robot
+        /// Initialize
+        /// @param dt: control interval
+        /// @param urdfFile: path to the URDF model of the robot
         void init(const double & dt,
                   const std::string & robotRef);
 
@@ -98,21 +98,21 @@ namespace dynamicgraph {
 
         /* --- COMMANDS --- */
 
-	      /// Commands related to the control mode.
+        /// Commands related to the control mode.
         void addCtrlMode(const std::string& name);
         void ctrlModes();
         void getCtrlMode(const std::string& jointName);
         void setCtrlMode(const std::string& jointName, const std::string& ctrlMode);
         void setCtrlMode(const int jid, const CtrlMode& cm);
-	
-        void resetProfiler();
-	
-	      /// Commands related to joint name and joint id
-	      // void setNameToId(const std::string& jointName, const double & jointId);
-	      // void setJointLimitsFromId(const double &jointId, const double &lq, const double &uq);
 
-	      /// Set the mapping between urdf and sot.
-	      // void setJoints(const dynamicgraph::Vector &);
+        void resetProfiler();
+
+        /// Commands related to joint name and joint id
+        // void setNameToId(const std::string& jointName, const double & jointId);
+        // void setJointLimitsFromId(const double &jointId, const double &lq, const double &uq);
+
+        /// Set the mapping between urdf and sot.
+        // void setJoints(const dynamicgraph::Vector &);
 
         // void setStreamPrintPeriod(const double & s);
 
@@ -124,7 +124,7 @@ namespace dynamicgraph {
 
       protected:
         RobotUtil *                   m_robot_util;
-        unsigned int m_numDofs;
+        size_t  m_numDofs;
         bool    m_initSucceeded;    /// true if the entity has been successfully initialized
         double  m_dt;               /// control loop time period
         bool    m_emergency_stop_triggered;  /// true if an emergency condition as been triggered either by an other entity, or by control limit violation
