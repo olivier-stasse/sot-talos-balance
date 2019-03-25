@@ -99,8 +99,8 @@ namespace dynamicgraph
         const Vector & com = m_comSIN(iter);
         const Vector & momenta = m_momentaSIN(iter);
 
-        assert(com.size()==3 && "Unexpected size of signal com");
-        assert(momenta.size()==6 && "Unexpected size of signal momenta");
+        assert( com.size()==3 && "Unexpected size of signal com" );
+        assert( (momenta.size()==3 || momenta.size()==6) && "Unexpected size of signal momenta" );
 
         const Vector dcom = momenta.head<3>()/mass;
 
