@@ -44,6 +44,7 @@ namespace dynamicgraph
 
         s12 =  pinocchio::SE3(pinocchio::exp3(w),t_);
       }
+
       void rpyToMatrix(double roll, double pitch, double yaw, Eigen::Matrix3d & R)
       {
         Eigen::AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
@@ -84,15 +85,16 @@ namespace dynamicgraph
 
       void pointRotationByQuaternion(const Eigen::Vector3d & point,const Eigen::Vector4d & quat, Eigen::Vector3d & rotatedPoint)
       {
-            const Eigen::Vector4d p4(0.0, point(0),point(1),point(2));
-            const Eigen::Vector4d quat_conj(quat(0),-quat(1),-quat(2),-quat(3));
-            Eigen::Vector4d q_tmp1,q_tmp2;
-            quanternionMult(quat,p4,q_tmp1);
-            quanternionMult(q_tmp1,quat_conj,q_tmp2);
-            rotatedPoint(0) = q_tmp2(1);
-            rotatedPoint(1) = q_tmp2(2);
-            rotatedPoint(2) = q_tmp2(3);
+        const Eigen::Vector4d p4(0.0, point(0),point(1),point(2));
+        const Eigen::Vector4d quat_conj(quat(0),-quat(1),-quat(2),-quat(3));
+        Eigen::Vector4d q_tmp1,q_tmp2;
+        quanternionMult(quat,p4,q_tmp1);
+        quanternionMult(q_tmp1,quat_conj,q_tmp2);
+        rotatedPoint(0) = q_tmp2(1);
+        rotatedPoint(1) = q_tmp2(2);
+        rotatedPoint(2) = q_tmp2(3);
       }
+
       inline
       double eulerMean(double a1, double a2)
       {
@@ -201,14 +203,14 @@ namespace dynamicgraph
                                                                              << m_qSOUT
                                                                              << m_dforceLLEGSIN
                                                                              << m_dforceRLEGSIN)
-        ,CONSTRUCT_SIGNAL_OUT(v_ac,                       dynamicgraph::Vector, m_vSOUT)
-        ,CONSTRUCT_SIGNAL_OUT(a_ac,                       dynamicgraph::Vector, m_vSOUT)
+        ,CONSTRUCT_SIGNAL_OUT(v_kin,                      dynamicgraph::Vector, m_vSOUT)
         ,CONSTRUCT_SIGNAL_OUT(v_flex,                     dynamicgraph::Vector, m_vSOUT)
         ,CONSTRUCT_SIGNAL_OUT(v_imu,                      dynamicgraph::Vector, m_vSOUT)
         ,CONSTRUCT_SIGNAL_OUT(v_gyr,                      dynamicgraph::Vector, m_vSOUT)
-        ,CONSTRUCT_SIGNAL_OUT(v_kin,                      dynamicgraph::Vector, m_vSOUT)
         ,CONSTRUCT_SIGNAL_OUT(lf_xyzquat,                 dynamicgraph::Vector, m_qSOUT)
         ,CONSTRUCT_SIGNAL_OUT(rf_xyzquat,                 dynamicgraph::Vector, m_qSOUT)
+        ,CONSTRUCT_SIGNAL_OUT(a_ac,                       dynamicgraph::Vector, m_vSOUT)
+        ,CONSTRUCT_SIGNAL_OUT(v_ac,                       dynamicgraph::Vector, m_vSOUT)
         ,CONSTRUCT_SIGNAL_OUT(q_lf,                       dynamicgraph::Vector, m_qSOUT)
         ,CONSTRUCT_SIGNAL_OUT(q_rf,                       dynamicgraph::Vector, m_qSOUT)
         ,CONSTRUCT_SIGNAL_OUT(q_imu,                      dynamicgraph::Vector, m_qSOUT
@@ -388,14 +390,14 @@ namespace dynamicgraph
 
       void BaseEstimator::set_fz_stable_windows_size(const int& ws)
       {
-          if(ws<0.0)
+        if(ws<0.0)
           return SEND_MSG("windows_size should be a positive integer", MSG_TYPE_ERROR);
         m_fz_stable_windows_size = ws;
       }
 
       void BaseEstimator::set_alpha_w_filter(const double& a)
       {
-          if(a<0.0 || a>1.0)
+        if(a<0.0 || a>1.0)
           return SEND_MSG("alpha should be in [0..1]", MSG_TYPE_ERROR);
         m_alpha_w_filter = a;
       }
@@ -403,14 +405,14 @@ namespace dynamicgraph
 
       void BaseEstimator::set_alpha_DC_acc(const double& a)
       {
-          if(a<0.0 || a>1.0)
+        if(a<0.0 || a>1.0)
           return SEND_MSG("alpha should be in [0..1]", MSG_TYPE_ERROR);
         m_alpha_DC_acc = a;
       }
 
       void BaseEstimator::set_alpha_DC_vel(const double& a)
       {
-          if(a<0.0 || a>1.0)
+        if(a<0.0 || a>1.0)
           return SEND_MSG("alpha should be in [0..1]", MSG_TYPE_ERROR);
         m_alpha_DC_vel = a;
       }
@@ -545,7 +547,7 @@ namespace dynamicgraph
         SE3 dummy, dummy1, lfMff, rfMff;
         m_oMrfs = SE3::Identity();
         m_oMlfs = SE3::Identity();
-        kinematics_estimation(ftrf, m_K_rf, m_oMrfs, m_right_foot_id, rfMff, dummy, dummy1); //rfMff is obtain reading oMff becaused oMrfs is here set to Identity
+        kinematics_estimation(ftrf, m_K_rf, m_oMrfs, m_right_foot_id, rfMff, dummy, dummy1); //rfMff is obtained reading oMff becaused oMrfs is here set to Identity
         kinematics_estimation(ftlf, m_K_lf, m_oMlfs, m_left_foot_id,  lfMff, dummy, dummy1);
 
         // distance from ankle to ground
@@ -594,7 +596,7 @@ namespace dynamicgraph
       }
 
       void BaseEstimator::kinematics_estimation(const Vector6 & ft, const Vector6 & K,
-                                                const SE3 & oMfs, const int foot_id,
+                                                const SE3 & oMfs, const pinocchio::FrameIndex foot_id,
                                                 SE3 & oMff, SE3 & oMfa, SE3 & fsMff)
       {
         Vector3 xyz;
@@ -652,7 +654,7 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal q before initialization!");
           return s;
         }
-        if(s.size()!=m_robot_util->m_nbJoints+6)
+        if( s.size()!=static_cast<Eigen::Index>(m_robot_util->m_nbJoints+6) )
           s.resize(m_robot_util->m_nbJoints+6);
 
         const Eigen::VectorXd & qj          = m_joint_positionsSIN(iter);     //n+6
@@ -665,7 +667,9 @@ namespace dynamicgraph
         // if one feet is not stable, force weight to 0.0
         double wL, wR;
         if(m_w_lf_inSIN.isPlugged())
+        {
           wL = m_w_lf_inSIN(iter);
+        }
         else
         {
           wL = m_w_lf_filteredSOUT(iter);
@@ -673,7 +677,9 @@ namespace dynamicgraph
             wL = 0.0;
         }
         if(m_w_rf_inSIN.isPlugged())
+        {
           wR = m_w_rf_inSIN(iter);
+        }
         else
         {
           wR = m_w_rf_filteredSOUT(iter);
@@ -721,21 +727,12 @@ namespace dynamicgraph
           matrixToRpy(quat_torso_imu.toRotationMatrix(), rpy_torso_imu);
 
           // average (we do not take into account the IMU yaw)
-          double wSum = wL + wR + m_w_imu;
+          // double wSum = wL + wR + m_w_imu;
           rpy_torso[0] = wEulerMean(rpy_torso_lf[0],  rpy_torso_rf[0], wL, wR);
           rpy_torso[0] = wEulerMean(rpy_torso[0],  rpy_torso_imu[0], wL+wR, m_w_imu);
-          //rpy_torso[0] = eulerMean(rpy_torso_lf[0],  rpy_torso_rf[0]);
-          //eulerMean(rpy_torso[0],  rpy_torso_imu[0], rpy_torso(0))
           rpy_torso[1] = wEulerMean(rpy_torso_lf[1],  rpy_torso_rf[1], wL, wR); 
           rpy_torso[1] = wEulerMean(rpy_torso[1],  rpy_torso_imu[1], wL+wR, m_w_imu);
-          //rpy_torso[1] = eulerMean(rpy_torso_lf[1],  rpy_torso_rf[1]);
-          //eulerMean(rpy_torso[1],  rpy_torso_imu[1], rpy_torso(1))
-          //rpy_torso(0) = (rpy_torso_lf[0]*wL + rpy_torso_rf[0]*wR + rpy_torso_imu[0]*m_w_imu) / wSum;
-          //rpy_torso(1) = (rpy_torso_lf[1]*wL + rpy_torso_rf[1]*wR + rpy_torso_imu[1]*m_w_imu) / wSum;
           rpy_torso[2] = wEulerMean(rpy_torso_lf[2],  rpy_torso_rf[2], wL, wR);
-          //rpy_torso[2] = wEulerMean(rpy_torso[2],  rpy_torso_imu[2], wL+wR, m_w_imu);
-          //rpy_torso[2] = eulerMean(rpy_torso_lf[2],  rpy_torso_rf[2]);
-          //rpy_torso(2) = (rpy_torso_lf[2]*wL + rpy_torso_rf[2]*wR )                 / (wL+wR);
 
           rpyToMatrix(rpy_torso, m_oRtorso);
           m_oRff = m_oRtorso * torsoMff.rotation();
@@ -861,6 +858,7 @@ namespace dynamicgraph
         if(s.size()!=7)
           s.resize(7);
         const Eigen::VectorXd & q = m_qSOUT(iter);
+        (void) q; // disable unused variable warning
         s = m_oMlfs_xyzquat;
         return s;
       }
@@ -875,6 +873,7 @@ namespace dynamicgraph
         if(s.size()!=7)
           s.resize(7);
         const Eigen::VectorXd & q = m_qSOUT(iter);
+        (void) q; // disable unused variable warning
         s = m_oMrfs_xyzquat;
         return s;
       }
@@ -886,7 +885,7 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal q_lf before initialization!");
           return s;
         }
-        if(s.size()!=m_robot_util->m_nbJoints+6)
+        if( s.size()!=static_cast<Eigen::Index>(m_robot_util->m_nbJoints+6) )
           s.resize(m_robot_util->m_nbJoints+6);
 
         const Eigen::VectorXd & q = m_qSOUT(iter);
@@ -903,7 +902,7 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal q_rf before initialization!");
           return s;
         }
-        if(s.size()!=m_robot_util->m_nbJoints+6)
+        if( s.size()!=static_cast<Eigen::Index>(m_robot_util->m_nbJoints+6) )
           s.resize(m_robot_util->m_nbJoints+6);
 
         const Eigen::VectorXd & q = m_qSOUT(iter);
@@ -920,7 +919,7 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal q_imu before initialization!");
           return s;
         }
-        if(s.size()!=m_robot_util->m_nbJoints+6)
+        if( s.size()!=static_cast<Eigen::Index>(m_robot_util->m_nbJoints+6) )
           s.resize(m_robot_util->m_nbJoints+6);
 
         const Eigen::VectorXd & q = m_qSOUT(iter);
@@ -1040,7 +1039,7 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal v before initialization!");
           return s;
         }
-        if(s.size()!=m_robot_util->m_nbJoints+6)
+        if( s.size()!=static_cast<Eigen::Index>(m_robot_util->m_nbJoints+6) )
           s.resize(m_robot_util->m_nbJoints+6);
 
         m_kinematics_computationsSINNER(iter);
@@ -1048,10 +1047,10 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_BASE_VELOCITY_ESTIMATION);
         {
-          const Eigen::VectorXd& dq          = m_joint_velocitiesSIN(iter);
-          const Eigen::Vector3d& acc_imu     = m_accelerometerSIN(iter);
-          const Eigen::Vector3d& gyr_imu     = m_gyroscopeSIN(iter);
-          const Eigen::Vector4d& quatIMU_vec = m_imu_quaternionSIN(iter);
+          const Eigen::VectorXd & dq          = m_joint_velocitiesSIN(iter);
+          const Eigen::Vector3d & acc_imu     = m_accelerometerSIN(iter);
+          const Eigen::Vector3d & gyr_imu     = m_gyroscopeSIN(iter);
+          // const Eigen::Vector4d & quatIMU_vec = m_imu_quaternionSIN(iter);
           const Vector6 & dftrf              = m_dforceRLEGSIN(iter);
           const Vector6 & dftlf              = m_dforceLLEGSIN(iter);
           assert(dq.size()==m_robot_util->m_nbJoints     && "Unexpected size of signal joint_velocities");
@@ -1061,7 +1060,9 @@ namespace dynamicgraph
           // if one feet is not stable, force weight to 0.0
           double wL, wR;
           if(m_w_lf_inSIN.isPlugged())
+          {
             wL = m_w_lf_inSIN(iter);
+          }
           else
           {
             wL = m_w_lf_filteredSOUT(iter);
@@ -1069,7 +1070,9 @@ namespace dynamicgraph
               wL = 0.0;
           }
           if(m_w_rf_inSIN.isPlugged())
+          {
             wR = m_w_rf_inSIN(iter);
+          }
           else
           {
             wR = m_w_rf_filteredSOUT(iter);
@@ -1085,15 +1088,15 @@ namespace dynamicgraph
 
           /* Compute foot velocities */
           const Frame & f_lf = m_model.frames[m_left_foot_id];
-          const Motion v_lf_local = m_data->v[f_lf.parent];
-          const SE3 ffMlf = m_data->oMi[f_lf.parent];
+          const Motion & v_lf_local = m_data->v[f_lf.parent];
+          const SE3 & ffMlf = m_data->oMi[f_lf.parent];
           Vector6 v_kin_l = -ffMlf.act(v_lf_local).toVector(); //this is the velocity of the base in the frame of the base.
           v_kin_l.head<3>()     = m_oRff * v_kin_l.head<3>();
           v_kin_l.segment<3>(3) = m_oRff * v_kin_l.segment<3>(3);
 
           const Frame & f_rf = m_model.frames[m_right_foot_id];
-          const Motion v_rf_local = m_data->v[f_rf.parent];
-          const SE3 ffMrf = m_data->oMi[f_rf.parent];
+          const Motion & v_rf_local = m_data->v[f_rf.parent];
+          const SE3 & ffMrf = m_data->oMi[f_rf.parent];
           Vector6 v_kin_r = -ffMrf.act(v_rf_local).toVector(); //this is the velocity of the base in the frame of the base.
           v_kin_r.head<3>()     = m_oRff * v_kin_r.head<3>();
           v_kin_r.segment<3>(3) = m_oRff * v_kin_r.segment<3>(3);
@@ -1119,14 +1122,12 @@ namespace dynamicgraph
           m_v_flex.head<6>() = (A.transpose() * A).ldlt().solve(A.transpose() * b);
           m_v_flex.head<3>() = m_oRff * m_v_flex.head<3>();
 
-
-
           /* Get an estimate of linear velocities from gyroscope only*/
-          // we make the asumtion than we are 'turning around the foot' with pure angular velocity in the ankle measured by the gyro
-          const Matrix3 ffRtorso = (m_data->oMi[m_torso_id]).rotation();
-          const SE3 ffMtorso(m_data->oMi[m_torso_id]);  // transform between freeflyer and body attached to IMU sensor
-          const Matrix3 ffRimu = (ffMtorso * m_torsoMimu).rotation(); 
-          //std::cerr << m_data->oMf[m_torso_id] << std::endl; 
+          // we make the assumption that we are 'turning around the foot' with pure angular velocity in the ankle measured by the gyro
+          const SE3 & ffMtorso = m_data->oMi[m_torso_id];  // transform between freeflyer and body attached to IMU sensor
+          const Matrix3 & ffRtorso = ffMtorso.rotation();
+          const Matrix3 ffRimu = ffRtorso * m_torsoMimu.rotation();
+          //std::cerr << m_data->oMf[m_torso_id] << std::endl;
           //std::cerr << m_data->liMi[m_torso_id] << std::endl;
           //std::cerr << "m_torso_id" << m_torso_id << std::endl;
           const Matrix3 lfRimu = ffMlf.rotation().transpose() * ffRimu;
@@ -1134,9 +1135,9 @@ namespace dynamicgraph
 
           //const SE3 torsoMimu(Matrix3::Identity(), Vector3(-0.13, 0.0,  0.118)); ///TODO Read this transform from setable parameter /// TODO chesk the sign of the translation
           //const SE3 ffMtorso(m_data->oMf[m_torso_id]);
-          const SE3 imuMff = (ffMtorso * m_torsoMimu).inverse();
+          //const SE3 imuMff = (ffMtorso * m_torsoMimu).inverse();
           //gVw_a =  gVo_g + gHa.act(aVb_a)-gVb_g //angular velocity in the ankle from gyro and d_enc
-          const Frame & f_imu = m_model.frames[m_torso_id];
+          //const Frame & f_imu = m_model.frames[m_torso_id];
           //const Frame & f_imu = m_model.frames[m_IMU_frame_id];
           Vector3 gVo_a_l = Vector3(gyr_imu(0),gyr_imu(1),gyr_imu(2)); //+ (imuMff*ffMlf).act(v_lf_local).angular() - m_data->v[f_imu.parent].angular();
           Vector3 gVo_a_r = Vector3(gyr_imu(0),gyr_imu(1),gyr_imu(2)); //+ (imuMff*ffMrf).act(v_rf_local).angular() - m_data->v[f_imu.parent].angular();
@@ -1187,7 +1188,7 @@ namespace dynamicgraph
           /* Here we could remove dc from gyrometer to remove bias*/  ///TODO
           const Motion imuWimu(imuVimu,gyr_imu);
           //const Frame & f_imu = m_model.frames[m_torso_id];
-          const Motion ffWtorso = m_data->v[f_imu.parent];
+          //const Motion & ffWtorso = m_data->v[f_imu.parent];
           //const SE3 ffMtorso(m_data->oMf[m_torso_id]);
           //const SE3 torsoMimu(Matrix3::Identity(), +1.0*Vector3(-0.13, 0.0,  0.118)); ///TODO Read this transform from setable parameter /// TODO chesk the sign of the translation
           const SE3 ffMimu = ffMtorso * m_torsoMimu;
