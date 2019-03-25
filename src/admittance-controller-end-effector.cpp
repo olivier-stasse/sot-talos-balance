@@ -25,19 +25,20 @@ using namespace dg;
 using namespace pinocchio;
 using namespace dg::command;
 
-//Size to be aligned                                   "-------------------------------------------------------"
+#define PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WFORCE_COMPUTATION \
+  "AdmittanceControllerEndEffector: w_force computation   "
 
-#define PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQREF_COMPUTATION "AdmittanceControllerEndEffector: dqRef computation                "
+#define PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WDQ_COMPUTATION \
+  "AdmittanceControllerEndEffector: w_dq computation      "
 
-#define PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_FORCEWORLDFRAME_COMPUTATION "AdmittanceControllerEndEffector: forceWorldFrame computation          "
+#define PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQ_COMPUTATION \
+  "AdmittanceControllerEndEffector: dq computation        "
 
-#define PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQWORLDFRAME_COMPUTATION "AdmittanceControllerEndEffector: dqWorldFrame computation          "
+#define INPUT_SIGNALS m_KpSIN << m_KdSIN << m_dqSaturationSIN << m_forceSIN << m_w_forceDesSIN << m_qSIN
 
-#define INPUT_SIGNALS m_KpSIN << m_velocitySaturationSIN << m_forceSIN << m_forceDesSIN << m_jointPositionSIN
+#define INNER_SIGNALS m_w_forceSINNER << m_w_dqSINNER
 
-#define INNER_SIGNALS m_forceWorldFrameSINNER << m_dqWorldFrameSINNER
-
-#define OUTPUT_SIGNALS m_dqRefSOUT
+#define OUTPUT_SIGNALS m_dqSOUT
 
 /// Define EntityClassName here rather than in the header file
 /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -53,46 +54,58 @@ DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(AdmittanceControllerEndEffector,
 AdmittanceControllerEndEffector::AdmittanceControllerEndEffector(const std::string &name)
     : Entity(name),
       CONSTRUCT_SIGNAL_IN(Kp, dynamicgraph::Vector),
-      CONSTRUCT_SIGNAL_IN(velocitySaturation, dynamicgraph::Vector),
+      CONSTRUCT_SIGNAL_IN(Kd, dynamicgraph::Vector),
+      CONSTRUCT_SIGNAL_IN(dqSaturation, dynamicgraph::Vector),
       CONSTRUCT_SIGNAL_IN(force, dynamicgraph::Vector),
-      CONSTRUCT_SIGNAL_IN(forceDes, dynamicgraph::Vector),
-      CONSTRUCT_SIGNAL_IN(jointPosition, dynamicgraph::Vector),
-      CONSTRUCT_SIGNAL_INNER(forceWorldFrame, dynamicgraph::Vector, m_forceSIN),
-      CONSTRUCT_SIGNAL_INNER(dqWorldFrame, dynamicgraph::Vector, INPUT_SIGNALS << m_forceWorldFrameSINNER),
-      CONSTRUCT_SIGNAL_OUT(dqRef, dynamicgraph::Vector, m_dqWorldFrameSINNER),
+      CONSTRUCT_SIGNAL_IN(w_forceDes, dynamicgraph::Vector),
+      CONSTRUCT_SIGNAL_IN(q, dynamicgraph::Vector),
+      CONSTRUCT_SIGNAL_INNER(w_force, dynamicgraph::Vector, m_forceSIN),
+      CONSTRUCT_SIGNAL_INNER(w_dq, dynamicgraph::Vector, INPUT_SIGNALS << m_w_forceSINNER),
+      CONSTRUCT_SIGNAL_OUT(dq, dynamicgraph::Vector, m_w_dqSINNER),
       m_initSucceeded(false),
-      m_removeWeight(true),
+      m_removeWeight(false),
       m_robot_util(),
       m_model(),
-      m_sensorFrame(),
-      m_sensorParentId(),
+      m_sensorFrameId(),
       m_endEffectorId()
 {
   Entity::signalRegistration(INPUT_SIGNALS << INNER_SIGNALS << OUTPUT_SIGNALS);
 
   /* Commands. */
-  addCommand("init", makeCommandVoid3(*this, &AdmittanceControllerEndEffector::init,
-                                      docCommandVoid3("Initialize the entity.", "time step", "sensor frame name", "end Effector Joint Name")));
-  addCommand("reset_dq", makeCommandVoid0(*this, &AdmittanceControllerEndEffector::reset_dq,
+  addCommand("init", makeCommandVoid4(*this,
+                                      &AdmittanceControllerEndEffector::init,
+                                      docCommandVoid4("Initialize the entity.",
+                                                      "time step",
+                                                      "sensor frame name",
+                                                      "end Effector Joint Name",
+                                                      "remove weight boolean")));
+  addCommand("reset_dq", makeCommandVoid0(*this,
+                                          &AdmittanceControllerEndEffector::reset_dq,
                                           docCommandVoid0("reset_dq")));
 }
 
-void AdmittanceControllerEndEffector::init(const double &dt, const std::string &sensorFrameName, const std::string &endEffectorName)
+void AdmittanceControllerEndEffector::init(const double &dt,
+                                           const std::string &sensorFrameName,
+                                           const std::string &endEffectorName,
+                                           const bool &removeWeight)
 {
   if (!m_KpSIN.isPlugged())
-    return SEND_MSG("Init failed: signal velocitySaturation is not plugged", MSG_TYPE_ERROR);
-  if (!m_velocitySaturationSIN.isPlugged())
+    return SEND_MSG("Init failed: signal dqSaturation is not plugged", MSG_TYPE_ERROR);
+  if (!m_dqSaturationSIN.isPlugged())
     return SEND_MSG("Init failed: signal Kp is not plugged", MSG_TYPE_ERROR);
+  if (!m_dqSaturationSIN.isPlugged())
+    return SEND_MSG("Init failed: signal Kd is not plugged", MSG_TYPE_ERROR);
   if (!m_forceSIN.isPlugged())
     return SEND_MSG("Init failed: signal force is not plugged", MSG_TYPE_ERROR);
-  if (!m_forceDesSIN.isPlugged())
-    return SEND_MSG("Init failed: signal forceDes is not plugged", MSG_TYPE_ERROR);
-  if (!m_jointPositionSIN.isPlugged())
-    return SEND_MSG("Init failed: signal jointPosition is not plugged", MSG_TYPE_ERROR);
+  if (!m_w_forceDesSIN.isPlugged())
+    return SEND_MSG("Init failed: signal w_forceDes is not plugged", MSG_TYPE_ERROR);
+  if (!m_qSIN.isPlugged())
+    return SEND_MSG("Init failed: signal q is not plugged", MSG_TYPE_ERROR);
 
   m_n = 6;
   m_dt = dt;
-  m_dq.setZero(m_n);
+  m_w_dq.setZero(m_n);
+  m_removeWeight = removeWeight;
 
   try
   {
@@ -111,24 +124,22 @@ void AdmittanceControllerEndEffector::init(const double &dt, const std::string &
 
     pinocchio::urdf::buildModel(m_robot_util->m_urdf_filename, pinocchio::JointModelFreeFlyer(), m_model);
     m_data = new pinocchio::Data(m_model);
-    m_q.setZero(m_model.nq);
+    const Vector &q = Vector::Zero(m_model.nq);
 
-    pinocchio::FrameIndex sensorFrameId = m_model.getFrameId(sensorFrameName);
-    assert(m_model.existFrame(sensorFrameId));
-
+    assert(m_model.existJoint(endEffectorName));
     m_endEffectorId = m_model.getJointId(endEffectorName);
-    m_sensorParentId = m_model.frames[sensorFrameId].parent;
-    m_sensorFrame = m_model.frames[sensorFrameId].placement;
+    assert(m_model.existFrame(sensorFrameName));
+    m_sensorFrameId = m_model.getFrameId(sensorFrameName);
 
     // Compute weight
-    pinocchio::forwardKinematics(m_model, *m_data, m_q);
-    pinocchio::centerOfMass(m_model, *m_data, 0);
+    pinocchio::centerOfMass(m_model, *m_data, q, 1);
     m_mass = m_data->mass[m_endEffectorId];
   }
   catch (const std::exception &e)
   {
     std::cout << e.what();
-    SEND_MSG("Init failed: Could load URDF :" + m_robot_util->m_urdf_filename, MSG_TYPE_ERROR);
+    SEND_MSG("Init failed: Could load URDF :" + m_robot_util->m_urdf_filename,
+             MSG_TYPE_ERROR);
     return;
   }
 
@@ -137,122 +148,108 @@ void AdmittanceControllerEndEffector::init(const double &dt, const std::string &
 
 void AdmittanceControllerEndEffector::reset_dq()
 {
-  m_dq.setZero(m_n);
+  m_w_dq.setZero(m_n);
   return;
 }
 
 /* ------------------------------------------------------------------- */
 /* --- SIGNALS ------------------------------------------------------- */
 /* ------------------------------------------------------------------- */
-
-DEFINE_SIGNAL_INNER_FUNCTION(forceWorldFrame, dynamicgraph::Vector)
+DEFINE_SIGNAL_INNER_FUNCTION(w_force, dynamicgraph::Vector)
 {
   if (!m_initSucceeded)
   {
-    SEND_WARNING_STREAM_MSG("Cannot compute signal forceWorldFrame before initialization!");
+    SEND_WARNING_STREAM_MSG("Cannot compute signal w_force before initialization!");
     return s;
   }
 
-  getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_FORCEWORLDFRAME_COMPUTATION);
+  getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WFORCE_COMPUTATION);
 
-  const Vector &forceVector = m_forceSIN(iter);
-  const Vector &q = m_jointPositionSIN(iter);
+  const Vector &vForce = m_forceSIN(iter);
+  const Vector &q = m_qSIN(iter);
+  assert(vForce.size() == m_n && "Unexpected size of signal force");
+  assert(q.size() == m_model.nq && "Unexpected size of signal q");
 
-  assert(forceVector.size() == m_n && "Unexpected size of signal force");
-  assert(q.size() == static_cast<dg::Index>(m_robot_util->m_nbJoints) && "Unexpected size of signal joint_positions");
+  // Get sensorPlacement
+  pinocchio::framesForwardKinematics(m_model, *m_data, q);
+  pinocchio::SE3 sensorPlacement = m_data->oMf[m_sensorFrameId];
 
-  // Fill m_q with the current joint configuration and compute forward kinematics
-  m_q.head<6>().setZero();
-  m_q[6] = 1.;
-  m_robot_util->joints_sot_to_urdf(q, m_q.tail(m_robot_util->m_nbJoints));
-  pinocchio::forwardKinematics(m_model, *m_data, m_q);
-
-  // Compute sensorPlacement
-  assert(m_model.existJoint(m_sensorParentId));
-  pinocchio::SE3 parentPlacement = m_data->oMi[m_sensorParentId];
-  pinocchio::SE3 sensorPlacement = parentPlacement * m_sensorFrame;
-
-  pinocchio::Force force = pinocchio::Force(forceVector);
-  pinocchio::Force forceWorldFrame = sensorPlacement.act(force);
-  Vector forceWorldFrameVector = forceWorldFrame.toVector();
+  pinocchio::Force force = pinocchio::Force(vForce);
+  pinocchio::Force w_force = sensorPlacement.act(force);
+  Vector w_vForce = w_force.toVector();
 
   if (m_removeWeight)
   {
-    forceWorldFrameVector(2) += m_mass * 9.80665 - 1.99325154291384;
+    w_vForce(2) += m_mass * 9.80665 - 1.99325154291384;
   }
 
-  s = forceWorldFrameVector;
+  s = w_vForce;
 
-  getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_FORCEWORLDFRAME_COMPUTATION);
+  getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WFORCE_COMPUTATION);
 
   return s;
 }
 
-DEFINE_SIGNAL_INNER_FUNCTION(dqWorldFrame, dynamicgraph::Vector)
+DEFINE_SIGNAL_INNER_FUNCTION(w_dq, dynamicgraph::Vector)
 {
   if (!m_initSucceeded)
   {
-    SEND_WARNING_STREAM_MSG("Cannot compute signal dqWorldFrame before initialization!");
+    SEND_WARNING_STREAM_MSG("Cannot compute signal w_dq before initialization!");
     return s;
   }
 
-  getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQWORLDFRAME_COMPUTATION);
+  getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WDQ_COMPUTATION);
 
-  const Vector &forceDes = m_forceDesSIN(iter);
-  const Vector &forceWorldFrame = m_forceWorldFrameSINNER(iter);
+  const Vector &w_forceDes = m_w_forceDesSIN(iter);
+  const Vector &w_force = m_w_forceSINNER(iter);
   const Vector &Kp = m_KpSIN(iter);
-  const Vector &velocitySaturation = m_velocitySaturationSIN(iter);
-
+  const Vector &Kd = m_KdSIN(iter);
+  const Vector &dqSaturation = m_dqSaturationSIN(iter);
   assert(force.size() == m_n && "Unexpected size of signal force");
-  assert(forceDes.size() == m_n && "Unexpected size of signal forceDes");
+  assert(w_forceDes.size() == m_n && "Unexpected size of signal w_forceDes");
   assert(Kp.size() == m_n && "Unexpected size of signal Kp");
-  assert(velocitySaturation.size() == m_n && "Unexpected size of signal velocitySaturation");
+  assert(Kd.size() == m_n && "Unexpected size of signal Kd");
+  assert(dqSaturation.size() == m_n && "Unexpected size of signal dqSaturation");
 
-  m_dq += m_dt * (Kp.cwiseProduct(forceDes - forceWorldFrame));
+  m_w_dq += m_dt * (Kp.cwiseProduct(w_forceDes - w_force) - Kd.cwiseProduct(m_w_dq));
 
   for (int i = 0; i < m_n; i++)
   {
-    if (m_dq[i] > velocitySaturation[i])
-    {
-      m_dq[i] = velocitySaturation[i];
-    }
-    if (m_dq[i] < -velocitySaturation[i])
-    {
-      m_dq[i] = -velocitySaturation[i];
-    }
+    if (m_w_dq[i] > dqSaturation[i])
+      m_w_dq[i] = dqSaturation[i];
+    if (m_w_dq[i] < -dqSaturation[i])
+      m_w_dq[i] = -dqSaturation[i];
   }
 
-  s = m_dq;
+  s = m_w_dq;
 
-  getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQWORLDFRAME_COMPUTATION);
+  getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WDQ_COMPUTATION);
 
   return s;
 }
 
-DEFINE_SIGNAL_OUT_FUNCTION(dqRef, dynamicgraph::Vector)
+DEFINE_SIGNAL_OUT_FUNCTION(dq, dynamicgraph::Vector)
 {
   if (!m_initSucceeded)
   {
-    SEND_WARNING_STREAM_MSG("Cannot compute signal dqRef before initialization!");
+    SEND_WARNING_STREAM_MSG("Cannot compute signal dq before initialization!");
     return s;
   }
 
-  getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQREF_COMPUTATION);
+  getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQ_COMPUTATION);
 
-  const Vector &dqWorldFrame = m_dqWorldFrameSINNER(iter);
-
-  assert(dqWorldFrame.size() == m_n && "Unexpected size of signal dqWorldFrame");
+  const Vector &w_dq = m_w_dqSINNER(iter);
+  assert(w_dq.size() == m_n && "Unexpected size of signal w_dq");
 
   // Get endEffectorPlacement
-  assert(m_model.existJoint(m_endEffectorId));
   pinocchio::SE3 placement = m_data->oMi[m_endEffectorId];
 
-  pinocchio::Motion velocityWorldFrame = pinocchio::Motion(dqWorldFrame);
+  pinocchio::Motion velocityWorldFrame = pinocchio::Motion(w_dq);
   pinocchio::Motion velocity = placement.actInv(velocityWorldFrame);
 
   s = velocity.toVector();
 
-  getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQREF_COMPUTATION);
+  getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQ_COMPUTATION);
 
   return s;
 }

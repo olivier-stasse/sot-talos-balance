@@ -1,22 +1,23 @@
 import sot_talos_balance.talos.parameter_server_conf as paramServerConfig
+import sot_talos_balance.talos.base_estimator_conf as baseEstimatorConf
 from sot_talos_balance.create_entities_utils import *
-from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom
+from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d
+from dynamic_graph.sot.core import SOT, Task, GainAdaptive, FeaturePosture
 from dynamic_graph import plug
-from dynamic_graph.sot.core import SOT
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
-from numpy import eye
+from dynamic_graph.ros import RosSubscribe, RosPublish
 import numpy as np
 
 robot.timeStep = robot.device.getTimeStep()
-timeStep = robot.timeStep
 
-# --- CREATE PARAM_SERVER
-robot.param_server = create_parameter_server(paramServerConfig, timeStep)
+# --- PARAM_SERVER ---
+robot.param_server = create_parameter_server(paramServerConfig, robot.timeStep)
+robot.device_filters = create_device_filters(robot, robot.timeStep)
+robot.imu_filters = create_imu_filters(robot, robot.timeStep)
+robot.baseEstimator = create_base_estimator(robot, robot.timeStep, baseEstimatorConf)
 
 # --- ADMITTANCE CONTROLLER ---
-Kp = np.array([0.0, 0., 0., 0., 0., 0.])
-robot.admittanceController = create_end_effector_admittance_controller(Kp, timeStep, robot)
-robot.admittanceController.forceDes.value = [0., 0., 0., 0., 0., 0.]
+robot.controller = create_end_effector_admittance_controller(robot,'rightWrist')
 
 # --- HAND TASK ---
 taskRightHand = MetaTaskKine6d('rh', robot.dynamic, 'rh', robot.OperationalPointsMap['right-wrist'])
@@ -30,7 +31,7 @@ taskRightHand.task.controlGain.value = 0
 taskRightHand.feature.position.value = np.eye(4)
 taskRightHand.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
 taskRightHand.featureDes.position.value = np.eye(4)
-plug(robot.admittanceController.dqRef, taskRightHand.featureDes.velocity)
+plug(robot.controller.dq, taskRightHand.featureDes.velocity)
 
 # --- POSTURE TASK ---
 robot.taskPosture = Task('task_posture')
@@ -53,11 +54,6 @@ robot.taskPosture.feature.selectDof(14, True)
 robot.taskPosture.feature.selectDof(15, True)
 robot.taskPosture.feature.selectDof(16, True)
 robot.taskPosture.feature.selectDof(17, True)
-robot.taskPosture.feature.selectDof(18, True)
-robot.taskPosture.feature.selectDof(19, True)
-
-robot.taskPosture.feature.selectDof(36, True)
-robot.taskPosture.feature.selectDof(37, True)
 
 robot.taskPosture.add(robot.taskPosture.feature.name)
 plug(robot.dynamic.position, robot.taskPosture.feature.state)
@@ -71,14 +67,16 @@ robot.sot.push(taskRightHand.task.name)
 
 # # --- ROS PUBLISHER
 robot.publisher = create_rospublish(robot, 'robot_publisher')
-create_topic(robot.publisher, robot.admittanceController, 'forceWorldFrame', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.admittanceController, 'force', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.admittanceController, 'dqRef', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.admittanceController, 'forceDes', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'w_force', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'force', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'dq', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'w_dq', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'w_forceDes', robot=robot, data_type='vector')
 
 # # --- ROS SUBSCRIBER
 robot.subscriber = RosSubscribe("end_effector_subscriber")
-robot.subscriber.add("vector", "forceWorldFrame", "/sot/admittanceController/forceWorldFrame")
-robot.subscriber.add("vector", "force", "/sot/admittanceController/force")
-robot.subscriber.add("vector", "dqRef", "/sot/admittanceController/dqRef")
-robot.subscriber.add("vector", "forceDes", "/sot/admittanceController/forceDes")
+robot.subscriber.add("vector", "w_force", "/sot/controller/w_force")
+robot.subscriber.add("vector", "force", "/sot/controller/force")
+robot.subscriber.add("vector", "dq", "/sot/controller/dq")
+robot.subscriber.add("vector", "w_dq", "/sot/controller/w_dq")
+robot.subscriber.add("vector", "w_forceDes", "/sot/controller/w_forceDes")

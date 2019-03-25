@@ -39,6 +39,7 @@
 #include "pinocchio/spatial/motion.hpp"
 #include <sot/core/robot-utils.hh>
 #include <pinocchio/algorithm/kinematics.hpp>
+#include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/center-of-mass.hpp>
 
 namespace dynamicgraph
@@ -53,12 +54,14 @@ namespace talos_balance
 /* --------------------------------------------------------------------- */
 
 /**
-       * @brief      Admittance controller for an upper body end-effector (right or left wrist
-       *
-       *  This entity computes a velocity reference for an end-effector based on the force error in the world frame :
-       *  dqRef = integral( Kp(forceDes-forceWorldFrame) )
-       *
-       */
+ * @brief  Admittance controller for an upper body end-effector (right or left 
+ *         wrist)
+ *
+ *  This entity computes a velocity reference for an end-effector based 
+ *  on the force error in the world frame :
+ *  w_dq = integral(Kp(w_forceDes-w_force)) + Kd (w_dq)
+ *
+ */
 class ADMITTANCECONTROLLERENDEFFECTOR_EXPORT AdmittanceControllerEndEffector
     : public ::dynamicgraph::Entity
 {
@@ -71,70 +74,76 @@ public:
   AdmittanceControllerEndEffector(const std::string &name);
 
   /* --- SIGNALS --- */
-  /// \brief     Gain (6d) for the integration of the error on the force
+  /// \brief  Gain (6d) for the integration of the error on the force
   DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
-  /// \brief     Value of the saturation to apply on the velocity output
-  DECLARE_SIGNAL_IN(velocitySaturation, dynamicgraph::Vector);
-  /// \brief     6d force given by the sensor in its local frame
+  /// \brief  Derivative gain (6d) for the error on the force
+  DECLARE_SIGNAL_IN(Kd, dynamicgraph::Vector);
+  /// \brief  Value of the saturation to apply on the velocity output
+  DECLARE_SIGNAL_IN(dqSaturation, dynamicgraph::Vector);
+  /// \brief  6d force given by the sensor in its local frame
   DECLARE_SIGNAL_IN(force, dynamicgraph::Vector);
-  /// \brief     6d desired force of the end-effector in the world frame
-  DECLARE_SIGNAL_IN(forceDes, dynamicgraph::Vector);
-  /// \brief     Current joint configuration of the robot
-  DECLARE_SIGNAL_IN(jointPosition, dynamicgraph::Vector);
+  /// \brief  6d desired force of the end-effector in the world frame
+  DECLARE_SIGNAL_IN(w_forceDes, dynamicgraph::Vector);
+  /// \brief  Current joint configuration of the robot
+  DECLARE_SIGNAL_IN(q, dynamicgraph::Vector);
 
-  /// \brief     6d force given by the sensor in he global frame
-  DECLARE_SIGNAL_INNER(forceWorldFrame, dynamicgraph::Vector);
-  /// \brief     Velocity reference for the end-effector computed in the global frame
-  DECLARE_SIGNAL_INNER(dqWorldFrame, dynamicgraph::Vector);
+  /// \brief  6d force given by the sensor in the world frame
+  DECLARE_SIGNAL_INNER(w_force, dynamicgraph::Vector);
+  /// \brief  Internal intergration computed in the world frame
+  DECLARE_SIGNAL_INNER(w_dq, dynamicgraph::Vector);
 
-  /// \brief     Velocity reference for the end-effector in the local frame
-  DECLARE_SIGNAL_OUT(dqRef, dynamicgraph::Vector);
+  /// \brief  Velocity reference for the end-effector in the local frame
+  DECLARE_SIGNAL_OUT(dq, dynamicgraph::Vector);
 
   /* --- COMMANDS --- */
   /**
-        * @brief      Initialize the entity
-        *
-        * @param[in]  dt  Time step of the control
-        * @param[in]  sensorFrameName  Name of the force sensor of the end-effector used in the pinocchio model
-        */
-  void init(const double &dt, const std::string &sensorFrameName, const std::string &endeffectorName);
+   * @brief      Initialize the entity
+   *
+   * @param[in]  dt  Time step of the control
+   * @param[in]  sensorFrameName  Name of the force sensor of the end-effector 
+   *             used in the pinocchio model
+   */
+  void init(const double &dt, const std::string &sensorFrameName, 
+            const std::string &endeffectorName, const bool &removeWeight);
   /**
-         * @brief      Reset the velocity
-         */
-        void reset_dq();
+   * @brief      Reset the velocity
+   */
+  void reset_dq();
 
-        /* --- ENTITY INHERITANCE --- */
-        virtual void display( std::ostream& os ) const;
+  /* --- ENTITY INHERITANCE --- */
+  virtual void display(std::ostream &os) const;
 
-      protected:
-        /// Dimension of the force signals and of the output
-        int                    m_n;
-        /// True if the entity has been successfully initialized
-        bool                   m_initSucceeded;
-        /// Internal state
-        dynamicgraph::Vector   m_dq;
-        /// Time step of the control
-        double                 m_dt;
+protected:
+  /// Dimension of the force signals and of the output
+  int m_n;
+  /// True if the entity has been successfully initialized
+  bool m_initSucceeded;
+  /// Internal state
+  dynamicgraph::Vector m_w_dq;
+  /// Time step of the control
+  double m_dt;
+  // Weight of the end-effector
+  double m_mass;
+  // If true, the weight of the end effector is removed from the force
+  bool m_removeWeight;
 
-        /// Robot Util instance to get the sensor frame
-        RobotUtilShrPtr             m_robot_util;
-        /// Pinocchio robot model
-        pinocchio::Model       m_model;
-        /// Pinocchio robot data
-        pinocchio::Data       *m_data;
-        /// Force sensor frame placement wrt the parent frame
-        pinocchio::SE3         m_sensorFrame;
-        /// Id of the parent joint of the force sensor frame
-        pinocchio::JointIndex  m_parentId;
-        /// robot configuration according to pinocchio convention
-        dynamicgraph::Vector   m_q;
+  /// Robot Util instance to get the sensor frame
+  RobotUtil *m_robot_util;
+  /// Pinocchio robot model
+  pinocchio::Model m_model;
+  /// Pinocchio robot data
+  pinocchio::Data *m_data;
+  /// Id of the force sensor frame
+  pinocchio::FrameIndex m_sensorFrameId;
+  /// Id of the joint of the end-effector
+  pinocchio::JointIndex m_endEffectorId;
+  /// robot configuration according to pinocchio convention
+  dynamicgraph::Vector m_q;
 
-      }; // class AdmittanceControllerEndEffector
+}; // class AdmittanceControllerEndEffector
 
-    }    // namespace talos_balance
-  }      // namespace sot
-}        // namespace dynamicgraph
-
-
+} // namespace talos_balance
+} // namespace sot
+} // namespace dynamicgraph
 
 #endif // #ifndef __sot_talos_balance_admittance_controller_end_effector_H__
