@@ -42,11 +42,10 @@ namespace dynamicgraph
         ,CONSTRUCT_SIGNAL_OUT(accelerometer_out, dynamicgraph::Vector, m_accelerometer_inSIN)
         ,CONSTRUCT_SIGNAL_OUT(gyrometer_out,     dynamicgraph::Vector, m_gyrometer_inSIN)
         ,m_initSucceeded(false)
+        ,m_dt(0.001)
         ,m_update_cycles_left(0)
         ,m_update_cycles(0)
-        ,m_dt(0.001)
         ,m_a_gyro_DC_blocker(1.0)
-
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
