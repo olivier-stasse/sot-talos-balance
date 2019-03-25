@@ -49,7 +49,7 @@ public:
 
 enum StopwatchMode
 {
-  NONE	    = 0,  // Clock is not initialized
+  NONE      = 0,  // Clock is not initialized
   CPU_TIME  = 1,  // Clock calculates time ranges using ctime and CLOCKS_PER_SEC
   REAL_TIME = 2   // Clock calculates time by asking the operating system how
   // much real time passed
@@ -204,7 +204,7 @@ public:
       performance. */
   long double get_time_so_far(std::string perf_name);
 
-  /**	Turn off clock, all the Stopwatch::* methods return without doing
+  /** Turn off clock, all the Stopwatch::* methods return without doing
         anything after this method is called. */
   void turn_off();
 
@@ -230,16 +230,16 @@ protected:
     }
 
     /** Start time */
-    long double	clock_start;
+    long double clock_start;
 
     /** Cumulative total time */
-    long double	total_time;
+    long double total_time;
 
     /** Minimum time */
-    long double	min_time;
+    long double min_time;
 
     /** Maximum time */
-    long double	max_time;
+    long double max_time;
 
     /** Last time */
     long double last_time;
@@ -248,7 +248,7 @@ protected:
     bool paused;
 
     /** How many cycles have been this stopwatch executed? */
-    int	stops;
+    int stops;
   };
 
   /** Flag to hold the clock's status */
