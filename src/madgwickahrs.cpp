@@ -3,10 +3,10 @@
 // Implementation of Madgwick's IMU and AHRS algorithms.
 // See: http://www.x-io.co.uk/node/8#open_source_ahrs_and_imu_algorithms
 //
-// Date			Author          Notes
-// 29/09/2011	SOH Madgwick    Initial release
-// 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
-// 11/05/2017   T Flayols       Make it a dynamic-graph entity
+// Date       Author       Notes
+// 29/09/2011 SOH Madgwick Initial release
+// 02/10/2011 SOH Madgwick Optimised for reduced CPU load
+// 11/05/2017   T Flayols  Make it a dynamic-graph entity
 //
 //=====================================================================================================
 
@@ -57,6 +57,11 @@ namespace dynamicgraph
                                                                               m_accelerometerSIN)
         ,m_initSucceeded(false)
         ,m_beta(betaDef)
+        ,m_q0(1.0f)
+        ,m_q1(0.0f)
+        ,m_q2(0.0f)
+        ,m_q3(0.0f)
+        ,m_sampleFreq(512.0f)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
@@ -138,7 +143,7 @@ namespace dynamicgraph
           y = *(float*)&i;
           y = y * (1.5f - (halfx * y * y));
           return y;*/
-        return (1.0f/sqrt(x)); //we'r not in the 70's
+        return (1.0f/sqrt(x)); //we're not in the 70's
       }
 
       // IMU algorithm update
