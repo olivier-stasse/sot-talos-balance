@@ -63,7 +63,7 @@ namespace dynamicgraph {
       /* --------------------------------------------------------------------- */
 
       class SOTNDTRAJECTORYGENERATOR_EXPORT NdTrajectoryGenerator
-	:public::dynamicgraph::Entity
+        :public::dynamicgraph::Entity
       {
         typedef NdTrajectoryGenerator EntityClassName;
         DYNAMIC_GRAPH_ENTITY_DECL();
