@@ -53,7 +53,7 @@ namespace dynamicgraph
       /* --------------------------------------------------------------------- */
 
       class DCMESTIMATOR_EXPORT DcmEstimator
-	                         :public::dynamicgraph::Entity
+                                : public::dynamicgraph::Entity
       {
         typedef pinocchio::SE3 SE3;
         typedef Eigen::Vector2d Vector2;

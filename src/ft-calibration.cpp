@@ -109,27 +109,27 @@ namespace dynamicgraph
 
       void FtCalibration::setRightFootWeight(const dynamicgraph::Vector &rightW)
       {
-	if(!m_initSucceeded)
-	  {
-	    SEND_WARNING_STREAM_MSG("Cannot set right foot weight before initialization!");
-	    return;
-	  }
-	m_right_foot_weight = rightW;
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot set right foot weight before initialization!");
+          return;
+        }
+        m_right_foot_weight = rightW;
       }
 
       void FtCalibration::setleftFootWeight(const dynamicgraph::Vector &leftW)
       {
-	if(!m_initSucceeded)
-	  {
-	    SEND_WARNING_STREAM_MSG("Cannot set left foot weight before initialization!");
-	    return;
-	  }
-	m_left_foot_weight = leftW;
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot set left foot weight before initialization!");
+          return;
+        }
+        m_left_foot_weight = leftW;
       }
       
       void ParameterServer::displayRobotUtil()
       {
-	m_robot_util->display(std::cout);
+        m_robot_util->display(std::cout);
       }
 
       /* --- PROTECTED MEMBER METHODS ---------------------------------------------------------- */
@@ -137,7 +137,7 @@ namespace dynamicgraph
       bool ParameterServer::convertJointNameToJointId(const std::string& name, unsigned int& id)
       {
         // Check if the joint name exists
-	pinocchio::Model::JointIndex jid = m_robot_util->get_id_from_name(name);
+        pinocchio::Model::JointIndex jid = m_robot_util->get_id_from_name(name);
         if (jid<0)
         {
           SEND_MSG("The specified joint name does not exist: "+name, MSG_TYPE_ERROR);
@@ -153,16 +153,16 @@ namespace dynamicgraph
 
       bool ParameterServer::isJointInRange(unsigned int id, double q)
       {
-	const JointLimits & JL = m_robot_util->
-	  get_joint_limits_from_id((Index)id);
+        const JointLimits & JL = m_robot_util->
+        get_joint_limits_from_id((Index)id);
 
-	double jl= JL.lower;
+        double jl= JL.lower;
         if(q<jl)
         {
           SEND_MSG("Desired joint angle "+toString(q)+" is smaller than lower limit: "+toString(jl),MSG_TYPE_ERROR);
           return false;
         }
-	double ju = JL.upper;
+        double ju = JL.upper;
         if(q>ju)
         {
           SEND_MSG("Desired joint angle "+toString(q)+" is larger than upper limit: "+toString(ju),MSG_TYPE_ERROR);

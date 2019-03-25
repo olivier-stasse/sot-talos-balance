@@ -49,7 +49,7 @@ namespace dynamicgraph {
       /* --------------------------------------------------------------------- */
 
       class JOINTPOSITIONCONTROLLER_EXPORT JointPositionController
-	                         : public ::dynamicgraph::Entity
+                                           : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
 

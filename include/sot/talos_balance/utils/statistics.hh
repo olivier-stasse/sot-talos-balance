@@ -109,8 +109,8 @@ public:
   /** Return last measurement of a certain quantity */
   long double get_last(std::string name);
 
-  /**	Turn off statistics, all the Statistics::* methods return without doing
-        anything after this method is called. */
+  /** Turn off statistics, all the Statistics::* methods return without doing
+      anything after this method is called. */
   void turn_off();
 
   /** Turn on statistics, restore operativity after a turn_off(). */
@@ -130,19 +130,19 @@ protected:
     }
 
     /** Cumulative total value */
-    long double	total;
+    long double total;
 
     /** Minimum value */
-    long double	min;
+    long double min;
 
     /** Maximum value */
-    long double	max;
+    long double max;
 
     /** Last value */
     long double last;
 
     /** How many times have this quantity been stored? */
-    int	stops;
+    int stops;
   };
 
   /** Flag to hold the statistics status */

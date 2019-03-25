@@ -51,7 +51,7 @@ namespace dynamicgraph {
       /* --------------------------------------------------------------------- */
 
       class EXAMPLE_EXPORT Example
-	                         : public ::dynamicgraph::Entity
+                           : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
 

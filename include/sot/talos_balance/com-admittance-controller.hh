@@ -49,7 +49,7 @@ namespace dynamicgraph {
       /* --------------------------------------------------------------------- */
 
       class COMADMITTANCECONTROLLER_EXPORT ComAdmittanceController
-	                         : public ::dynamicgraph::Entity
+                                           : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
 

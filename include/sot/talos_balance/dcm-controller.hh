@@ -49,7 +49,7 @@ namespace dynamicgraph {
       /* --------------------------------------------------------------------- */
 
       class DCMCONTROLLER_EXPORT DcmController
-	                         : public ::dynamicgraph::Entity
+                                 : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
 

@@ -16,9 +16,9 @@
 
 #define LOGFILE "/tmp/fd_log.dat"
 
-#define LOG(x) { std::ofstream LogFile;	\
+#define LOG(x) { std::ofstream LogFile; \
     LogFile.open(LOGFILE,std::ofstream::app); \
-    LogFile << x << std::endl;		\
+    LogFile << x << std::endl; \
     LogFile.close();}
 
 
@@ -148,7 +148,7 @@ namespace dynamicgraph
         const dynamicgraph::Vector &x_dx_ddx = m_x_dx_ddxSINNER(iter);
         if(s.size()!=m_x_size)
           s.resize(m_x_size);
-	s = x_dx_ddx.head(m_x_size);
+        s = x_dx_ddx.head(m_x_size);
         return s;
       }
 
@@ -158,8 +158,8 @@ namespace dynamicgraph
 
         const dynamicgraph::Vector &x_dx_ddx = m_x_dx_ddxSINNER(iter);
         if(s.size()!=m_x_size)
-	  s.resize(m_x_size);
-	s = x_dx_ddx.segment(m_x_size, m_x_size);
+          s.resize(m_x_size);
+        s = x_dx_ddx.segment(m_x_size, m_x_size);
         return s;
       }
 
@@ -169,8 +169,8 @@ namespace dynamicgraph
 
         const dynamicgraph::Vector &x_dx_ddx = m_x_dx_ddxSINNER(iter);
         if(s.size()!=m_x_size)
-	  s.resize(m_x_size);
-	s = x_dx_ddx.tail(m_x_size);
+          s.resize(m_x_size);
+        s = x_dx_ddx.tail(m_x_size);
         return s;
       }
 
