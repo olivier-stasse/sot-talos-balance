@@ -19,14 +19,39 @@ dt = robot.timeStep;
 # -------------------------- DESIRED TRAJECTORY --------------------------
 
 # --- Desired values
+
+# --- Desired CoM
 robot.dynamic.com.recompute(0)
 comDes = robot.dynamic.com.value
-#comDes = list(robot.dynamic.com.value)
-#comDes[0] += 0.001
-#comDes[1] += 0.001
+
+## --- Translation
+#comDes = list(comDes)
+#comDes[0] += 0.01
+#comDes[1] += 0.01
 #comDes = tuple(comDes)
+
+# --- Conversion to center of feet reference frame
+import pinocchio as pin
+import numpy as np
+model = robot.dynamic.model
+data = robot.dynamic.data # DO NOT make any computation with this data object. Kinematic computation have already been done
+leftName = param_server_conf.footFrameNames['Left']
+leftId = model.getFrameId(leftName)
+leftPos  = data.oMf[leftId]
+rightName = param_server_conf.footFrameNames['Right']
+rightId = model.getFrameId(rightName)
+rightPos = data.oMf[rightId]
+centerTranslation = ( data.oMf[rightId].translation + data.oMf[leftId].translation )/2 + np.matrix(param_server_conf.rightFootSoleXYZ).T
+centerPos = pin.SE3(rightPos.rotation,centerTranslation)
+
+comDes = centerPos.actInv(np.matrix(comDes).T)
+comDes = tuple(comDes.flatten().tolist()[0])
+
+# --- Desired DCM and ZMP
 dcmDes = comDes
 zmpDes = comDes[:2] + (0.0,)
+
+# --- Desired CoM acceleration
 ddcomDes = (0.0,0.0,0.0)
 
 # --- Pendulum parameters
@@ -91,7 +116,7 @@ robot.zmp_estimator = zmp_estimator
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [0.0,0.0,0.0]
+Kp_dcm = [5.0,5.0,5.0]
 Ki_dcm = [0.0,0.0,0.0] # zero (to be set later)
 gamma_dcm = 0.2
 
@@ -113,7 +138,7 @@ dcm_controller.init(dt)
 
 robot.dcm_control = dcm_controller
 
-Ki_dcm = [0.0,0.0,0.0] # this value is employed later
+Ki_dcm = [0.1,0.1,0.1] # this value is employed later
 
 # --- CoM admittance controller
 Kp_adm = [0.0,0.0,0.0] # zero (to be set later)
@@ -129,7 +154,7 @@ com_admittance_control.setState(comDes,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [0.0,0.0,0.0] # this value is employed later
+Kp_adm = [0.1,0.1,0.0] # this value is employed later
 
 # -------------------------- SOT CONTROL --------------------------
 
