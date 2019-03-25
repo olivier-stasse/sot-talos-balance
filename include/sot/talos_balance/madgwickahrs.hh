@@ -7,6 +7,7 @@
 // 29/09/2011 SOH Madgwick  Initial release
 // 02/10/2011 SOH Madgwick  Optimised for reduced CPU load
 // 11/05/2017 T Flayols     Make it a dynamic graph entity
+// 26/03/2019 G Buondonno   Converted to double
 //
 //=====================================================================================================
 
@@ -53,7 +54,7 @@
 #include <map>
 #include "boost/assign.hpp"
 
-#define betaDef 0.01f // 2 * proportional g
+#define betaDef 0.01 // 2 * proportional g
 
 namespace dynamicgraph {
   namespace sot {
@@ -89,15 +90,15 @@ namespace dynamicgraph {
         virtual void display( std::ostream& os ) const;
 
         /* --- METHODS --- */
-        float invSqrt(float x);
-        void madgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, float az) ;
-        //void madgwickAHRSupdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+        double invSqrt(double x);
+        void madgwickAHRSupdateIMU(double gx, double gy, double gz, double ax, double ay, double az) ;
+        //void madgwickAHRSupdate(double gx, double gy, double gz, double ax, double ay, double az, double mx, double my, double mz);
 
       protected:
-        bool              m_initSucceeded;        /// true if the entity has been successfully initialized
-        volatile float    m_beta;                 /// 2 * proportional gain (Kp)
-        volatile float    m_q0, m_q1, m_q2, m_q3; /// quaternion of sensor frame
-        float             m_sampleFreq;           /// sample frequency in Hz
+        bool     m_initSucceeded;        /// true if the entity has been successfully initialized
+        double   m_beta;                 /// 2 * proportional gain (Kp)
+        double   m_q0, m_q1, m_q2, m_q3; /// quaternion of sensor frame
+        double   m_sampleFreq;           /// sample frequency in Hz
 
       }; // class MadgwickAHRS
     }    // namespace talos_balance
