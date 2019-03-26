@@ -84,21 +84,37 @@ def create_joint_controller(Kp):
     return controller
 
 
-def create_end_effector_admittance_controller(Kp, timeStep, robot):
+def create_end_effector_admittance_controller(robot, endEffector):
+    timeStep = robot.timeStep
     controller = AdmittanceControllerEndEffector("admittanceController")
-    controller.Kp.value = Kp
 
-    # Filter the force
-    ft_RH_filter = create_butter_lp_filter_Wn_04_N_2("ft_RH_filter", timeStep, 6)
-    plug(robot.device.forceRARM, ft_RH_filter.x)
+    # Filter and plug the force
+    forceFilter = create_butter_lp_filter_Wn_04_N_2("forceFilter", timeStep, 6)
+    if endEffector == 'rightWrist':
+        plug(robot.device.forceRARM, forceFilter.x)
+    elif endEffector == 'leftWrist':
+        plug(robot.device.forceLARM, forceFilter.x)
+    else:
+        print('Error in create_end_effector_admittance_controller : end effector unknown')
+    plug(forceFilter.x_filtered, controller.force)
 
-    # Plug the force and joint configuration
-    plug(robot.device.joint_angles,  controller.jointPosition)
-    plug(ft_RH_filter.x_filtered, controller.force)
+    # Plug configuration vector
+    configurationTransform = EulerToQuat("configurationTransform")
+    plug(robot.baseEstimator.q, configurationTransform.euler)
+    plug(configurationTransform.quaternion, controller.q)
 
-    controller.forceDes.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    controller.velocitySaturation.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    controller.init(timeStep, "wrist_right_ft_link", 'arm_right_7_joint')
+    controller.Kp.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    controller.Kd.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    controller.w_forceDes.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    controller.dqSaturation.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    if endEffector == 'rightWrist':
+        controller.init(timeStep, "wrist_right_ft_link", 'arm_right_7_joint', True)
+    elif endEffector == 'leftWrist':
+        controller.init(timeStep, "wrist_left_ft_link", 'arm_left_7_joint', True)
+    else:
+        print('Error in create_end_effector_admittance_controller : end effector unknown')
+
     return controller
 
 
@@ -191,29 +207,35 @@ def create_base_estimator(robot, dt, conf, robot_name="robot"):
     plug(robot.device_filters.ft_RF_filter.x_filtered,   base_estimator.forceRLEG)
     plug(robot.device_filters.ft_LF_filter.dx,           base_estimator.dforceLLEG)
     plug(robot.device_filters.ft_RF_filter.dx,           base_estimator.dforceRLEG)
-    plug(robot.vselec.sout,                              base_estimator.joint_velocities)
-    # plug(robot.device_filters.vel_filter.x_filtered,     base_estimator.joint_velocities)
-    plug(robot.imu_filters.imu_quat,                     base_estimator.imu_quaternion)
-    plug(robot.device_filters.gyro_filter.x_filtered,    base_estimator.gyroscope)
-    plug(robot.device_filters.acc_filter.x_filtered,     base_estimator.accelerometer)
-    base_estimator.K_fb_feet_poses.value = conf.K_fb_feet_poses
-    base_estimator.w_lf_in.value = conf.w_lf_in
-    base_estimator.w_rf_in.value = conf.w_rf_in
-    base_estimator.set_imu_weight(conf.w_imu)
-    base_estimator.set_stiffness_right_foot(conf.K)
-    base_estimator.set_stiffness_left_foot(conf.K)
-    base_estimator.set_zmp_std_dev_right_foot(conf.std_dev_zmp)
-    base_estimator.set_zmp_std_dev_left_foot(conf.std_dev_zmp)
-    base_estimator.set_normal_force_std_dev_right_foot(conf.std_dev_fz)
-    base_estimator.set_normal_force_std_dev_left_foot(conf.std_dev_fz)
-    base_estimator.set_zmp_margin_right_foot(conf.zmp_margin)
-    base_estimator.set_zmp_margin_left_foot(conf.zmp_margin)
-    base_estimator.set_normal_force_margin_right_foot(conf.normal_force_margin)
-    base_estimator.set_normal_force_margin_left_foot(conf.normal_force_margin)
-    base_estimator.set_right_foot_sizes(conf.RIGHT_FOOT_SIZES)
-    base_estimator.set_left_foot_sizes(conf.LEFT_FOOT_SIZES)
 
-    return base_estimator
+
+<< << << < HEAD
+plug(robot.vselec.sout,                              base_estimator.joint_velocities)
+# plug(robot.device_filters.vel_filter.x_filtered,     base_estimator.joint_velocities)
+== == == =
+plug(robot.device_filters.estimator_kin.dx,          base_estimator.joint_velocities)
+>>>>>> > df7d604... indentation fis
+plug(robot.imu_filters.imu_quat,                     base_estimator.imu_quaternion)
+plug(robot.device_filters.gyro_filter.x_filtered,    base_estimator.gyroscope)
+plug(robot.device_filters.acc_filter.x_filtered,     base_estimator.accelerometer)
+base_estimator.K_fb_feet_poses.value = conf.K_fb_feet_poses
+base_estimator.w_lf_in.value = conf.w_lf_in
+base_estimator.w_rf_in.value = conf.w_rf_in
+base_estimator.set_imu_weight(conf.w_imu)
+base_estimator.set_stiffness_right_foot(conf.K)
+base_estimator.set_stiffness_left_foot(conf.K)
+base_estimator.set_zmp_std_dev_right_foot(conf.std_dev_zmp)
+base_estimator.set_zmp_std_dev_left_foot(conf.std_dev_zmp)
+base_estimator.set_normal_force_std_dev_right_foot(conf.std_dev_fz)
+base_estimator.set_normal_force_std_dev_left_foot(conf.std_dev_fz)
+base_estimator.set_zmp_margin_right_foot(conf.zmp_margin)
+base_estimator.set_zmp_margin_left_foot(conf.zmp_margin)
+base_estimator.set_normal_force_margin_right_foot(conf.normal_force_margin)
+base_estimator.set_normal_force_margin_left_foot(conf.normal_force_margin)
+base_estimator.set_right_foot_sizes(conf.RIGHT_FOOT_SIZES)
+base_estimator.set_left_foot_sizes(conf.LEFT_FOOT_SIZES)
+
+return base_estimator
 
 
 def create_imu_filters(robot, dt):

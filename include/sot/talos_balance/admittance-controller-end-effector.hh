@@ -16,13 +16,13 @@
 /* --------------------------------------------------------------------- */
 
 #if defined(WIN32)
-#if defined(admittance_controller_end_effector_EXPORTS)
-#define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT __declspec(dllexport)
+#  if defined(admittance_controller_end_effector_EXPORTS)
+#    define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT __declspec(dllexport)
+#  else
+#    define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT __declspec(dllimport)
+#  endif
 #else
-#define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT __declspec(dllimport)
-#endif
-#else
-#define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT
+#  define ADMITTANCECONTROLLERENDEFFECTOR_EXPORT
 #endif
 
 /* --------------------------------------------------------------------- */

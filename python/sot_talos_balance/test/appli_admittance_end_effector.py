@@ -17,7 +17,7 @@ robot.imu_filters = create_imu_filters(robot, robot.timeStep)
 robot.baseEstimator = create_base_estimator(robot, robot.timeStep, baseEstimatorConf)
 
 # --- ADMITTANCE CONTROLLER ---
-robot.controller = create_end_effector_admittance_controller(robot,'rightWrist')
+robot.controller = create_end_effector_admittance_controller(robot, 'rightWrist')
 
 # --- HAND TASK ---
 taskRightHand = MetaTaskKine6d('rh', robot.dynamic, 'rh', robot.OperationalPointsMap['right-wrist'])
