@@ -217,7 +217,7 @@ namespace dynamicgraph
         const dynamicgraph::Vector& u                      = m_uSOUT(iter);
         const dynamicgraph::Vector& ctrl_max               = m_u_maxSIN(iter);
 
-        for(int i=0;i< m_emergencyStopVector.size();i++)
+        for(size_t i=0; i<m_emergencyStopVector.size(); i++)
         {
           if ((* m_emergencyStopVector[i]).isPlugged() && (* m_emergencyStopVector[i])(iter)) 
           {
@@ -270,7 +270,7 @@ namespace dynamicgraph
         m_ctrlModes.push_back(name);
 
         // register the new signals and add the new signal dependecy
-	      Eigen::VectorXd::Index i = m_ctrlModes.size()-1;
+        Eigen::VectorXd::Index i = m_ctrlModes.size()-1;
         m_uSOUT.addDependency(*m_ctrlInputsSIN[i]);
         m_u_safeSOUT.addDependency(*m_ctrlInputsSIN[i]);
         Entity::signalRegistration(*m_ctrlInputsSIN[i]);
@@ -381,7 +381,7 @@ namespace dynamicgraph
         m_emergencyStopVector.push_back(new SignalPtr<bool, int>(NULL, getClassName()+"("+getName()+")::input(bool)::emergencyStop_"+name));
 
         // register the new signals and add the new signal dependecy
-        unsigned int i =  m_emergencyStopVector.size()-1;
+        Eigen::Index i =  m_emergencyStopVector.size()-1;
         m_u_safeSOUT.addDependency(* m_emergencyStopVector[i]);
         Entity::signalRegistration(* m_emergencyStopVector[i]);
       }
@@ -390,7 +390,7 @@ namespace dynamicgraph
 
       void ControlManager::updateJointCtrlModesOutputSignal()
       {
-	      if (m_numDofs==0)
+        if (m_numDofs==0)
         {
           SEND_MSG("You should call init first. The size of the vector is unknown.", MSG_TYPE_ERROR);
           return;
@@ -431,13 +431,13 @@ namespace dynamicgraph
       bool ControlManager::convertJointNameToJointId(const std::string& name, unsigned int& id)
       {
         // Check if the joint name exists
-	      int jid = m_robot_util->get_id_from_name(name);
+        int jid = int(m_robot_util->get_id_from_name(name)); // cast needed due to bug in robot-utils
         jid += 6; // Take into account the FF
         if (jid<0)
         {
           SEND_MSG("The specified joint name does not exist: "+name, MSG_TYPE_ERROR);
           std::stringstream ss;
-          for(Index it=0; it< m_numDofs;it++)
+          for(size_t it=0; it<m_numDofs; it++)
             ss<< toString(it) <<", ";
           SEND_MSG("Possible joint names are: "+ss.str(), MSG_TYPE_INFO);
           return false;
@@ -449,15 +449,15 @@ namespace dynamicgraph
 /*
       bool ControlManager::isJointInRange(unsigned int id, double q)
       {
-	      const JointLimits & JL = m_robot_util->get_joint_limits_from_id((Index)id);
+        const JointLimits & JL = m_robot_util->get_joint_limits_from_id((Index)id);
 
-	      double jl= JL.lower;
+        double jl= JL.lower;
         if(q<jl)
         {
           SEND_MSG("Desired joint angle "+toString(q)+" is smaller than lower limit: "+toString(jl),MSG_TYPE_ERROR);
           return false;
         }
-	      double ju = JL.upper;
+        double ju = JL.upper;
         if(q>ju)
         {
           SEND_MSG("Desired joint angle "+toString(q)+" is larger than upper limit: "+toString(ju),MSG_TYPE_ERROR);

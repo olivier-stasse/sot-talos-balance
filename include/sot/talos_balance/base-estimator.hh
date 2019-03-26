@@ -130,7 +130,7 @@ namespace dynamicgraph {
                                   double std_dev, double margin);
         double compute_force_weight(double fz, double std_dev, double margin);
         void kinematics_estimation(const Vector6 & ft, const Vector6 & K,
-                                   const SE3 & oMfs, const int foot_id,
+                                   const SE3 & oMfs, const pinocchio::FrameIndex foot_id,
                                    SE3 & oMff, SE3& oMfa, SE3& fsMff);
 
         /* --- SIGNALS --- */
@@ -149,26 +149,26 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(accelerometer,              dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(gyroscope,                  dynamicgraph::Vector);
 
-      DECLARE_SIGNAL_INNER(kinematics_computations, dynamicgraph::Vector);
+        DECLARE_SIGNAL_INNER(kinematics_computations, dynamicgraph::Vector);
 
-      DECLARE_SIGNAL_OUT(q,                         dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
-      DECLARE_SIGNAL_OUT(v,                         dynamicgraph::Vector);  /// n+6 robot velocities
-      DECLARE_SIGNAL_OUT(v_kin,                     dynamicgraph::Vector);  /// 6d robot velocities from kinematic only   (encoders derivative)
-      DECLARE_SIGNAL_OUT(v_flex,                    dynamicgraph::Vector);  /// 6d robot velocities from flexibility only (force sensor derivative)
-      DECLARE_SIGNAL_OUT(v_imu,                     dynamicgraph::Vector);  /// 6d robot velocities form imu only (accelerometer integration + gyro)
-      DECLARE_SIGNAL_OUT(v_gyr,                     dynamicgraph::Vector);  /// 6d robot velocities form gyroscope only (as if gyro measured the pure angular ankle velocities)
-      DECLARE_SIGNAL_OUT(lf_xyzquat,                dynamicgraph::Vector);  /// left foot pose
-      DECLARE_SIGNAL_OUT(rf_xyzquat,                dynamicgraph::Vector);  /// right foot pose
-      DECLARE_SIGNAL_OUT(a_ac,                      dynamicgraph::Vector);  /// acceleration of the base in the world with DC component removed
-      DECLARE_SIGNAL_OUT(v_ac,                      dynamicgraph::Vector);  /// velocity of the base in the world with DC component removed
+        DECLARE_SIGNAL_OUT(q,                         dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
+        DECLARE_SIGNAL_OUT(v,                         dynamicgraph::Vector);  /// n+6 robot velocities
+        DECLARE_SIGNAL_OUT(v_kin,                     dynamicgraph::Vector);  /// 6d robot velocities from kinematic only   (encoders derivative)
+        DECLARE_SIGNAL_OUT(v_flex,                    dynamicgraph::Vector);  /// 6d robot velocities from flexibility only (force sensor derivative)
+        DECLARE_SIGNAL_OUT(v_imu,                     dynamicgraph::Vector);  /// 6d robot velocities form imu only (accelerometer integration + gyro)
+        DECLARE_SIGNAL_OUT(v_gyr,                     dynamicgraph::Vector);  /// 6d robot velocities form gyroscope only (as if gyro measured the pure angular ankle velocities)
+        DECLARE_SIGNAL_OUT(lf_xyzquat,                dynamicgraph::Vector);  /// left foot pose
+        DECLARE_SIGNAL_OUT(rf_xyzquat,                dynamicgraph::Vector);  /// right foot pose
+        DECLARE_SIGNAL_OUT(a_ac,                      dynamicgraph::Vector);  /// acceleration of the base in the world with DC component removed
+        DECLARE_SIGNAL_OUT(v_ac,                      dynamicgraph::Vector);  /// velocity of the base in the world with DC component removed
 
-      DECLARE_SIGNAL_OUT(q_lf,                       dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
-      DECLARE_SIGNAL_OUT(q_rf,                       dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
-      DECLARE_SIGNAL_OUT(q_imu,                      dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
-      DECLARE_SIGNAL_OUT(w_lf,                       double);  /// weight of the estimation coming from the left foot
-      DECLARE_SIGNAL_OUT(w_rf,                       double);  /// weight of the estimation coming from the right foot
-      DECLARE_SIGNAL_OUT(w_lf_filtered,              double);  /// filtered weight of the estimation coming from the left foot
-      DECLARE_SIGNAL_OUT(w_rf_filtered,              double);  /// filtered weight of the estimation coming from the right foot
+        DECLARE_SIGNAL_OUT(q_lf,                      dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
+        DECLARE_SIGNAL_OUT(q_rf,                      dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
+        DECLARE_SIGNAL_OUT(q_imu,                     dynamicgraph::Vector);  /// n+6 robot configuration with base6d in RPY
+        DECLARE_SIGNAL_OUT(w_lf,                      double);  /// weight of the estimation coming from the left foot
+        DECLARE_SIGNAL_OUT(w_rf,                      double);  /// weight of the estimation coming from the right foot
+        DECLARE_SIGNAL_OUT(w_lf_filtered,             double);  /// filtered weight of the estimation coming from the left foot
+        DECLARE_SIGNAL_OUT(w_rf_filtered,             double);  /// filtered weight of the estimation coming from the right foot
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -216,11 +216,11 @@ namespace dynamicgraph {
         double m_w_lf_filtered;               /// filtered weight of the estimation coming from the left foot
         double m_w_rf_filtered;               /// filtered weight of the estimation coming from the right foot
 
-        pinocchio::Model        m_model;            /// Pinocchio robot model
-        pinocchio::Data         *m_data;            /// Pinocchio robot data
+        pinocchio::Model  m_model;            /// Pinocchio robot model
+        pinocchio::Data   *m_data;            /// Pinocchio robot data
         pinocchio::SE3    m_torsoMimu;              /// chest to imu transformation
-        pinocchio::SE3          m_oMff_lf;          /// world-to-base transformation obtained through left foot
-        pinocchio::SE3          m_oMff_rf;          /// world-to-base transformation obtained through right foot
+        pinocchio::SE3    m_oMff_lf;          /// world-to-base transformation obtained through left foot
+        pinocchio::SE3    m_oMff_rf;          /// world-to-base transformation obtained through right foot
         SE3               m_oMlfs;            /// transformation from world to left foot sole
         SE3               m_oMrfs;            /// transformation from world to right foot sole
         Vector7           m_oMlfs_xyzquat;

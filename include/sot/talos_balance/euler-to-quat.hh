@@ -53,7 +53,7 @@ namespace dynamicgraph {
       /* --------------------------------------------------------------------- */
 
       class EULERTOQUAT_EXPORT EulerToQuat
-	                         : public ::dynamicgraph::Entity
+                               : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
 

@@ -49,7 +49,7 @@ namespace dynamicgraph {
       /* --------------------------------------------------------------------- */
 
       class DUMMYDCMESTIMATOR_EXPORT DummyDcmEstimator
-	                         : public ::dynamicgraph::Entity
+                                     : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
 

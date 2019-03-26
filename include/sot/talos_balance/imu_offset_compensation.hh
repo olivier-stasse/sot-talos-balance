@@ -81,7 +81,7 @@ namespace dynamicgraph {
 
       protected:
         bool            m_initSucceeded;      /// true if the entity has been successfully initialized
-        float           m_dt;		      /// sampling time in seconds
+        double          m_dt;                 /// sampling time in seconds
         int             m_update_cycles_left; /// number of update cycles left
         int             m_update_cycles;      /// total number of update cycles to perform
         double          m_a_gyro_DC_blocker;  /// filter parameter to remove DC from gyro online (should be close to <1.0 and equal to 1.0 for disabling)

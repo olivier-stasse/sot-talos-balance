@@ -25,10 +25,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #ifndef WIN32
-	#include <sys/time.h>
+  #include <sys/time.h>
 #else
-	#include <Windows.h>
-	#include <iomanip>
+  #include <Windows.h>
+  #include <iomanip>
 #endif
 
 #include <iomanip>      // std::setprecision
@@ -80,7 +80,7 @@ long double Stopwatch::take_time()
     // Query operating system
     
 #ifdef WIN32
-    /*	In case of usage under Windows */
+    /* In case of usage under Windows */
     FILETIME ft;
     LARGE_INTEGER intervals;
     
@@ -91,8 +91,8 @@ long double Stopwatch::take_time()
     intervals.HighPart = ft.dwHighDateTime;
     
     long double measure = intervals.QuadPart;
-    measure -= 116444736000000000.0;	// Convert to UNIX epoch time
-    measure /= 10000000.0;		// Convert to seconds
+    measure -= 116444736000000000.0; // Convert to UNIX epoch time
+    measure /= 10000000.0;           // Convert to seconds
     
     return measure;
 #else
@@ -101,8 +101,8 @@ long double Stopwatch::take_time()
     gettimeofday(&tv, NULL);
     
     long double measure = tv.tv_usec;
-    measure /= 1000000.0;		// Convert to seconds
-    measure += tv.tv_sec;		// Add seconds part
+    measure /= 1000000.0;           // Convert to seconds
+    measure += tv.tv_sec;           // Add seconds part
     
     return measure;
 #endif
@@ -158,8 +158,9 @@ void Stopwatch::stop(string perf_name)
   perf_info.last_time = lapse;
   
   // Update min/max time
-  if ( lapse >= perf_info.max_time )	perf_info.max_time = lapse;
-  if ( lapse <= perf_info.min_time || perf_info.min_time == 0 )	
+  if ( lapse >= perf_info.max_time )
+    perf_info.max_time = lapse;
+  if ( lapse <= perf_info.min_time || perf_info.min_time == 0 )
     perf_info.min_time = lapse;
   
   // Update total time
@@ -253,7 +254,7 @@ void Stopwatch::report(string perf_name, int precision, std::ostream& output)
   PerformanceData& perf_info = records_of->find(perf_name)->second;
   
   string pad = "";
-  for (int i = perf_name.length(); i<STOP_WATCH_MAX_NAME_LENGTH; i++)
+  for (size_t i = perf_name.length(); i<STOP_WATCH_MAX_NAME_LENGTH; i++)
     pad.append(" ");
   
   output << perf_name << pad;

@@ -55,7 +55,7 @@ namespace dynamicgraph {
         /* --- CONSTRUCTOR ---- */
         FtCalibration( const std::string & name);
 
-	/// Initialize
+        /// Initialize
         void init(const std::string & robotRef);
 
         /* --- SIGNALS --- */
@@ -65,11 +65,11 @@ namespace dynamicgraph {
 
         /* --- COMMANDS --- */
 
-	      /// Commands for setting the feet weight
-	      void setRightFootWeight(const dynamicgraph::Vector &rightW);
-	      void setLeftFootWeight(const dynamicgraph::Vector &leftW);
+        /// Commands for setting the feet weight
+        void setRightFootWeight(const dynamicgraph::Vector &rightW);
+        void setLeftFootWeight(const dynamicgraph::Vector &leftW);
 
-	      void displayRobotUtil();
+        void displayRobotUtil();
 
 
         /* --- ENTITY INHERITANCE --- */

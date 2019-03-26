@@ -69,9 +69,9 @@ namespace dynamicgraph {
         /* --- CONSTRUCTOR ---- */
         ParameterServer( const std::string & name);
 
-	/// Initialize
-	/// @param dt: control interval
-	/// @param urdfFile: path to the URDF model of the robot
+        /// Initialize
+        /// @param dt: control interval
+        /// @param urdfFile: path to the URDF model of the robot
         void init(const double & dt,
                   const std::string & urdfFile,
                   const std::string & robotRef);
@@ -81,22 +81,22 @@ namespace dynamicgraph {
 
         /* --- COMMANDS --- */
 
-	      /// Commands related to joint name and joint id
-	      void setNameToId(const std::string& jointName, const double & jointId);
-	      void setJointLimitsFromId(const double &jointId, const double &lq, const double &uq);
+        /// Commands related to joint name and joint id
+        void setNameToId(const std::string& jointName, const unsigned int & jointId);
+        void setJointLimitsFromId(const unsigned int &jointId, const double &lq, const double &uq);
 
-	      /// Command related to ForceUtil
-	      void setForceLimitsFromId(const double &jointId, const dynamicgraph::Vector &lq, const dynamicgraph::Vector &uq);
-	      void setForceNameToForceId(const std::string& forceName, const double & forceId);
-	
-	      /// Commands related to FootUtil
-	      void setRightFootSoleXYZ(const dynamicgraph::Vector &);
+        /// Command related to ForceUtil
+        void setForceLimitsFromId(const unsigned int & jointId, const dynamicgraph::Vector &lq, const dynamicgraph::Vector &uq);
+        void setForceNameToForceId(const std::string& forceName, const unsigned int & forceId);
+
+        /// Commands related to FootUtil
+        void setRightFootSoleXYZ(const dynamicgraph::Vector &);
         void setRightFootForceSensorXYZ(const dynamicgraph::Vector &);
-	      void setFootFrameName(const std::string &, const std::string &);
+        void setFootFrameName(const std::string &, const std::string &);
         void setImuJointName(const std::string &);
-	      void displayRobotUtil();
-	      /// Set the mapping between urdf and sot.
-	      void setJoints(const dynamicgraph::Vector &);
+        void displayRobotUtil();
+        /// Set the mapping between urdf and sot.
+        void setJoints(const dynamicgraph::Vector &);
 
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;

@@ -51,7 +51,7 @@ namespace dynamicgraph {
       /* --------------------------------------------------------------------- */
 
       class SIMPLEZMPESTIMATOR_EXPORT SimpleZmpEstimator
-	                         : public ::dynamicgraph::Entity
+                                      : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
 

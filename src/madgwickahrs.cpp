@@ -3,10 +3,10 @@
 // Implementation of Madgwick's IMU and AHRS algorithms.
 // See: http://www.x-io.co.uk/node/8#open_source_ahrs_and_imu_algorithms
 //
-// Date			Author          Notes
-// 29/09/2011	SOH Madgwick    Initial release
-// 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
-// 11/05/2017   T Flayols       Make it a dynamic-graph entity
+// Date       Author       Notes
+// 29/09/2011 SOH Madgwick Initial release
+// 02/10/2011 SOH Madgwick Optimised for reduced CPU load
+// 11/05/2017   T Flayols  Make it a dynamic-graph entity
 //
 //=====================================================================================================
 
@@ -57,6 +57,11 @@ namespace dynamicgraph
                                                                               m_accelerometerSIN)
         ,m_initSucceeded(false)
         ,m_beta(betaDef)
+        ,m_q0(1.0)
+        ,m_q1(0.0)
+        ,m_q2(0.0)
+        ,m_q3(0.0)
+        ,m_sampleFreq(512.0)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
@@ -66,7 +71,7 @@ namespace dynamicgraph
                                     docCommandVoid1("Initialize the entity.",
                                                     "Timestep in seconds (double)")));
         addCommand("getBeta",
-                   makeDirectGetter(*this,&m_beta,
+                   makeDirectGetter(*this, &m_beta,
                                     docDirectGetter("Beta parameter", "double")));
         addCommand("setBeta",
                    makeCommandVoid1(*this, &MadgwickAHRS::set_beta,
@@ -77,7 +82,7 @@ namespace dynamicgraph
       {
         if(dt<=0.0)
           return SEND_MSG("Timestep must be positive", MSG_TYPE_ERROR);
-        m_sampleFreq=1.0f/dt;
+        m_sampleFreq=1.0/dt;
         m_initSucceeded = true;
       }
 
@@ -128,7 +133,7 @@ namespace dynamicgraph
 
       // Fast inverse square-root
       // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
-      float MadgwickAHRS::invSqrt(float x)
+      double MadgwickAHRS::invSqrt(double x)
       {
         /*
           float halfx = 0.5f * x;
@@ -138,25 +143,25 @@ namespace dynamicgraph
           y = *(float*)&i;
           y = y * (1.5f - (halfx * y * y));
           return y;*/
-        return (1.0f/sqrt(x)); //we'r not in the 70's
+        return (1.0/sqrt(x)); //we're not in the 70's
       }
 
       // IMU algorithm update
-      void MadgwickAHRS::madgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, float az)
+      void MadgwickAHRS::madgwickAHRSupdateIMU(double gx, double gy, double gz, double ax, double ay, double az)
       {
-        float recipNorm;
-        float s0, s1, s2, s3;
-        float qDot1, qDot2, qDot3, qDot4;
-        float _2q0, _2q1, _2q2, _2q3, _4q0, _4q1, _4q2 ,_8q1, _8q2, q0q0, q1q1, q2q2, q3q3;
+        double recipNorm;
+        double s0, s1, s2, s3;
+        double qDot1, qDot2, qDot3, qDot4;
+        double _2q0, _2q1, _2q2, _2q3, _4q0, _4q1, _4q2 ,_8q1, _8q2, q0q0, q1q1, q2q2, q3q3;
 
         // Rate of change of quaternion from gyroscope
-        qDot1 = 0.5f * (-m_q1 * gx - m_q2 * gy - m_q3 * gz);
-        qDot2 = 0.5f * ( m_q0 * gx + m_q2 * gz - m_q3 * gy);
-        qDot3 = 0.5f * ( m_q0 * gy - m_q1 * gz + m_q3 * gx);
-        qDot4 = 0.5f * ( m_q0 * gz + m_q1 * gy - m_q2 * gx);
+        qDot1 = 0.5 * (-m_q1 * gx - m_q2 * gy - m_q3 * gz);
+        qDot2 = 0.5 * ( m_q0 * gx + m_q2 * gz - m_q3 * gy);
+        qDot3 = 0.5 * ( m_q0 * gy - m_q1 * gz + m_q3 * gx);
+        qDot4 = 0.5 * ( m_q0 * gz + m_q1 * gy - m_q2 * gx);
 
         // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
-        if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f)))
+        if(!((ax == 0.0) && (ay == 0.0) && (az == 0.0)))
         {
           // Normalise accelerometer measurement
           recipNorm = invSqrt(ax * ax + ay * ay + az * az);
@@ -165,15 +170,15 @@ namespace dynamicgraph
           az *= recipNorm;
 
           // Auxiliary variables to avoid repeated arithmetic
-          _2q0 = 2.0f * m_q0;
-          _2q1 = 2.0f * m_q1;
-          _2q2 = 2.0f * m_q2;
-          _2q3 = 2.0f * m_q3;
-          _4q0 = 4.0f * m_q0;
-          _4q1 = 4.0f * m_q1;
-          _4q2 = 4.0f * m_q2;
-          _8q1 = 8.0f * m_q1;
-          _8q2 = 8.0f * m_q2;
+          _2q0 = 2.0 * m_q0;
+          _2q1 = 2.0 * m_q1;
+          _2q2 = 2.0 * m_q2;
+          _2q3 = 2.0 * m_q3;
+          _4q0 = 4.0 * m_q0;
+          _4q1 = 4.0 * m_q1;
+          _4q2 = 4.0 * m_q2;
+          _8q1 = 8.0 * m_q1;
+          _8q2 = 8.0 * m_q2;
           q0q0 = m_q0 * m_q0;
           q1q1 = m_q1 * m_q1;
           q2q2 = m_q2 * m_q2;
@@ -181,10 +186,10 @@ namespace dynamicgraph
 
           // Gradient decent algorithm corrective step
           s0 = _4q0 * q2q2 + _2q2 * ax + _4q0 * q1q1 - _2q1 * ay;
-          s1 = _4q1 * q3q3 - _2q3 * ax + 4.0f * q0q0 * m_q1 - _2q0 * ay - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 + _4q1 * az;
-          s2 = 4.0f * q0q0 * m_q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 + _4q2 * az;
-          s3 = 4.0f * q1q1 * m_q3 - _2q1 * ax + 4.0f * q2q2 * m_q3 - _2q2 * ay;
-          if(!((s0 == 0.0f) && (s1 == 0.0f) && (s2 == 0.0f) && (s3 == 0.0f)))
+          s1 = _4q1 * q3q3 - _2q3 * ax + 4.0 * q0q0 * m_q1 - _2q0 * ay - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 + _4q1 * az;
+          s2 = 4.0 * q0q0 * m_q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 + _4q2 * az;
+          s3 = 4.0 * q1q1 * m_q3 - _2q1 * ax + 4.0 * q2q2 * m_q3 - _2q2 * ay;
+          if(!((s0 == 0.0) && (s1 == 0.0) && (s2 == 0.0) && (s3 == 0.0)))
           {
             recipNorm = invSqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step magnitude
             s0 *= recipNorm;
@@ -201,10 +206,10 @@ namespace dynamicgraph
         }
 
         // Integrate rate of change of quaternion to yield quaternion
-        m_q0 += qDot1 * (1.0f / m_sampleFreq);
-        m_q1 += qDot2 * (1.0f / m_sampleFreq);
-        m_q2 += qDot3 * (1.0f / m_sampleFreq);
-        m_q3 += qDot4 * (1.0f / m_sampleFreq);
+        m_q0 += qDot1 * (1.0 / m_sampleFreq);
+        m_q1 += qDot2 * (1.0 / m_sampleFreq);
+        m_q2 += qDot3 * (1.0 / m_sampleFreq);
+        m_q3 += qDot4 * (1.0 / m_sampleFreq);
 
         // Normalise quaternion
         recipNorm = invSqrt(m_q0 * m_q0 + m_q1 * m_q1 + m_q2 * m_q2 + m_q3 * m_q3);
