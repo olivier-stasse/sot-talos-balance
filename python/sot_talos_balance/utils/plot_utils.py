@@ -20,12 +20,18 @@ def plot_select_traj(traj,idxs,name):
         plt.plot(traj[:,idx])
         plt.title(name)
 
-def write_pdf_graph(path):
+def write_pdf_graph(path='/tmp/'):
     ''' outputs a pdf of the graph to the specified path '''
     writeGraph(path+'graph.dot')
     os.system('dot -Tpdf '+path+'graph.dot -o '+path+'graph.pdf')
     return
-    
+
+def write_svg_graph(path='/tmp/'):
+    ''' outputs a svg of the graph to the specified path '''
+    writeGraph(path+'graph.dot')
+    os.system('dot -Tsvg '+path+'graph.dot -o '+path+'graph.svg')
+    return
+
 def dump_sot_sig(robot,entity,signal_name,duration):
     '''dumps a sot signal in /tmp
     ex: dump_sot_sig(robot,robot.entity,'signal_name',1.)'''
