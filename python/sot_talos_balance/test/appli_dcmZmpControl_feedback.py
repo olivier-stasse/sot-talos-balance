@@ -1,5 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
 import sot_talos_balance.talos.parameter_server_conf          as param_server_conf
+import sot_talos_balance.talos.base_estimator_conf            as base_estimator_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core import Task, FeaturePosture
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
@@ -54,6 +55,32 @@ plug(robot.cdc_estimator.com,estimator.com)
 plug(robot.cdc_estimator.momenta,estimator.momenta)
 estimator.init()
 robot.estimator = estimator
+
+# --- dc Estimation
+estimatorDc = DummyDcmEstimator("dcest")
+estimatorDc.omega.value = 1.0
+estimatorDc.mass.value = mass
+estimatorDc.com.value = (0.0,0.0,0.0)
+plug(robot.cdc_estimator.momenta,estimatorDc.momenta)
+estimatorDc.init()
+robot.estimatorDc = estimatorDc
+
+# --- REAL BASE ESTIMATION 
+robot.param_server            = create_parameter_server(param_server_conf,dt)
+robot.device_filters          = create_device_filters(robot, dt)
+robot.imu_filters             = create_imu_filters(robot, dt)
+robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf) 
+robot.be_filters              = create_be_filters(robot, dt)
+
+robot_name='robot'
+e2q = EulerToQuat('e2q')
+plug(robot.base_estimator.q,e2q.euler)
+robot.e2q = e2q
+dcm_estimator = DcmEstimator('dcm_estimator')
+dcm_estimator.init(dt, robot_name)
+plug(robot.e2q.quaternion, dcm_estimator.q)
+plug(robot.base_estimator.v, dcm_estimator.v)
+robot.dcm_estimator = dcm_estimator
 
 # --- filters
 filters = Bunch()
@@ -272,6 +299,10 @@ create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='ve
 
 create_topic(robot.publisher, robot.dcm_control, 'dcmDes', robot = robot, data_type='vector')             # desired DCM
 create_topic(robot.publisher, robot.estimator, 'dcm', robot = robot, data_type='vector')                  # estimated DCM
+
+create_topic(robot.publisher, robot.estimatorDc, 'dcm', robot = robot, data_type='vector')                # dc from sot
+create_topic(robot.publisher, robot.dcm_estimator, 'c', robot = robot, data_type='vector')                # c from base estimator
+create_topic(robot.publisher, robot.dcm_estimator, 'dc', robot = robot, data_type='vector')               # dc from base estimator  
 
 create_topic(robot.publisher, robot.dcm_control, 'zmpDes', robot = robot, data_type='vector')             # desired ZMP
 create_topic(robot.publisher, robot.dynamic, 'zmp', robot = robot, data_type='vector')                    # SOT ZMP

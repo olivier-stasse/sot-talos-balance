@@ -299,6 +299,8 @@ robot.publisher.add('vector',rospub_signalName,topicname)
 plug(robot.dcm_control.dcmDes, robot.publisher.signal(rospub_signalName))                                 # desired CoM (workaround)
 
 create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM
+create_topic(robot.publisher, robot.cdc_estimator, 'dc', robot = robot, data_type='vector')                # estimated CoM
+
 create_topic(robot.publisher, robot.com_admittance_control, 'comRef', robot = robot, data_type='vector')  # reference CoM
 create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')                    # resulting SOT CoM
 
