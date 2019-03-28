@@ -10,6 +10,15 @@ import numpy as np
 
 robot.timeStep = robot.device.getTimeStep()
 
+q =  [0., 0., 1.018213, 0., 0., 0.]                                  #Base
+q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]             #Left Leg
+q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]             #Right Leg
+q += [0.0 ,  0.006761]                                               #Chest
+q += [0.25847 ,  0.173046, -0.0002, -0.525366, 0., 0.,  0.1, -0.005] #Left Arm
+q += [-0.25847 , -0.0, 0.19  , -1.61, 0.,  0.,  0.1,-0.005]          #Right Arm
+q += [0.,  0.]                                                       #Head
+robot.device.set(q)
+
 # --- PARAM_SERVER ---
 robot.param_server = create_parameter_server(paramServerConfig, robot.timeStep)
 robot.device_filters = create_device_filters(robot, robot.timeStep)
@@ -32,7 +41,6 @@ taskRightHand.feature.position.value = np.eye(4)
 taskRightHand.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
 taskRightHand.featureDes.position.value = np.eye(4)
 plug(robot.controller.dq, taskRightHand.featureDes.velocity)
-# taskRightHand.featureDes.velocity.value = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 # --- BASE TASK ---
 taskWaist = MetaTaskKine6d('taskWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
