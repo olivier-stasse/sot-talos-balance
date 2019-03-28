@@ -20,18 +20,27 @@ robot.baseEstimator = create_base_estimator(robot, robot.timeStep, baseEstimator
 robot.controller = create_end_effector_admittance_controller(robot, 'rightWrist')
 
 # --- HAND TASK ---
-taskRightHand = MetaTaskKine6d('rh', robot.dynamic, 'rh', robot.OperationalPointsMap['right-wrist'])
+taskRightHand = MetaTaskKine6d('rh', robot.dynamic, 'rh', 'arm_right_7_joint')
 handMgrip = np.eye(4)
 handMgrip[0:3, 3] = (0.1, 0, 0)
 taskRightHand.opmodif = matrixToTuple(handMgrip)
-taskRightHand.feature.frame('current')
-taskRightHand.feature.selec.value = '000111'
+taskRightHand.feature.frame('desired')
+taskRightHand.feature.selec.value = '111111'
 taskRightHand.task.setWithDerivative(True)
 taskRightHand.task.controlGain.value = 0
 taskRightHand.feature.position.value = np.eye(4)
 taskRightHand.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
 taskRightHand.featureDes.position.value = np.eye(4)
 plug(robot.controller.dq, taskRightHand.featureDes.velocity)
+# taskRightHand.featureDes.velocity.value = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+# --- BASE TASK ---
+taskWaist = MetaTaskKine6d('taskWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
+taskWaist.feature.frame('desired')
+taskWaist.gain.setConstant(300)
+taskWaist.keep()
+taskWaist.feature.selec.value = '111111'
+locals()['taskWaist'] = taskWaist
 
 # --- POSTURE TASK ---
 robot.taskPosture = Task('task_posture')
@@ -54,6 +63,8 @@ robot.taskPosture.feature.selectDof(14, True)
 robot.taskPosture.feature.selectDof(15, True)
 robot.taskPosture.feature.selectDof(16, True)
 robot.taskPosture.feature.selectDof(17, True)
+robot.taskPosture.feature.selectDof(18, True)
+robot.taskPosture.feature.selectDof(19, True)
 
 robot.taskPosture.add(robot.taskPosture.feature.name)
 plug(robot.dynamic.position, robot.taskPosture.feature.state)
@@ -62,8 +73,10 @@ robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 plug(robot.sot.control, robot.device.control)
 
+# --- PUSH THE TASKS ---
 robot.sot.push(robot.taskPosture.name)
 robot.sot.push(taskRightHand.task.name)
+robot.sot.push(taskWaist.task.name)
 
 # # --- ROS PUBLISHER
 robot.publisher = create_rospublish(robot, 'robot_publisher')
