@@ -118,6 +118,10 @@ def create_imu_offset_compensation(robot, dt):
     return imu_offset_compensation;
 
 def create_device_filters(robot, dt):
+    robot.vselec = Selec_of_vector("vselec")
+    robot.vselec.selec(6,6+N_JOINTS)
+    plug(robot.device.robotVelocity,robot.vselec.sin)
+
     filters = Bunch();    
     filters.joints_kin    = create_chebi1_checby2_series_filter("joints_kin", dt, N_JOINTS);
     filters.ft_RF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_RF_filter", dt, 6);
@@ -127,14 +131,16 @@ def create_device_filters(robot, dt):
     filters.torque_filter = create_chebi1_checby2_series_filter("ptorque_filter", dt, N_JOINTS);
     filters.acc_filter    = create_chebi1_checby2_series_filter("acc_filter", dt, 3);
     filters.gyro_filter   = create_chebi1_checby2_series_filter("gyro_filter", dt, 3);
-    filters.estimator_kin = create_chebi1_checby2_series_filter("estimator_kin", dt, N_JOINTS);
+    #filters.estimator_kin = create_chebi1_checby2_series_filter("estimator_kin", dt, N_JOINTS);
+    filters.vel_filter    = create_butter_lp_filter_Wn_04_N_2("vel_filter", dt, N_JOINTS);
     
-    plug(robot.device.joint_angles,                       filters.estimator_kin.x);  # device.state, device.joint_angles or device.motor_angles ?
+    plug(robot.device.joint_angles,                       filters.joints_kin.x);
     plug(robot.device.forceRLEG,                          filters.ft_RF_filter.x);
     plug(robot.device.forceLLEG,                          filters.ft_LF_filter.x);
     plug(robot.device.forceRARM,                          filters.ft_RH_filter.x);
     plug(robot.device.forceLARM,                          filters.ft_LH_filter.x);
     plug(robot.device.ptorque,                            filters.torque_filter.x);
+    plug(robot.vselec.sout,                               filters.vel_filter.x);
     
     # switch following lines if willing to use imu offset compensation
     #~ plug(robot.imu_offset_compensation.accelerometer_out, filters.acc_filter.x);
@@ -166,7 +172,9 @@ def create_base_estimator(robot, dt, conf, robot_name="robot"):
     plug(robot.device_filters.ft_RF_filter.x_filtered,   base_estimator.forceRLEG)
     plug(robot.device_filters.ft_LF_filter.dx,           base_estimator.dforceLLEG)
     plug(robot.device_filters.ft_RF_filter.dx,           base_estimator.dforceRLEG)
-    plug(robot.device_filters.estimator_kin.dx,          base_estimator.joint_velocities)
+    # plug(robot.device_filters.estimator_kin.dx,          base_estimator.joint_velocities)
+    # plug(robot.vselec.sout,                              base_estimator.joint_velocities)
+    plug(robot.device_filters.vel_filter.x_filtered,     base_estimator.joint_velocities)
     plug(robot.imu_filters.imu_quat,                     base_estimator.imu_quaternion)
     plug(robot.device_filters.gyro_filter.x_filtered,    base_estimator.gyroscope)
     plug(robot.device_filters.acc_filter.x_filtered,     base_estimator.accelerometer)
