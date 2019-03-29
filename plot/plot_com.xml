@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root>
+ <tabbed_widget parent="main_window" name="Main Window">
+  <plotmatrix columns="3" rows="2" tab_name="plot">
+   <plot row="0" col="0">
+    <range top="0.002152" left="6.915000" right="11.911000" bottom="-0.003031"/>
+    <limitY/>
+    <curve R="255" G="0" custom_transform="" name="/sot/cdc_estimator/c/data.0" B="255"/>
+    <curve R="0" G="0" custom_transform="" name="/sot/robot_dynamic/com/data.0" B="255"/>
+    <transform value=""/>
+   </plot>
+   <plot row="1" col="0">
+    <range top="0.000004" left="6.915000" right="11.911000" bottom="0.000001"/>
+    <limitY/>
+    <curve R="160" G="160" custom_transform="" name="/sot/cdc_estimator/dc/data.0" B="164"/>
+    <curve R="0" G="0" custom_transform="" name="/sot/dcest/dcm/data.0" B="255"/>
+    <transform value=""/>
+   </plot>
+   <plot row="0" col="1">
+    <range top="0.897567" left="6.915000" right="11.911000" bottom="-0.023415"/>
+    <limitY/>
+    <curve R="0" G="0" custom_transform="" name="/sot/cdc_estimator/c/data.1" B="128"/>
+    <curve R="0" G="128" custom_transform="" name="/sot/robot_dynamic/com/data.1" B="0"/>
+    <curve R="255" G="0" custom_transform="" name="/sot/robot_dynamic/com/data.2" B="0"/>
+    <transform value=""/>
+   </plot>
+   <plot row="1" col="1">
+    <range top="0.000000" left="6.915000" right="11.911000" bottom="-0.000000"/>
+    <limitY/>
+    <curve R="128" G="128" custom_transform="" name="/sot/cdc_estimator/dc/data.1" B="0"/>
+    <curve R="0" G="128" custom_transform="" name="/sot/dcest/dcm/data.1" B="0"/>
+    <transform value=""/>
+   </plot>
+   <plot row="0" col="2">
+    <range top="0.875700" left="6.915000" right="11.911000" bottom="0.873109"/>
+    <limitY/>
+    <curve R="0" G="128" custom_transform="" name="/sot/cdc_estimator/c/data.2" B="128"/>
+    <curve R="255" G="0" custom_transform="" name="/sot/robot_dynamic/com/data.2" B="0"/>
+    <transform value=""/>
+   </plot>
+   <plot row="1" col="2">
+    <range top="0.000000" left="6.915000" right="11.911000" bottom="-0.000000"/>
+    <limitY/>
+    <curve R="128" G="0" custom_transform="" name="/sot/cdc_estimator/dc/data.2" B="0"/>
+    <curve R="255" G="0" custom_transform="" name="/sot/dcest/dcm/data.2" B="0"/>
+    <transform value=""/>
+   </plot>
+  </plotmatrix>
+  <currentPlotMatrix index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <Plugins>
+  <DataLoad_CSV>
+   <default time_axis=""/>
+  </DataLoad_CSV>
+  <DataLoad_ROS_bags>
+   <selected_topics list=""/>
+  </DataLoad_ROS_bags>
+  <DataLoad_ULog>
+   <no_params/>
+  </DataLoad_ULog>
+  <ROS_Topic_Streamer>
+   <selected_topics list="/gazebo/link_states;/sot/cdc_estimator/c;/sot/cdc_estimator/dc;/sot/comAdmCtrl/comRef;/sot/dcest/dcm;/sot/dcmCtrl/dcmDes;/sot/dcmCtrl/zmpDes;/sot/dcmCtrl/zmpRef;/sot/dummy/dcm;/sot/fake/comDes;/sot/robot_dynamic/com;/sot/robot_dynamic/zmp;/sot/zmpEst/zmp;/gazebo/model_states"/>
+  </ROS_Topic_Streamer>
+  <RosoutPublisherROS/>
+  <TopicPublisherROS/>
+ </Plugins>
+ <previouslyLoadedStreamer name="ROS_Topic_Streamer"/>
+ <customMathEquations/>
+ <snippets>
+  <snippet name="1st_derivative">
+   <global>var prevX = 0
+var prevY = 0</global>
+   <equation>dx = time - prevX
+dy = value - prevY
+prevX = time
+prevY = value
+
+return dy/dx</equation>
+  </snippet>
+  <snippet name="1st_order_lowpass">
+   <global>var prevY = 0
+var alpha = 0.1</global>
+   <equation>prevY = alpha * value + (1.-alpha) * prevY
+
+return prevY</equation>
+  </snippet>
+  <snippet name="sum_A_B">
+   <global></global>
+   <equation>return $$PLOT_A$$ + $$PLOT_B$$</equation>
+  </snippet>
+  <snippet name="yaw_from_quaternion">
+   <global>// source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+
+function quaternionToYaw(x, y, z, w)
+{
+  // yaw (z-axis rotation)
+  t1 = 2.0 * (w * z + x * y);
+  t2 = 1.0 - 2.0 * (y * y + z * z);
+  yaw = Math.atan2(t1, t2);
+
+  return yaw
+}</global>
+   <equation>return quaternionToYaw(x, y, z, w);</equation>
+  </snippet>
+ </snippets>
+</root>
+
