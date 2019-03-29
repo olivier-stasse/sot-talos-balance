@@ -55,8 +55,9 @@ PKG_CONFIG_APPEND_LIBS("sot-talos-balance")
 # Boost
 SET(BOOST_COMPONENTS thread filesystem program_options unit_test_framework system regex)
 
+OPTION (BUILD_ROS_PACKAGES "Build ros packages" ON)
 OPTION (BUILD_PYTHON_INTERFACE "Build the python bindings" ON)
-OPTION (BUILD_TEST "Build dynamic-graph architecture tests" ON)
+OPTION (BUILD_TEST "Build tests" ON)
 
 # name of the python module
 IF(BUILD_PYTHON_INTERFACE)
@@ -272,6 +273,11 @@ MACRO(SOT_TALOS_BALANCE_PYTHON_MODULE SUBMODULENAME LIBRARYNAME TARGETNAME)
 ENDMACRO(SOT_TALOS_BALANCE_PYTHON_MODULE)
 
 ADD_SUBDIRECTORY(src)
+
+IF(BUILD_ROS_PACKAGES)
+  ADD_SUBDIRECTORY(ros)
+ENDIF(BUILD_ROS_PACKAGES)
+
 # ADD_SUBDIRECTORY(unittest)
 
 SETUP_PROJECT_FINALIZE()
