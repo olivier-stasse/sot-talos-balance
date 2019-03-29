@@ -1,6 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
-import sot_talos_balance.talos.parameter_server_conf          as param_server_conf
-import sot_talos_balance.talos.base_estimator_conf            as base_estimator_conf
+import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
+import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.core import Task, FeaturePosture
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
@@ -16,17 +16,27 @@ dt = robot.timeStep;
 # -------------------------- DESIRED TRAJECTORY --------------------------
 
 # --- Desired values
+
+# --- Desired CoM
 robot.dynamic.com.recompute(0)
 comDes = robot.dynamic.com.value
-#comDes = list(robot.dynamic.com.value)
-#comDes[0] += 0.001
-#comDes[1] += 0.001
+
+## --- Translation
+#comDes = list(comDes)
+#comDes[0] += 0.01
+#comDes[1] += 0.01
 #comDes = tuple(comDes)
+
+# --- Desired DCM and ZMP
 dcmDes = comDes
 zmpDes = comDes[:2] + (0.0,)
+
+# --- Desired CoM acceleration
 ddcomDes = (0.0,0.0,0.0)
 
 # --- Pendulum parameters
+robot_name='robot'
+robotDim = robot.dynamic.getDimension()
 mass = robot.dynamic.data.mass[0]
 h = robot.dynamic.com.value[2]
 g = 9.81
@@ -34,61 +44,54 @@ omega = sqrt(g/h)
 
 # -------------------------- ESTIMATION --------------------------
 
-# --- General Estimation
-# robot.param_server = create_parameter_server(param_server_conf,dt)
-# robot_name='robot'
-# cdc_estimator = DcmEstimator('dcm_estimator')
-# cdc_estimator.init(dt, robot_name)
-# plug(robot.device.state, cdc_estimator.q)
-# plug(robot.device.velocity, cdc_estimator.v)
-# robot.cdc_estimator = cdc_estimator # cdc_estimator.c == robot.dynamic.com
-robot.cdc_estimator = robot.dynamic
+# --- REAL ESTIMATION - diagnostics only
+
+# --- Base Estimation
+robot.param_server            = create_parameter_server(param_server_conf,dt)
+robot.device_filters          = create_device_filters(robot, dt)
+robot.imu_filters             = create_imu_filters(robot, dt)
+robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf)
+# robot.be_filters              = create_be_filters(robot, dt)
+
+# --- Conversion
+e2q = EulerToQuat('e2q')
+plug(robot.base_estimator.q,e2q.euler)
+robot.e2q = e2q
+
+# --- CoM Estimation
+cdc_estimator = DcmEstimator('cdc_estimator')
+cdc_estimator.init(dt, robot_name)
+plug(robot.e2q.quaternion, cdc_estimator.q)
+plug(robot.base_estimator.v, cdc_estimator.v)
+robot.cdc_estimator = cdc_estimator
+
+# --- SOT ESTIMATION
 
 # --- DCM Estimation
 estimator = DummyDcmEstimator("dummy")
 estimator.omega.value = omega
-# estimator.mass.value = 1.0
-# plug(robot.cdc_estimator.c, estimator.com)
-# plug(robot.cdc_estimator.dc,estimator.momenta)
 estimator.mass.value = mass
-plug(robot.cdc_estimator.com,estimator.com)
-plug(robot.cdc_estimator.momenta,estimator.momenta)
+plug(robot.dynamic.com,estimator.com)
+plug(robot.dynamic.momenta,estimator.momenta)
 estimator.init()
 robot.estimator = estimator
 
-# --- dc Estimation
+# --- dc Estimation - diagnostics only
 estimatorDc = DummyDcmEstimator("dcest")
 estimatorDc.omega.value = 1.0
 estimatorDc.mass.value = mass
 estimatorDc.com.value = (0.0,0.0,0.0)
-plug(robot.cdc_estimator.momenta,estimatorDc.momenta)
+plug(robot.dynamic.momenta,estimatorDc.momenta)
 estimatorDc.init()
 robot.estimatorDc = estimatorDc
 
-# --- REAL BASE ESTIMATION 
-robot.param_server            = create_parameter_server(param_server_conf,dt)
-robot.device_filters          = create_device_filters(robot, dt)
-robot.imu_filters             = create_imu_filters(robot, dt)
-robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf) 
-robot.be_filters              = create_be_filters(robot, dt)
-
-robot_name='robot'
-e2q = EulerToQuat('e2q')
-plug(robot.base_estimator.q,e2q.euler)
-robot.e2q = e2q
-dcm_estimator = DcmEstimator('dcm_estimator')
-dcm_estimator.init(dt, robot_name)
-plug(robot.e2q.quaternion, dcm_estimator.q)
-plug(robot.base_estimator.v, dcm_estimator.v)
-robot.dcm_estimator = dcm_estimator
-
-# --- filters
-filters = Bunch()
-filters.ft_RF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_RF_filter", dt, 6)
-filters.ft_LF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_LF_filter", dt, 6)
-plug(robot.device.forceRLEG, filters.ft_RF_filter.x)
-plug(robot.device.forceLLEG, filters.ft_LF_filter.x)
-robot.device_filters = filters
+# --- filters - already created
+# filters = Bunch()
+# filters.ft_RF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_RF_filter", dt, 6)
+# filters.ft_LF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_LF_filter", dt, 6)
+# plug(robot.device.forceRLEG, filters.ft_RF_filter.x)
+# plug(robot.device.forceLLEG, filters.ft_LF_filter.x)
+# robot.device_filters = filters
 
 # --- ZMP estimation
 zmp_estimator = SimpleZmpEstimator("zmpEst")
@@ -98,8 +101,6 @@ plug(robot.dynamic.sole_LF,zmp_estimator.poseLeft)
 plug(robot.dynamic.sole_RF,zmp_estimator.poseRight)
 plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
 plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
-#plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
-#plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
 zmp_estimator.init()
 robot.zmp_estimator = zmp_estimator
 
@@ -118,7 +119,7 @@ dcm_controller.decayFactor.value = gamma_dcm
 dcm_controller.mass.value = mass
 dcm_controller.omega.value = omega
 
-plug(robot.cdc_estimator.com,dcm_controller.com)
+plug(robot.dynamic.com,dcm_controller.com)
 plug(robot.estimator.dcm,dcm_controller.dcm)
 
 dcm_controller.zmpDes.value = zmpDes # plug a signal here
@@ -288,11 +289,8 @@ topicname = '/sot/{0}/{1}'.format('fake', 'comDes')
 robot.publisher.add('vector',rospub_signalName,topicname)
 plug(robot.dcm_control.dcmDes, robot.publisher.signal(rospub_signalName))                                 # desired CoM (workaround)
 
-rospub_signalName = '{0}_{1}'.format(robot.cdc_estimator.name, 'c')
-topicname = '/sot/{0}/{1}'.format(robot.cdc_estimator.name, 'c')
-robot.publisher.add('vector',rospub_signalName,topicname)
-plug(robot.cdc_estimator.com, robot.publisher.signal(rospub_signalName))                                  # estimated CoM (workaround)
-# create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM (to be modified)
+create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM
+create_topic(robot.publisher, robot.cdc_estimator, 'dc', robot = robot, data_type='vector')               # estimated CoM velocity
 
 create_topic(robot.publisher, robot.com_admittance_control, 'comRef', robot = robot, data_type='vector')  # reference CoM
 create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')                    # resulting SOT CoM
@@ -301,8 +299,6 @@ create_topic(robot.publisher, robot.dcm_control, 'dcmDes', robot = robot, data_t
 create_topic(robot.publisher, robot.estimator, 'dcm', robot = robot, data_type='vector')                  # estimated DCM
 
 create_topic(robot.publisher, robot.estimatorDc, 'dcm', robot = robot, data_type='vector')                # dc from sot
-create_topic(robot.publisher, robot.dcm_estimator, 'c', robot = robot, data_type='vector')                # c from base estimator
-create_topic(robot.publisher, robot.dcm_estimator, 'dc', robot = robot, data_type='vector')               # dc from base estimator  
 
 create_topic(robot.publisher, robot.dcm_control, 'zmpDes', robot = robot, data_type='vector')             # desired ZMP
 create_topic(robot.publisher, robot.dynamic, 'zmp', robot = robot, data_type='vector')                    # SOT ZMP
@@ -316,10 +312,9 @@ robot.tracer.open('/tmp','dg_','.dat')
 robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
 addTrace(robot.tracer, robot.dcm_control, 'dcmDes')             # desired CoM (workaround)
-addTrace(robot.tracer, robot.dynamic, 'com')                    # estimated CoM (workaround)
-# addTrace(robot.tracer, robot.cdc_estimator, 'com')              # estimated CoM (to be modified)
+addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
 addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
-# addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM (already added)
+addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
 
 # addTrace(robot.tracer, robot.dcm_control, 'dcmDes')           # desired DCM (already added)
 addTrace(robot.tracer, robot.estimator, 'dcm')                  # estimated DCM

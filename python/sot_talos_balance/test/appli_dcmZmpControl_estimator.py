@@ -10,7 +10,6 @@ from math import sqrt
 
 from dynamic_graph.tracer_real_time import TracerRealTime
 
-from sot_talos_balance.euler_to_quat import EulerToQuat
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 
 robot.timeStep = robot.device.getTimeStep()
@@ -76,7 +75,7 @@ e2q = EulerToQuat('e2q')
 plug(robot.base_estimator.q,e2q.euler)
 robot.e2q = e2q
 
-# --- Feet pose
+# --- Kinematic computations
 robot.rdynamic = DynamicPinocchio("real_dynamics")
 robot.rdynamic.setModel(robot.dynamic.model)
 robot.rdynamic.setData(robot.rdynamic.model.createData())
@@ -108,8 +107,6 @@ plug(robot.rdynamic.sole_LF,zmp_estimator.poseLeft)
 plug(robot.rdynamic.sole_RF,zmp_estimator.poseRight)
 plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
 plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
-#plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
-#plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
 zmp_estimator.init()
 robot.zmp_estimator = zmp_estimator
 
@@ -299,7 +296,7 @@ robot.publisher.add('vector',rospub_signalName,topicname)
 plug(robot.dcm_control.dcmDes, robot.publisher.signal(rospub_signalName))                                 # desired CoM (workaround)
 
 create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM
-create_topic(robot.publisher, robot.cdc_estimator, 'dc', robot = robot, data_type='vector')                # estimated CoM
+create_topic(robot.publisher, robot.cdc_estimator, 'dc', robot = robot, data_type='vector')               # estimated CoM velocity
 
 create_topic(robot.publisher, robot.com_admittance_control, 'comRef', robot = robot, data_type='vector')  # reference CoM
 create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')                    # resulting SOT CoM
