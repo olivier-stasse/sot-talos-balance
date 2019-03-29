@@ -123,7 +123,7 @@ namespace dynamicgraph {
         virtual void display( std::ostream& os ) const;
 
       protected:
-        RobotUtil *                   m_robot_util;
+        RobotUtilShrPtr                   m_robot_util;
         size_t  m_numDofs;
         bool    m_initSucceeded;    /// true if the entity has been successfully initialized
         double  m_dt;               /// control loop time period

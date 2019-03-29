@@ -86,7 +86,7 @@ namespace dynamicgraph
 
       protected:
         bool      m_initSucceeded;            /// true if the entity has been successfully initialized
-        RobotUtil*   m_robot_util;
+        RobotUtilShrPtr   m_robot_util;
         pinocchio::Data         m_data;            /// Pinocchio robot data
         Eigen::VectorXd   m_q_pin;            /// robot configuration according to pinocchio convention
         Eigen::VectorXd   m_v_pin;            /// robot velocities according to pinocchio convention

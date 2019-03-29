@@ -76,7 +76,7 @@ namespace dynamicgraph {
 
       protected:
         bool  m_initSucceeded;    /// true if the entity has been successfully initialized
-        RobotUtil* m_robot_util;
+        RobotUtilShrPtr m_robot_util;
 
       }; // class Example
 
