@@ -180,7 +180,13 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_force, dynamicgraph::Vector)
 
   if (m_removeWeight)
   {
-    w_vForce(2) += m_mass * 9.80665 - 1.99325154291384;
+    double weight = -14.604817920170488;
+    // Eigen::Vector3d OC(0.02097597, -0.02460337, -0.00272215);
+    // Vector w_OC = sensorPlacement.rotation() * OC;
+    w_vForce(2) -= weight;
+    // w_forceDes(3) += w_OC(1) * weight;
+    // w_forceDes(4) += -w_OC(0) * weight;
+    // w_vForce(2) += m_mass * 9.80665 - 1.99325154291384;
   }
 
   s = w_vForce;
