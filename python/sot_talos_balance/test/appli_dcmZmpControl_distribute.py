@@ -314,7 +314,12 @@ create_topic(robot.publisher, robot.estimator, 'dcm', robot = robot, data_type='
 create_topic(robot.publisher, robot.dcm_control, 'zmpDes', robot = robot, data_type='vector')             # desired ZMP
 create_topic(robot.publisher, robot.dynamic, 'zmp', robot = robot, data_type='vector')                    # SOT ZMP
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot = robot, data_type='vector')              # estimated ZMP
-create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_type='vector')             # reference ZMP
+create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_type='vector')             # unoptimized reference ZMP
+
+create_topic(robot.publisher, robot.dcm_control, 'wrenchRef', robot = robot, data_type='vector')          # unoptimized reference wrench
+create_topic(robot.publisher, robot.distribute, 'wrenchLeft', robot = robot, data_type='vector')          # reference left wrench
+create_topic(robot.publisher, robot.distribute, 'wrenchRight', robot = robot, data_type='vector')         # reference right wrench
+create_topic(robot.publisher, robot.distribute, 'wrenchRef', robot = robot, data_type='vector')           # optimized reference wrench
 
 # --- TRACER
 robot.tracer = TracerRealTime("zmp_tracer")

@@ -113,6 +113,10 @@ namespace dynamicgraph
           return;
         }
 
+        // TODO: initialize m_qp1
+
+        m_qp2.problem(12,6,0);
+
         m_initSucceeded = true;
       }
 
@@ -196,8 +200,36 @@ namespace dynamicgraph
         getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS);
 
         // stub
-        m_wrenchLeft  = wrenchDes/2;
-        m_wrenchRight = wrenchDes/2;
+        Eigen::MatrixXd Q(12,12);
+        Q.setIdentity();
+
+        Eigen::VectorXd C(12);
+        C.setZero();
+
+        Eigen::MatrixXd Aeq(6,12);
+        Aeq.block<6,6>(0,0).setIdentity();
+        Aeq.block<6,6>(0,6).setIdentity();
+
+        Eigen::VectorXd Beq(6);
+        Beq = wrenchDes;
+
+        Eigen::MatrixXd Aineq(0,12);
+
+        Eigen::VectorXd Bineq(0);
+
+        bool success = m_qp2.solve(Q, C, Aeq, Beq, Aineq, Bineq);
+
+        // TODO: create error signal
+        if(!success)
+        {
+          SEND_ERROR_STREAM_MSG("Cannot compute signal wrenches before initialization!");
+          return s;
+        }
+
+        Eigen::VectorXd result = m_qp2.result();
+
+        m_wrenchLeft  = result.head<6>();
+        m_wrenchRight = result.tail<6>();
 
         getProfiler().stop(PROFILE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS);
 
@@ -294,8 +326,8 @@ namespace dynamicgraph
 
         const Eigen::VectorXd & wrenchRef  = m_wrenchRefSOUT(iter);
 
-        const double fx = wrenchRef[0];
-        const double fy = wrenchRef[1];
+        //const double fx = wrenchRef[0];
+        //const double fy = wrenchRef[1];
         const double fz = wrenchRef[2];
         const double tx = wrenchRef[3];
         const double ty = wrenchRef[4];

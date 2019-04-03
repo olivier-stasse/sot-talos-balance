@@ -45,6 +45,8 @@
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/multibody/data.hpp>
 
+#include <eigen-quadprog/QuadProg.h>
+
 namespace dynamicgraph {
   namespace sot {
     namespace talos_balance {
@@ -95,6 +97,9 @@ namespace dynamicgraph {
 
         dynamicgraph::Vector m_wrenchLeft;
         dynamicgraph::Vector m_wrenchRight;
+
+//      Eigen::QuadProgDense m_qp1; // TODO: saturate wrench
+        Eigen::QuadProgDense m_qp2; // distribute wrench
       }; // class DistributeWrench
 
     }    // namespace talos_balance
