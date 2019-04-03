@@ -39,6 +39,7 @@ SET(plugins
     euler-to-quat
     quat-to-euler
     simple-zmp-estimator
+    distribute-wrench
     dcm-com-controller
     dcm-controller
     dummy-dcm-estimator

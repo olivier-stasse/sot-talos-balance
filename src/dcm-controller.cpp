@@ -168,12 +168,13 @@ namespace dynamicgraph
 
         assert(com.size()==3 && "Unexpected size of signal com");
 
-        Vector forceRef = mass*omega*omega*(com-zmpRef);
-        forceRef[2] = mass*9.81;
+        Eigen::Vector3d forceRef = mass*omega*omega*(com-zmpRef);
+        forceRef[2] = mass*9.81; // maybe needs better way
 
         Vector wrenchRef(6);
         wrenchRef.head<3>() = forceRef;
-        wrenchRef.tail<3>().setZero();
+        Eigen::Vector3d com3 = com;
+        wrenchRef.tail<3>() = com3.cross(forceRef);
 
         s = wrenchRef;
 
