@@ -55,6 +55,7 @@ SET(plugins
     imu_offset_compensation
     parameter-server
     dcm-estimator
+    qualisys-client
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
