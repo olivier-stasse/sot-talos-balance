@@ -73,7 +73,7 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(q,  dynamicgraph::Vector);
 
         DECLARE_SIGNAL_INNER(kinematics_computations, int);
-        DECLARE_SIGNAL_INNER(wrenches,  int);
+        DECLARE_SIGNAL_INNER(qp_computations,  int);
 
         DECLARE_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector);
 //        DECLARE_SIGNAL_OUT(copLeft, dynamicgraph::Vector);
@@ -82,6 +82,7 @@ namespace dynamicgraph {
 
         DECLARE_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(zmpRef, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(emergencyStop, bool);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
@@ -100,6 +101,8 @@ namespace dynamicgraph {
 
 //      Eigen::QuadProgDense m_qp1; // TODO: saturate wrench
         Eigen::QuadProgDense m_qp2; // distribute wrench
+
+        bool m_emergency_stop_triggered;
       }; // class DistributeWrench
 
     }    // namespace talos_balance

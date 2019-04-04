@@ -39,14 +39,14 @@ namespace dynamicgraph
 
 //Size to be aligned                                      "-------------------------------------------------------"
 #define PROFILE_DISTRIBUTE_WRENCH_KINEMATICS_COMPUTATIONS "DistributeWrench: kinematics computations              "
-#define PROFILE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS   "DistributeWrench: wrenches computations                "
+#define PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS         "DistributeWrench: QP problem computations              "
 
 #define INPUT_SIGNALS     m_wrenchDesSIN << m_qSIN
 
-#define INNER_SIGNALS m_kinematics_computations << m_wrenches
+#define INNER_SIGNALS m_kinematics_computations << m_qp_computations
 
-//#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_copLeftSOUT << m_wrenchRightSOUT << m_copRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT
-#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_wrenchRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT
+//#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_copLeftSOUT << m_wrenchRightSOUT << m_copRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
+#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_wrenchRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -64,13 +64,14 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(wrenchDes, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(q, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN)
-                      , CONSTRUCT_SIGNAL_INNER(wrenches, int, m_wrenchDesSIN << m_kinematics_computationsSINNER)
-                      , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_wrenchesSINNER)
+                      , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_kinematics_computationsSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_qp_computationsSINNER)
 //                      , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
-                      , CONSTRUCT_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector, m_wrenchesSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector, m_qp_computationsSINNER)
 //                      , CONSTRUCT_SIGNAL_OUT(copRight, dynamicgraph::Vector, m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector, m_wrenchLeftSOUT << m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(zmpRef, dynamicgraph::Vector, m_wrenchRefSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(emergencyStop, bool, m_zmpRefSOUT)
                       , m_initSucceeded(false)
                       , m_model()
                       , m_data(pinocchio::Model())
@@ -185,11 +186,11 @@ namespace dynamicgraph
         return s;
       }
 
-      DEFINE_SIGNAL_INNER_FUNCTION(wrenches, int)
+      DEFINE_SIGNAL_INNER_FUNCTION(qp_computations, int)
       {
         if(!m_initSucceeded)
         {
-          SEND_WARNING_STREAM_MSG("Cannot compute signal wrenches before initialization!");
+          SEND_WARNING_STREAM_MSG("Cannot compute signal qp_computations before initialization!");
           return s;
         }
 
@@ -197,7 +198,7 @@ namespace dynamicgraph
         m_kinematics_computationsSINNER(iter);
         assert(wrenchDes.size()==6     && "Unexpected size of signal q");
 
-        getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS);
+        getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
 
         // stub
         Eigen::MatrixXd Q(12,12);
@@ -219,10 +220,11 @@ namespace dynamicgraph
 
         bool success = m_qp2.solve(Q, C, Aeq, Beq, Aineq, Bineq);
 
-        // TODO: create error signal
+        m_emergency_stop_triggered = !success;
+
         if(!success)
         {
-          SEND_ERROR_STREAM_MSG("Cannot compute signal wrenches before initialization!");
+          SEND_WARNING_STREAM_MSG("No solution to the QP problem!");
           return s;
         }
 
@@ -231,7 +233,7 @@ namespace dynamicgraph
         m_wrenchLeft  = result.head<6>();
         m_wrenchRight = result.tail<6>();
 
-        getProfiler().stop(PROFILE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS);
+        getProfiler().stop(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
 
         return s;
       }
@@ -244,7 +246,7 @@ namespace dynamicgraph
           return s;
         }
 
-        m_wrenchesSINNER(iter);
+        m_qp_computationsSINNER(iter);
         s = m_wrenchLeft;
         return s;
       }
@@ -257,7 +259,7 @@ namespace dynamicgraph
           return s;
         }
 
-        m_wrenchesSINNER(iter);
+        m_qp_computationsSINNER(iter);
         s = m_wrenchRight;
         return s;
       }
@@ -357,6 +359,13 @@ namespace dynamicgraph
         return s;
       }
 
+      DEFINE_SIGNAL_OUT_FUNCTION(emergencyStop, bool)
+      {
+        const dynamicgraph::Vector & zmp = m_zmpRefSOUT(iter); // dummy to trigger zmp computation
+        (void) zmp;                                            // disable unused variable warning
+        s = m_emergency_stop_triggered;
+        return s;
+      }
 
       /* --- COMMANDS ---------------------------------------------------------- */
 

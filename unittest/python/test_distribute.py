@@ -89,4 +89,7 @@ assertApprox(wrenchLeft,distribute.wrenchLeft.value,6)
 print( "resulting right wrench: %s" % str(distribute.wrenchRight.value) )
 assertApprox(wrenchRight,distribute.wrenchRight.value,6)
 
-# assertApprox(np.matrix(dcm_estimator.c.value).T,comRel,3)
+distribute.emergencyStop.recompute(0)
+stop = distribute.emergencyStop.value
+np.testing.assert_equal(stop,0)
+
