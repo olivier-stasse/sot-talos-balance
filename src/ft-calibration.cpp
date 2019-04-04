@@ -2,6 +2,7 @@
  * Copyright 2019
  * LAAS-CNRS
  * F. Bailly
+ * T. Flayols
  */
 
 
@@ -14,7 +15,7 @@
 #include <sot/talos_balance/utils/stop-watch.hh>
 #include <sot/talos_balance/utils/statistics.hh>
 
-
+#define CALIB_ITER_TIME 1000 //Iteration needed for sampling and averaging the FT sensors while calibrating
 
 using namespace sot::talos_balance;
 
@@ -28,8 +29,8 @@ namespace dynamicgraph
       using namespace dynamicgraph;
       using namespace dg::sot::talos_balance;
 
-#define INPUT_SIGNALS  m_right_force_inSIN <<  
-#define OUTPUT_SIGNALS m_force_outSOUT
+#define INPUT_SIGNALS  m_right_foot_force_inSIN   << m_left_foot_force_inSIN
+#define OUTPUT_SIGNALS m_right_foot_force_outSOUT << m_left_foot_force_outSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -47,8 +48,10 @@ namespace dynamicgraph
         : Entity(name)
         ,m_robot_util(RefVoidRobotUtil())
         ,m_initSucceeded(false)  
-        , CONSTRUCT_SIGNAL_IN(force_in,  dynamicgraph::Vector)
-        , CONSTRUCT_SIGNAL_OUT(force_out, dynamicgraph::Vector, INPUT_SIGNALS)
+        , CONSTRUCT_SIGNAL_IN(right_foot_force_in,  dynamicgraph::Vector)
+        , CONSTRUCT_SIGNAL_IN(left_foot_force_in,   dynamicgraph::Vector)
+        , CONSTRUCT_SIGNAL_OUT(right_foot_force_out, dynamicgraph::Vector, m_right_foot_force_inSIN)
+        , CONSTRUCT_SIGNAL_OUT(left_foot_force_out,  dynamicgraph::Vector, m_left_foot_force_inSIN)
       {
 
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS);
@@ -89,22 +92,57 @@ namespace dynamicgraph
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      DEFINE_SIGNAL_OUT_FUNCTION(force_out,double)
+      DEFINE_SIGNAL_OUT_FUNCTION(right_foot_force_out,dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
         {
           SEND_WARNING_STREAM_MSG("Cannot compute signal sum before initialization!");
           return s;
         }
-
-        dynamicgraph::Vector firstAddend  = m_firstAddendSIN(iter);
-        double secondAddend = m_secondAddendSIN(iter);
-
-        s = firstAddend + secondAddend;
-
+        const Vector & right_foot_force = m_right_foot_force_inSIN(iter);
+        assert(right_foot_force_in.size()==6  && "Unexpected size of signal right_foot_force_in");
+        
+        //do offset calibration if needed
+        if (m_right_calibration_iter>0)
+        {
+			m_right_FT_offset_calibration_sum+=right_foot_force;
+			m_right_calibration_iter--;
+		}
+		else
+		{
+			m_right_FT_offset = m_right_FT_offset_calibration_sum / CALIB_ITER_TIME ; //todo copy
+		}
+		
+		//remove offset
+		s = right_foot_force - m_right_FT_offset;
         return s;
       }
       
+      DEFINE_SIGNAL_OUT_FUNCTION(left_foot_force_out,dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal sum before initialization!");
+          return s;
+        }
+        const Vector & left_foot_force = m_left_foot_force_inSIN(iter);
+        assert(left_foot_force_in.size()==6  && "Unexpected size of signal left_foot_force_in");
+        
+        //do offset calibration if needed
+        if (m_left_calibration_iter>0)
+        {
+			m_left_FT_offset_calibration_sum+=left_foot_force;
+			m_left_calibration_iter--;
+		}
+		else
+		{
+			m_left_FT_offset = m_left_FT_offset_calibration_sum / CALIB_ITER_TIME ; //todo copy
+		}
+		
+		//remove offset
+		s = left_foot_force - m_left_FT_offset;
+        return s;
+      }
       /* --- COMMANDS ---------------------------------------------------------- */
 
       void FtCalibration::setRightFootWeight(const dynamicgraph::Vector &rightW)
@@ -127,8 +165,18 @@ namespace dynamicgraph
         m_left_foot_weight = leftW;
       }
       
+      void FtCalibration::calibrateFeetSensor()
+      {
+		SEND_WARNING_STREAM_MSG("Sampling FT sensor for offeset calibration... Robot should be in the air, with horizontal feet.");
+        m_right_calibration_iter = CALIB_ITER_TIME;
+        m_left_calibration_iter = CALIB_ITER_TIME;
+        m_right_FT_offset_calibration_sum = 0; // Todo
+        m_left_FT_offset_calibration_sum  = 0; // Todo
+      }
+      
       void ParameterServer::displayRobotUtil()
       {
+		SEND_MSG("The specified joint name does not exist: "+name, MSG_TYPE_ERROR)
         m_robot_util->display(std::cout);
       }
 

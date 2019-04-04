@@ -2,6 +2,7 @@
  * Copyright 2019
  * LAAS-CNRS
  * F. Bailly
+ * T. Flayols
  */
 
 #ifndef __sot_torque_control_ft_calibration_H__
@@ -68,6 +69,10 @@ namespace dynamicgraph {
         /// Commands for setting the feet weight
         void setRightFootWeight(const dynamicgraph::Vector &rightW);
         void setLeftFootWeight(const dynamicgraph::Vector &leftW);
+        
+        /// Command to calibrate the foot sensors when the robot is standing in the air with horizontal feet
+        void calibrateFeetSensor();
+        
 
         void displayRobotUtil();
 
@@ -76,7 +81,14 @@ namespace dynamicgraph {
         virtual void display( std::ostream& os ) const;
 
       protected:
-        RobotUtil *                   m_robot_util;
+        RobotUtil * m_robot_util;
+        unsigned int m_right_calibration_iter = 0; /// Number of iteration left for calibration (0=caibration done)
+        unsigned int m_left_calibration_iter = 0; /// Number of iteration left for calibration (0=caibration done)
+        dynamicgraph::Vector m_right_FT_offset = 6x0; //todo /// Offset or bias to be removed from Right FT sensor
+        dynamicgraph::Vector m_left_FT_offset  = 6x0; //todo /// Offset or bias to be removed from Left FT sensor
+        dynamicgraph::Vector m_right_FT_offset_calibration_sum = 6x0; //todo /// Variable used durring average computation of the offset
+        dynamicgraph::Vector m_left_FT_offset_calibration_sum  = 6x0; //todo /// Variable used durring average computation of the offset
+        
         bool    m_initSucceeded;    /// true if the entity has been successfully initialized
         dynamicgraph::Vector m_right_foot_weight  // weight of the right feet underneath the ft sensor
         dynamicgraph::Vector m_left_foot_weight   // weight of the left feet underneath the ft sensor
