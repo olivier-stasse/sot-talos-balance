@@ -13,6 +13,7 @@
 # received a copy of the GNU Lesser General Public License along with
 # sot-talos-balance. If not, see <http://www.gnu.org/licenses/>.
 
+set(CMAKE_CXX_STANDARD 11)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 INCLUDE(cmake/base.cmake)
@@ -94,7 +95,11 @@ SET(${LIBRARY_NAME}_HEADERS
   include/sot/talos_balance/math/fwd.hh
   include/sot/talos_balance/robot/fwd.hh
   include/sot/talos_balance/robot/robot-wrapper.hh
-  )
+  include/sot/talos_balance/sdk_qualisys/Network.h
+  include/sot/talos_balance/sdk_qualisys/RTPacket.h
+  include/sot/talos_balance/sdk_qualisys/RTProtocol.h
+  include/sot/talos_balance/sdk_qualisys/Markup.h
+)
 
 #INSTALL(FILES ${${LIBRARY_NAME}_HEADERS}
 #  DESTINATION include/sot/talos_balance
@@ -105,6 +110,10 @@ SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
     src/utils/statistics.cpp
     src/utils/stop-watch.cpp
     src/robot/robot-wrapper.cpp
+    src/sdk_qualisys/Network.cpp
+    src/sdk_qualisys/RTPacket.cpp
+    src/sdk_qualisys/RTProtocol.cpp
+    src/sdk_qualisys/Markup.cpp
 )
 
 
