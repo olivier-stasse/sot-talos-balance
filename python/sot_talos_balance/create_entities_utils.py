@@ -7,6 +7,8 @@ from sot_talos_balance.base_estimator                         import BaseEstimat
 from sot_talos_balance.madgwickahrs                           import MadgwickAHRS
 from sot_talos_balance.imu_offset_compensation                import ImuOffsetCompensation
 from sot_talos_balance.dcm_estimator                          import DcmEstimator
+from sot_talos_balance.ft_calibration                         import FtCalibration
+
 
 from sot_talos_balance.euler_to_quat import EulerToQuat
 from sot_talos_balance.quat_to_euler import QuatToEuler
@@ -419,3 +421,12 @@ def create_zmp_estimator(robot,filter=False):
 
     estimator.init()
     return estimator
+    
+def create_ft_calibrator(robot,conf):
+  ftc = FtCalibration('ftc')
+  ftc.init(robot_name)
+  ftc.setRightFootWeight(conf.rfw)
+  ftc.setLeftFootWeight(conf.lfw)
+  plug(robot.device_filters.ft_RF_filter.x_filtered, ftc.right_foot_force_in)
+  plug(robot.device_filters.ft_LF_filter.x_filtered, ftc.left_foot_force_in)
+  return ftc

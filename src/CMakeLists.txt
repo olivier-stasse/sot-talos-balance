@@ -56,6 +56,7 @@ SET(plugins
     parameter-server
     dcm-estimator
     qualisys-client
+    ft-calibration
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
