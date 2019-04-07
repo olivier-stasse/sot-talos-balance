@@ -1,15 +1,15 @@
 from sot_talos_balance.create_entities_utils import *
 import numpy as np
-import pinocchio as pin
 from numpy.testing import assert_almost_equal as assertApprox
 from sot_talos_balance.ft_calibration import FtCalibration
 from IPython import embed
+import sot_talos_balance.talos.ft_calibration_conf as conf
 
 robot_name = 'robot'
 ftc = FtCalibration('ftc')
 ftc.init(robot_name)
-rfw = 1.0
-lfw = 1.0
+rfw = conf.rfw
+lfw = conf.lfw
 ftc.setLeftFootWeight(lfw)
 ftc.setRightFootWeight(rfw)
 print('Weights of both feet set to 1.')
