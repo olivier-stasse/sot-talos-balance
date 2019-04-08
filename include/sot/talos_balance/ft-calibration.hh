@@ -81,14 +81,13 @@ namespace dynamicgraph {
         typedef Eigen::Matrix<double, 6, 1>    Vector6d;
 
       protected:
-        RobotUtil * m_robot_util;
+        RobotUtilShrPtr m_robot_util;
         int m_right_calibration_iter = -1; /// Number of iteration left for calibration (-1= not cailbrated, 0=caibration done)
         int m_left_calibration_iter =  -1; /// Number of iteration left for calibration (-1= not cailbrated, 0=caibration done)
         Vector6d m_right_FT_offset; /// Offset or bias to be removed from Right FT sensor
         Vector6d m_left_FT_offset;  /// Offset or bias to be removed from Left FT sensor
         Vector6d m_right_FT_offset_calibration_sum;  /// Variable used durring average computation of the offset
         Vector6d m_left_FT_offset_calibration_sum;  /// Variable used durring average computation of the offset
-        
         bool    m_initSucceeded;    /// true if the entity has been successfully initialized
         Vector6d m_right_foot_weight;  // weight of the right feet underneath the ft sensor
         Vector6d m_left_foot_weight;   // weight of the left feet underneath the ft sensor

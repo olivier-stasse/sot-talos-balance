@@ -94,7 +94,7 @@ namespace dynamicgraph {
         bool  m_initSucceeded;    /// true if the entity has been successfully initialized
         pinocchio::Model m_model;       /// Pinocchio robot model
         pinocchio::Data  m_data;        /// Pinocchio robot data
-        RobotUtil* m_robot_util;
+        RobotUtilShrPtr  m_robot_util;
 
         dynamicgraph::Vector m_wrenchLeft;
         dynamicgraph::Vector m_wrenchRight;

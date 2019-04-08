@@ -110,7 +110,7 @@ namespace dynamicgraph {
         double                 m_dt;
 
         /// Robot Util instance to get the sensor frame
-        RobotUtil*             m_robot_util;
+        RobotUtilShrPtr             m_robot_util;
         /// Pinocchio robot model
         pinocchio::Model             m_model;
         /// Pinocchio robot data
