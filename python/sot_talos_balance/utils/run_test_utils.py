@@ -5,6 +5,9 @@ This module contains utilities for running the tests
 """
 from __future__ import print_function
 
+from time import sleep
+from distutils.util import strtobool
+
 import rospy
 
 from std_srvs.srv import *
@@ -88,4 +91,23 @@ def run_test(appli,verbosity=1):
         print()
     except rospy.ServiceException, e:
         rospy.logerr("Service call failed: %s" % e)
+
+def run_ft_calibration(sensor_name,force=False):
+    cb = False
+    if force:
+        cb = True
+    else:
+        c = raw_input("Calibrate force sensors? [y/N] ")
+        try:
+            cb = strtobool(c)
+        except:
+            cb = False
+    if cb:
+        raw_input("Wait before running the calibration")
+        print("Calibrating sensors...")
+        runCommandClient(sensor_name+'.calibrateFeetSensor()')
+        sleep(1.0) # TODO: get time/state from F/T sensor
+        print("Sensors are calibrated!")
+    else:
+        print("Skipping sensor calibration")
 
