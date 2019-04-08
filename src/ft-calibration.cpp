@@ -16,7 +16,6 @@
 #include <sot/talos_balance/utils/statistics.hh>
 
 #define CALIB_ITER_TIME 1000 //Iteration needed for sampling and averaging the FT sensors while calibrating
-dgADD_OSTREAM_TO_RTLOG (std::cout);
 
 using namespace sot::talos_balance;
 
@@ -79,6 +78,7 @@ namespace dynamicgraph
 
       void FtCalibration::init(const std::string &robotRef)
       {
+        dgADD_OSTREAM_TO_RTLOG (std::cout);
         std::string localName(robotRef);
         m_initSucceeded = true;
         if (!isNameInRobotUtil(localName))
@@ -93,7 +93,7 @@ namespace dynamicgraph
         m_left_FT_offset                  << 0,0,0,0,0,0;
         m_right_FT_offset_calibration_sum << 0,0,0,0,0,0;
         m_left_FT_offset_calibration_sum  << 0,0,0,0,0,0;
-        SEND_MSG("Entity Initialized",MSG_TYPE_INFO);
+        SEND_MSG("Entity Initialized",MSG_TYPE_ERROR);
       }
 
 
