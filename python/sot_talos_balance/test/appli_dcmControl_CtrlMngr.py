@@ -237,7 +237,6 @@ robot.sot.setSize(robot.dynamic.getDimension())
 
 # --- PLUG SOT to CM
 plug(robot.sot.control,robot.cm.ctrl_sot_input)
-robot.cm.emergencyStop_zmp.value = 0
 
 # --- PLUG CM to Device
 plug(robot.cm.u_safe,robot.device.control)
@@ -286,7 +285,7 @@ create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot = robot, data_ty
 create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_type='vector')             # reference ZMP
 create_topic(robot.publisher, robot.cm, 'u', robot = robot, data_type='vector')                           # raw motor control
 create_topic(robot.publisher, robot.cm, 'u_safe', robot = robot, data_type='vector')                      # secured motor control
-create_topic(robot.publisher, robot.cm, 'emergencyStop_zmp', robot = robot, data_type='boolean')
+# create_topic(robot.publisher, robot.cm, 'emergencyStop_zmp', robot = robot, data_type='boolean')        # can't be done before it is plugged
 
 # --- TRACER
 robot.tracer = TracerRealTime("zmp_tracer")
