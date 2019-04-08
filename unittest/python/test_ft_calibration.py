@@ -12,7 +12,7 @@ rfw = conf.rfw
 lfw = conf.lfw
 ftc.setLeftFootWeight(lfw)
 ftc.setRightFootWeight(rfw)
-print('Weights of both feet set to 1.')
+print('Weights of both feet set to {0}'.format(rfw))
 
 print('The robot should be in the air.')
 
