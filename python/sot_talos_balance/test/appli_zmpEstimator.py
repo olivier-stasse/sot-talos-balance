@@ -1,4 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
+import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
+import sot_talos_balance.talos.ft_calibration_conf     as ft_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
@@ -14,6 +16,9 @@ robot.comTrajGen = create_com_trajectory_generator(dt,robot);
 
 # -------------------------- ESTIMATION --------------------------
 
+# --- Parameter server
+robot.param_server = create_parameter_server(param_server_conf,dt)
+
 # --- filters
 filters = Bunch();    
 filters.ft_RF_filter  = create_butter_lp_filter_Wn_04_N_2("ft_RF_filter", dt, 6)
@@ -22,16 +27,17 @@ plug(robot.device.forceRLEG, filters.ft_RF_filter.x)
 plug(robot.device.forceLLEG, filters.ft_LF_filter.x)
 robot.device_filters = filters
 
+# --- Force calibration
+robot.ftc = create_ft_calibrator(robot,ft_conf)
+
 # --- ZMP estimation (disconnected)
 zmp_estimator = SimpleZmpEstimator("zmpEst")
 robot.dynamic.createOpPoint('sole_LF','left_sole_link')
 robot.dynamic.createOpPoint('sole_RF','right_sole_link')
 plug(robot.dynamic.sole_LF,zmp_estimator.poseLeft)
 plug(robot.dynamic.sole_RF,zmp_estimator.poseRight)
-plug(robot.device_filters.ft_LF_filter.x_filtered,zmp_estimator.wrenchLeft)
-plug(robot.device_filters.ft_RF_filter.x_filtered,zmp_estimator.wrenchRight)
-#plug(robot.device.forceLLEG,zmp_estimator.wrenchLeft)
-#plug(robot.device.forceRLEG,zmp_estimator.wrenchRight)
+plug(robot.ftc.left_foot_force_out,zmp_estimator.wrenchLeft)
+plug(robot.ftc.right_foot_force_out,zmp_estimator.wrenchRight)
 zmp_estimator.init()
 robot.zmp_estimator = zmp_estimator
 
@@ -87,6 +93,15 @@ create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='ve
 create_topic(robot.publisher, robot.dynamic, 'zmp', robot = robot, data_type='vector')                    # SOT ZMP
 create_topic(robot.publisher, robot.device, 'forceLLEG', robot = robot, data_type='vector')               # force on left foot
 create_topic(robot.publisher, robot.device, 'forceRLEG', robot = robot, data_type='vector')               # force on right foot
+
+#create_topic(robot.publisher, robot.device, 'forceLLEG', robot = robot, data_type='vector')               # measured left wrench
+#create_topic(robot.publisher, robot.device, 'forceRLEG', robot = robot, data_type='vector')               # measured right wrench
+
+#create_topic(robot.publisher, robot.device_filters.ft_LF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered left wrench
+#create_topic(robot.publisher, robot.device_filters.ft_RF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered right wrench
+
+create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot = robot, data_type='vector')  # calibrated left wrench
+create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot = robot, data_type='vector') # calibrated right wrench
 
 # --- TRACER
 robot.tracer = TracerRealTime("zmp_tracer")

@@ -1,0 +1,103 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root>
+ <tabbed_widget parent="main_window" name="Main Window">
+  <plotmatrix rows="2" columns="3" tab_name="plot">
+   <plot col="0" row="0">
+    <range top="0.000748" bottom="-0.010062" left="11.716000" right="16.709000"/>
+    <limitY/>
+    <curve B="255" G="0" R="0" name="/sot/zmpEst/zmp/data.0" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot col="0" row="1">
+    <range top="0.002393" bottom="-0.013736" left="11.716000" right="16.709000"/>
+    <limitY/>
+    <curve B="164" G="160" R="160" name="/sot/robot_dynamic/com/data.0" custom_transform="noTransform"/>
+    <curve B="255" G="0" R="255" name="/sot/robot_dynamic/zmp/data.0" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot col="1" row="0">
+    <range top="0.070737" bottom="-0.046684" left="11.716000" right="16.709000"/>
+    <limitY/>
+    <curve B="0" G="128" R="0" name="/sot/zmpEst/zmp/data.1" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot col="1" row="1">
+    <range top="0.057134" bottom="-0.032148" left="11.716000" right="16.709000"/>
+    <limitY/>
+    <curve B="0" G="128" R="128" name="/sot/robot_dynamic/com/data.1" custom_transform="noTransform"/>
+    <curve B="128" G="0" R="0" name="/sot/robot_dynamic/zmp/data.1" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot col="2" row="0">
+    <range top="0.000047" bottom="-0.000097" left="11.716000" right="16.709000"/>
+    <limitY/>
+    <curve B="0" G="0" R="255" name="/sot/zmpEst/zmp/data.2" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot col="2" row="1">
+    <range top="0.100000" bottom="-0.100000" left="11.716000" right="16.709000"/>
+    <limitY/>
+    <curve B="128" G="128" R="0" name="/sot/robot_dynamic/zmp/data.2" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+  </plotmatrix>
+  <currentPlotMatrix index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <Plugins>
+  <DataLoad_CSV>
+   <default time_axis=""/>
+  </DataLoad_CSV>
+  <DataLoad_ROS_bags>
+   <selected_topics list=""/>
+  </DataLoad_ROS_bags>
+  <DataLoad_ULog>
+   <no_params/>
+  </DataLoad_ULog>
+  <ROS_Topic_Streamer>
+   <selected_topics list="/sot/robot_dynamic/zmp;/sot/zmpEst/zmp;/sot/robot_dynamic/com"/>
+  </ROS_Topic_Streamer>
+  <RosoutPublisherROS/>
+  <TopicPublisherROS/>
+ </Plugins>
+ <previouslyLoadedStreamer name="ROS_Topic_Streamer"/>
+ <customMathEquations/>
+ <snippets>
+  <snippet name="1st_derivative">
+   <global>var prevX = 0
+var prevY = 0</global>
+   <equation>dx = time - prevX
+dy = value - prevY
+prevX = time
+prevY = value
+
+return dy/dx</equation>
+  </snippet>
+  <snippet name="1st_order_lowpass">
+   <global>var prevY = 0
+var alpha = 0.1</global>
+   <equation>prevY = alpha * value + (1.-alpha) * prevY
+
+return prevY</equation>
+  </snippet>
+  <snippet name="sum_A_B">
+   <global></global>
+   <equation>return $$PLOT_A$$ + $$PLOT_B$$</equation>
+  </snippet>
+  <snippet name="yaw_from_quaternion">
+   <global>// source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+
+function quaternionToYaw(x, y, z, w)
+{
+  // yaw (z-axis rotation)
+  t1 = 2.0 * (w * z + x * y);
+  t2 = 1.0 - 2.0 * (y * y + z * z);
+  yaw = Math.atan2(t1, t2);
+
+  return yaw
+}</global>
+   <equation>return quaternionToYaw(x, y, z, w);</equation>
+  </snippet>
+ </snippets>
+</root>
+

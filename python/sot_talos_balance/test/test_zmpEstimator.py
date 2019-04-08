@@ -1,10 +1,13 @@
-from sot_talos_balance.utils.run_test_utils import run_test, runCommandClient, evalCommandClient
+from sot_talos_balance.utils.run_test_utils import *
 from time import sleep
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 run_test('appli_zmpEstimator.py')
+
+run_ft_calibration('robot.ftc')
+raw_input("Wait before running the test")
 
 sleep(2.0)
 runCommandClient('robot.comTrajGen.move(1,-0.025,1.0)')
