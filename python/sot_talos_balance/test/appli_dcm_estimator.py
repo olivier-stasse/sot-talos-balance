@@ -135,6 +135,10 @@ plug(robot.dvdt.sout,robot.dynamic.acceleration)
 # --- ROS PUBLISHER
 robot.publisher = create_rospublish(robot, 'robot_publisher')        
 
+create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM
+create_topic(robot.publisher, robot.cdc_estimator, 'dc', robot = robot, data_type='vector')               # estimated CoM velocity
+create_topic(robot.publisher, robot.estimator, 'dcm', robot = robot, data_type='vector')                  # estimated DCM
+
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot = robot, data_type='vector')              # estimated ZMP
 create_topic(robot.publisher, robot.zmp_estimator, 'emergencyStop', robot = robot, data_type='boolean')   # ZMP emergency stop
 create_topic(robot.publisher, robot.dynamic, 'com', robot = robot, data_type='vector')                    # SOT CoM
