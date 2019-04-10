@@ -1,5 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
 import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
+import sot_talos_balance.talos.control_manager_conf    as cm_conf
 import sot_talos_balance.talos.ft_calibration_conf     as ft_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph import plug
@@ -41,6 +42,12 @@ plug(robot.ftc.right_foot_force_out,zmp_estimator.wrenchRight)
 zmp_estimator.init()
 robot.zmp_estimator = zmp_estimator
 
+# --- Control Manager
+robot.cm = create_ctrl_manager(cm_conf, dt, robot_name='robot')
+robot.cm.addCtrlMode('sot_input')
+robot.cm.setCtrlMode('all','sot_input')
+robot.cm.addEmergencyStopSIN('zmp')
+
 # -------------------------- SOT CONTROL --------------------------
 
 # --- CONTACTS
@@ -66,7 +73,11 @@ robot.taskCom.task.controlGain.value = 10
 # --- SOT solver
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
-plug(robot.sot.control,robot.device.control)
+
+# --- Plug SOT control to device through control manager
+plug(robot.sot.control,robot.cm.ctrl_sot_input)
+plug(robot.cm.u_safe,robot.device.control)
+
 plug(robot.comTrajGen.x,    robot.taskCom.featureDes.errorIN)
 
 robot.sot.push(robot.contactRF.task.name)
