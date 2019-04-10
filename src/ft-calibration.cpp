@@ -93,7 +93,7 @@ namespace dynamicgraph
         m_left_FT_offset                  << 0,0,0,0,0,0;
         m_right_FT_offset_calibration_sum << 0,0,0,0,0,0;
         m_left_FT_offset_calibration_sum  << 0,0,0,0,0,0;
-        SEND_MSG("Entity Initialized",MSG_TYPE_ERROR);
+        SEND_MSG("Entity Initialized",MSG_TYPE_INFO);
       }
 
 
