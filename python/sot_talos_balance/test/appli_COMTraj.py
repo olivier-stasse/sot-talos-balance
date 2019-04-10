@@ -1,4 +1,6 @@
-from sot_talos_balance.create_entities_utils import create_com_trajectory_generator
+from sot_talos_balance.create_entities_utils import *
+import sot_talos_balance.talos.control_manager_conf as cm_conf
+import sot_talos_balance.talos.parameter_server_conf as param_server_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
@@ -12,6 +14,14 @@ robot.taskCom = MetaTaskKineCom(robot.dynamic)
 robot.dynamic.com.recompute(0)
 robot.taskCom.featureDes.errorIN.value = robot.dynamic.com.value
 robot.taskCom.task.controlGain.value = 10
+
+# --- Parameter Server
+robot.param_server = create_parameter_server(param_server_conf,dt)
+
+# --- Control Manager
+robot.cm = create_ctrl_manager(cm_conf, dt, robot_name='robot')
+robot.cm.addCtrlMode('sot_input')
+robot.cm.setCtrlMode('all','sot_input')
 
 # --- CONTACTS
 #define contactLF and contactRF
@@ -29,7 +39,11 @@ locals()['contactRF'] = robot.contactRF
 
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
-plug(robot.sot.control,robot.device.control)
+
+# --- Plug SOT control to device through control manager
+plug(robot.sot.control,robot.cm.ctrl_sot_input)
+plug(robot.cm.u_safe,robot.device.control)
+
 plug(robot.comTrajGen.x,    robot.taskCom.featureDes.errorIN)
 
 robot.sot.push(robot.contactRF.task.name)
