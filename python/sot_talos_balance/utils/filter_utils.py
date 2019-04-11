@@ -1,4 +1,5 @@
 from sot_talos_balance.filter_differentiator import FilterDifferentiator
+import numpy as np
 
 def create_chebi1_checby2_series_filter(name, dt, size):
    #b1,a1=cheby2(2, 20,0.05);
@@ -30,3 +31,8 @@ def create_bessel_lp_filter_Wn_04_N_2(name, dt, size):
                    (          1., -1.7899455543, 0.8041719893))
 
     return lp_filter
+
+def fft_xy(x,dt):
+    nb_s = x.shape[0]
+    return np.fft.fftfreq(nb_s,dt), np.abs(np.fft.fft(x))
+
