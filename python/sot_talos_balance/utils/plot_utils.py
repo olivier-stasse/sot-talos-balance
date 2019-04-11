@@ -66,4 +66,20 @@ def plot_sot_sig(filename,idxs):
     filename = '/tmp/dg_'+filename+'.dat'
     data, name = read_tracer_file(filename)
     plot_select_traj(data,idxs,name)
-    return    
+    return
+
+def load_log_txt(filename):
+    v = np.loadtxt(filename)
+    t = v[:,0]
+    v = v[:,2:]
+
+    idx = 0
+    for i in range(1,len(t)):
+        if t[i]<t[i-1]:
+            idx = i
+            break
+    if idx>0:
+        t = np.concatenate( (t[idx:], t[:idx]) )
+        v = np.concatenate( (v[idx:,:], v[:idx,:]), axis=0 )
+
+    return t, v
