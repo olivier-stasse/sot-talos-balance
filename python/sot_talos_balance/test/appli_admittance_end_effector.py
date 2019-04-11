@@ -7,6 +7,7 @@ from dynamic_graph import plug
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph.ros import RosSubscribe, RosPublish
 import numpy as np
+import math
 
 robot.timeStep = robot.device.getTimeStep()
 

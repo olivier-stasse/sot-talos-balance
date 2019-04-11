@@ -108,7 +108,14 @@ public:
   /**
    * @brief      Reset the velocity
    */
-  void reset_dq();
+  void resetDq();
+
+   /**
+   * @brief      Set to true if you want to remove the weight
+   * 
+   * @param[in]  removeWeight  Boolean used to remove the weight or not
+   */
+  void setRemoveWeight(const bool &removeWeight);
 
   /* --- ENTITY INHERITANCE --- */
   virtual void display(std::ostream &os) const;
@@ -139,6 +146,8 @@ protected:
   pinocchio::JointIndex m_endEffectorId;
   /// robot configuration according to pinocchio convention
   dynamicgraph::Vector m_q;
+
+  const double END_EFFECTOR_WEIGHT = -14.604817920170488;
 
 }; // class AdmittanceControllerEndEffector
 

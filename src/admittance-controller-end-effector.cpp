@@ -79,9 +79,13 @@ AdmittanceControllerEndEffector::AdmittanceControllerEndEffector(const std::stri
                                                       "sensor frame name",
                                                       "end Effector Joint Name",
                                                       "remove weight boolean")));
-  addCommand("reset_dq", makeCommandVoid0(*this,
-                                          &AdmittanceControllerEndEffector::reset_dq,
-                                          docCommandVoid0("reset_dq")));
+  addCommand("resetDq", makeCommandVoid0(*this,
+    &AdmittanceControllerEndEffector::resetDq,
+    docCommandVoid0("resetDq")));
+
+  addCommand("setRemoveWeight", makeCommandVoid1(*this,
+    &AdmittanceControllerEndEffector::setRemoveWeight,
+    docCommandVoid1("set RemoveWeight", "desired removeWeight")));
 }
 
 void AdmittanceControllerEndEffector::init(const double &dt,
@@ -130,10 +134,6 @@ void AdmittanceControllerEndEffector::init(const double &dt,
     m_endEffectorId = m_model.getJointId(endEffectorName);
     assert(m_model.existFrame(sensorFrameName));
     m_sensorFrameId = m_model.getFrameId(sensorFrameName);
-
-    // Compute weight
-    pinocchio::centerOfMass(m_model, *m_data, q, 1);
-    m_mass = m_data->mass[m_endEffectorId];
   }
   catch (const std::exception &e)
   {
@@ -146,10 +146,15 @@ void AdmittanceControllerEndEffector::init(const double &dt,
   m_initSucceeded = true;
 }
 
-void AdmittanceControllerEndEffector::reset_dq()
+void AdmittanceControllerEndEffector::resetDq()
 {
   m_w_dq.setZero(m_n);
   return;
+}
+
+void AdmittanceControllerEndEffector::setRemoveWeight(const bool &removeWeight)
+{
+  m_removeWeight = removeWeight;
 }
 
 /* ------------------------------------------------------------------- */
@@ -180,13 +185,11 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_force, dynamicgraph::Vector)
 
   if (m_removeWeight)
   {
-    double weight = -14.604817920170488;
     // Eigen::Vector3d OC(0.02097597, -0.02460337, -0.00272215);
     // Vector w_OC = sensorPlacement.rotation() * OC;
-    w_vForce(2) -= weight;
+    w_vForce(2) -= END_EFFECTOR_WEIGHT;
     // w_forceDes(3) += w_OC(1) * weight;
     // w_forceDes(4) += -w_OC(0) * weight;
-    // w_vForce(2) += m_mass * 9.80665 - 1.99325154291384;
   }
 
   s = w_vForce;
