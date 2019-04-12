@@ -38,6 +38,7 @@ SET(plugins
     example
     euler-to-quat
     quat-to-euler
+    dummy-walking-pattern-generator
     simple-zmp-estimator
     distribute-wrench
     dcm-com-controller
