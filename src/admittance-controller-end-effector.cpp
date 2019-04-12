@@ -211,7 +211,7 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_dq, dynamicgraph::Vector)
   assert(Kd.size() == m_n && "Unexpected size of signal Kd");
   assert(dqSaturation.size() == m_n && "Unexpected size of signal dqSaturation");
 
-  m_w_dq += m_dt * (Kp.cwiseProduct(w_forceDes - w_force) - Kd.cwiseProduct(m_w_dq));
+  m_w_dq = m_w_dq + m_dt * (Kp.cwiseProduct(w_forceDes - w_force)) - Kd.cwiseProduct(m_w_dq);
 
   for (int i = 0; i < m_n; i++)
   {
