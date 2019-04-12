@@ -133,5 +133,7 @@ robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
 addTrace(robot.tracer, robot.controller, 'force')
 addTrace(robot.tracer, robot.controller, 'w_force')
+addTrace(robot.tracer, robot.controller, 'w_dq')
+addTrace(robot.tracer, robot.controller, 'dq')
 
 robot.tracer.start()
