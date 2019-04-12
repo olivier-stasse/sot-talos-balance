@@ -6,7 +6,7 @@ import numpy as np
 
 run_test('appli_admittance_end_effector.py')
 
-sleep(50.0)
+sleep(10.0)
 
 runCommandClient('dump_tracer(robot.tracer)')
 

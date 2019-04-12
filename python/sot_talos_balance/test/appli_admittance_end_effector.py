@@ -1,4 +1,5 @@
 import sot_talos_balance.talos.parameter_server_conf as paramServerConfig
+import sot_talos_balance.talos.control_manager_conf as controlManagerConfig
 import sot_talos_balance.talos.base_estimator_conf as baseEstimatorConf
 from sot_talos_balance.create_entities_utils import *
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d
@@ -16,14 +17,14 @@ robot.timeStep = robot.device.getTimeStep()
 
 # --- SET INITIAL CONFIGURATION ------------------------------------------------
 
-q =  [0., 0., 1.018213, 0., 0., 0.]                                  #Base
-q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]             #Left Leg
-q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]             #Right Leg
-q += [0.0 ,  0.006761]                                               #Chest
-q += [ 0.25847, 0.173046, -0.0002, -0.525366, 0., 0., 0.1, -0.005]   #Left Arm
-q += [-0.25847, -0.173046, 0.0002, -0.525366, 0., 0., 0.1, -0.005]   #Right Arm
-# q += [-0.25847, -0.0, 0.19, -1.61, 0., 0., 0.1, -0.005]              #Right Arm
-q += [0.,  0.]                                                       #Head
+q = [0., 0., 1.018213, 0., 0., 0.]  # Base
+q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]  # Left Leg
+q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]  # Right Leg
+q += [0.0,  0.006761]  # Chest
+q += [0.25847, 0.173046, -0.0002, -0.525366, 0., 0., 0.1, -0.005]  # Left Arm
+# q += [-0.25847, -0.173046, 0.0002, -0.525366, 0., 0., 0.1, -0.005]  # Right Arm
+q += [-0.25847, -0.0, 0.19, -1.61, 0., 0., 0.1, -0.005]              #Right Arm
+q += [0.,  0.]  # Head
 robot.device.set(q)
 
 # --- CREATE ENTITIES ----------------------------------------------------------
@@ -33,6 +34,10 @@ robot.device_filters = create_device_filters(robot, robot.timeStep)
 robot.imu_filters = create_imu_filters(robot, robot.timeStep)
 robot.baseEstimator = create_base_estimator(robot, robot.timeStep, baseEstimatorConf)
 robot.controller = create_end_effector_admittance_controller(robot, 'rightWrist')
+
+robot.controlManager = create_ctrl_manager(controlManagerConfig, robot.timeStep)
+robot.controlManager.addCtrlMode('sot_input')
+robot.controlManager.setCtrlMode('all', 'sot_input')
 
 # --- HAND TASK ----------------------------------------------------------------
 
@@ -51,7 +56,7 @@ plug(robot.controller.dq, taskRightHand.featureDes.velocity)
 
 # --- BASE TASK ----------------------------------------------------------------
 
-taskWaist = MetaTaskKine6d('taskWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
+taskWaist = MetaTaskKine6d('taskWaist', robot.dynamic, 'WT', robot.OperationalPointsMap['waist'])
 taskWaist.feature.frame('desired')
 taskWaist.gain.setConstant(300)
 taskWaist.keep()
@@ -88,7 +93,11 @@ plug(robot.dynamic.position, robot.taskPosture.feature.state)
 
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
-plug(robot.sot.control, robot.device.control)
+
+# Plug SOT control to device through control manager
+plug(robot.sot.control, robot.controlManager.ctrl_sot_input)
+plug(robot.controlManager.u_safe, robot.device.control)
+# plug(robot.sot.control, robot.device.control)
 
 # --- PUSH THE TASKS -----------------------------------------------------------
 
@@ -104,6 +113,7 @@ create_topic(robot.publisher, robot.controller, 'force', robot=robot, data_type=
 create_topic(robot.publisher, robot.controller, 'dq', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.controller, 'w_dq', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.controller, 'w_forceDes', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'velocity', robot=robot, data_type='vector')
 
 # # --- ROS SUBSCRIBER
 robot.subscriber = RosSubscribe("end_effector_subscriber")
@@ -112,12 +122,13 @@ robot.subscriber.add("vector", "force", "/sot/controller/force")
 robot.subscriber.add("vector", "dq", "/sot/controller/dq")
 robot.subscriber.add("vector", "w_dq", "/sot/controller/w_dq")
 robot.subscriber.add("vector", "w_forceDes", "/sot/controller/w_forceDes")
+robot.subscriber.add("vector", "velocity", "/sot/device/velocity")
 
 # --- TRACER  ------------------------------------------------------------------
 
 robot.tracer = TracerRealTime("force_tracer")
 robot.tracer.setBufferSize(80*(2**20))
-robot.tracer.open('/tmp','dg_','.dat')
+robot.tracer.open('/tmp', 'dg_', '.dat')
 robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
 addTrace(robot.tracer, robot.controller, 'force')
