@@ -1,80 +1,139 @@
 import sot_talos_balance.talos.parameter_server_conf as paramServerConfig
+import sot_talos_balance.talos.control_manager_conf as controlManagerConfig
+import sot_talos_balance.talos.base_estimator_conf as baseEstimatorConf
 from sot_talos_balance.create_entities_utils import *
-from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom
+from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d
+from dynamic_graph.sot.core import SOT, Task, GainAdaptive, FeaturePosture
 from dynamic_graph import plug
-from dynamic_graph.sot.core import SOT
-from dynamic_graph.ros import RosSubscribe
-from dynamic_graph.ros import RosPublish
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
-from numpy import eye
+from dynamic_graph.ros import RosSubscribe, RosPublish
 import numpy as np
+import math
+
+from dynamic_graph.tracer_real_time import TracerRealTime
+from sot_talos_balance.create_entities_utils import addTrace, dump_tracer
 
 robot.timeStep = robot.device.getTimeStep()
-timeStep = robot.timeStep
 
-# --- CREATE PARAM_SERVER
-robot.param_server = create_parameter_server(paramServerConfig, timeStep)
+# --- SET INITIAL CONFIGURATION ------------------------------------------------
 
-# --- ADMITTANCE CONTROLLER ---
-Kp = np.array([0.0, 0., 0., 0., 0., 0.])
-robot.admittanceController = create_end_effector_admittance_controller(Kp, timeStep, robot)
-robot.admittanceController.forceDes.value = [0., 0., 0., 0., 0., 0.]
+q = [0., 0., 1.018213, 0., 0., 0.]  # Base
+q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]  # Left Leg
+q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]  # Right Leg
+q += [0.0,  0.006761]  # Chest
+q += [0.25847, 0.173046, -0.0002, -0.525366, 0., 0., 0.1, -0.005]  # Left Arm
+# q += [-0.25847, -0.173046, 0.0002, -0.525366, 0., 0., 0.1, -0.005]  # Right Arm
+q += [-0.25847, -0.0, 0.19, -1.61, 0., 0., 0.1, -0.005]              #Right Arm
+q += [0.,  0.]  # Head
+robot.device.set(q)
 
-# --- HAND TASK ---
-# Create task
-taskRightHand = MetaTaskKine6d('rh', robot.dynamic, 'rh', robot.OperationalPointsMap['right-wrist'])
-handMgrip = eye(4)
+# --- CREATE ENTITIES ----------------------------------------------------------
+
+robot.param_server = create_parameter_server(paramServerConfig, robot.timeStep)
+robot.device_filters = create_device_filters(robot, robot.timeStep)
+robot.imu_filters = create_imu_filters(robot, robot.timeStep)
+robot.baseEstimator = create_base_estimator(robot, robot.timeStep, baseEstimatorConf)
+robot.controller = create_end_effector_admittance_controller(robot, 'rightWrist')
+
+robot.controlManager = create_ctrl_manager(controlManagerConfig, robot.timeStep)
+robot.controlManager.addCtrlMode('sot_input')
+robot.controlManager.setCtrlMode('all', 'sot_input')
+
+# --- HAND TASK ----------------------------------------------------------------
+
+taskRightHand = MetaTaskKine6d('rh', robot.dynamic, 'rh', 'arm_right_7_joint')
+handMgrip = np.eye(4)
 handMgrip[0:3, 3] = (0.1, 0, 0)
 taskRightHand.opmodif = matrixToTuple(handMgrip)
-taskRightHand.feature.frame('current')
-taskRightHand.feature.selec.value = '000111'
+taskRightHand.feature.frame('desired')
+taskRightHand.feature.selec.value = '111111'
 taskRightHand.task.setWithDerivative(True)
 taskRightHand.task.controlGain.value = 0
-taskRightHand.feature.position.value =  eye(4)
-taskRightHand.feature.velocity.value =  [0., 0., 0., 0., 0., 0.]
-taskRightHand.featureDes.position.value =  eye(4)
-plug(robot.admittanceController.dqRef, taskRightHand.featureDes.velocity)
+taskRightHand.feature.position.value = np.eye(4)
+taskRightHand.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
+taskRightHand.featureDes.position.value = np.eye(4)
+plug(robot.controller.dq, taskRightHand.featureDes.velocity)
 
-## --- STATIC COM (if not walking)
-#taskCom = MetaTaskKineCom(robot.dynamic)
-#robot.dynamic.com.recompute(0)
-#taskCom.featureDes.errorIN.value = robot.dynamic.com.value
-#taskCom.task.controlGain.value = 10
+# --- BASE TASK ----------------------------------------------------------------
 
-# --- CONTACTS
-# Define contactLF and contactRF
-robot.contactLF = MetaTaskKine6d('contactLF', robot.dynamic, 'LF', robot.OperationalPointsMap['left-ankle'])
-robot.contactLF.feature.frame('desired')
-robot.contactLF.gain.setConstant(100)
-robot.contactLF.keep()
-locals()['contactLF'] = robot.contactLF
+taskWaist = MetaTaskKine6d('taskWaist', robot.dynamic, 'WT', robot.OperationalPointsMap['waist'])
+taskWaist.feature.frame('desired')
+taskWaist.gain.setConstant(300)
+taskWaist.keep()
+taskWaist.feature.selec.value = '111111'
+locals()['taskWaist'] = taskWaist
 
-robot.contactRF = MetaTaskKine6d('contactRF', robot.dynamic, 'RF', robot.OperationalPointsMap['right-ankle'])
-robot.contactRF.feature.frame('desired')
-robot.contactRF.gain.setConstant(100)
-robot.contactRF.keep()
-locals()['contactRF'] = robot.contactRF
+# --- POSTURE TASK -------------------------------------------------------------
+
+robot.taskPosture = Task('task_posture')
+robot.taskPosture.controlGain.value = 100.0
+robot.taskPosture.feature = FeaturePosture('feature_posture')
+
+q = list(robot.dynamic.position.value)
+robot.taskPosture.feature.state.value = q
+robot.taskPosture.feature.posture.value = q
+
+robot.taskPosture.feature.selectDof(6, True)
+robot.taskPosture.feature.selectDof(7, True)
+robot.taskPosture.feature.selectDof(8, True)
+robot.taskPosture.feature.selectDof(9, True)
+robot.taskPosture.feature.selectDof(10, True)
+robot.taskPosture.feature.selectDof(11, True)
+robot.taskPosture.feature.selectDof(12, True)
+robot.taskPosture.feature.selectDof(13, True)
+robot.taskPosture.feature.selectDof(14, True)
+robot.taskPosture.feature.selectDof(15, True)
+robot.taskPosture.feature.selectDof(16, True)
+robot.taskPosture.feature.selectDof(17, True)
+robot.taskPosture.feature.selectDof(18, True)
+robot.taskPosture.feature.selectDof(19, True)
+
+robot.taskPosture.add(robot.taskPosture.feature.name)
+plug(robot.dynamic.position, robot.taskPosture.feature.state)
 
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
-plug(robot.sot.control, robot.device.control)
 
-robot.sot.push(robot.contactRF.task.name)
-robot.sot.push(robot.contactLF.task.name)
-#robot.sot.push(taskCom.task.name)
-robot.device.control.recompute(0)
+# Plug SOT control to device through control manager
+plug(robot.sot.control, robot.controlManager.ctrl_sot_input)
+plug(robot.controlManager.u_safe, robot.device.control)
+# plug(robot.sot.control, robot.device.control)
 
-## --- ROS PUBLISHER
+# --- PUSH THE TASKS -----------------------------------------------------------
+
+robot.sot.push(robot.taskPosture.name)
+robot.sot.push(taskRightHand.task.name)
+robot.sot.push(taskWaist.task.name)
+
+# # --- ROS PUBLISHER ----------------------------------------------------------
+
 robot.publisher = create_rospublish(robot, 'robot_publisher')
-create_topic(robot.publisher, robot.admittanceController, 'forceWorldFrame', robot = robot, data_type='vector')
-create_topic(robot.publisher, robot.admittanceController, 'force', robot = robot, data_type='vector')
-create_topic(robot.publisher, robot.admittanceController, 'dqRef', robot = robot, data_type='vector')
-create_topic(robot.publisher, robot.admittanceController, 'forceDes', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'w_force', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'force', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'dq', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'w_dq', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.controller, 'w_forceDes', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.device, 'velocity', robot=robot, data_type='vector')
 
-# --- ROS SUBSCRIBER
+# # --- ROS SUBSCRIBER
 robot.subscriber = RosSubscribe("end_effector_subscriber")
-robot.subscriber.add("vector","forceWorldFrame","/sot/admittanceController/forceWorldFrame")
-robot.subscriber.add("vector","force","/sot/admittanceController/force") 
-robot.subscriber.add("vector","dqRef","/sot/admittanceController/dqRef") 
-robot.subscriber.add("vector","forceDes","/sot/admittanceController/forceDes") 
+robot.subscriber.add("vector", "w_force", "/sot/controller/w_force")
+robot.subscriber.add("vector", "force", "/sot/controller/force")
+robot.subscriber.add("vector", "dq", "/sot/controller/dq")
+robot.subscriber.add("vector", "w_dq", "/sot/controller/w_dq")
+robot.subscriber.add("vector", "w_forceDes", "/sot/controller/w_forceDes")
+robot.subscriber.add("vector", "velocity", "/sot/device/velocity")
 
+# --- TRACER  ------------------------------------------------------------------
+
+robot.tracer = TracerRealTime("force_tracer")
+robot.tracer.setBufferSize(80*(2**20))
+robot.tracer.open('/tmp', 'dg_', '.dat')
+robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
+
+addTrace(robot.tracer, robot.controller, 'force')
+addTrace(robot.tracer, robot.controller, 'w_force')
+addTrace(robot.tracer, robot.controller, 'w_dq')
+addTrace(robot.tracer, robot.controller, 'dq')
+
+robot.tracer.start()

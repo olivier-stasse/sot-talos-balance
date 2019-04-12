@@ -8,7 +8,7 @@ N_JOINTS = 32
 N_CONFIG = N_JOINTS + 6
 
 robot.timeStep = robot.device.getTimeStep()
-dt = robot.timeStep;
+dt = robot.timeStep
 
 JOINT = 25
 QJOINT = JOINT + 6
