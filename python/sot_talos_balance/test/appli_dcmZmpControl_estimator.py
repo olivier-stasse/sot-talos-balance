@@ -15,26 +15,28 @@ from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 
 robot.timeStep = robot.device.getTimeStep()
-dt = robot.timeStep;
+dt = robot.timeStep
+
+# --- Pendulum parameters
+robot_name='robot'
+robot.dynamic.com.recompute(0)
+robotDim = robot.dynamic.getDimension()
+mass = robot.dynamic.data.mass[0]
+h = robot.dynamic.com.value[2]
+g = 9.81
+omega = sqrt(g/h)
+
+# --- Parameter server
+robot.param_server = create_parameter_server(param_server_conf,dt)
 
 # -------------------------- DESIRED TRAJECTORY --------------------------
 
-# --- Desired values
-
 # --- Desired CoM
-robot.dynamic.com.recompute(0)
+robot.comTrajGen = create_com_trajectory_generator(dt,robot)
 robot.dynamic.waist.recompute(0) # trigger frames computation
-comDes = robot.dynamic.com.value
 
-## --- Translation
-#comDes = list(comDes)
-#comDes[0] += 0.01
-#comDes[1] += 0.01
-#comDes = tuple(comDes)
+# --- Walking pattern generator
 
-# --- Conversion to center of feet reference frame
-import pinocchio as pin
-import numpy as np
 model = robot.dynamic.model
 data = robot.dynamic.data # DO NOT make any computation with this data object. Kinematic computation have already been done
 leftName = param_server_conf.footFrameNames['Left']
@@ -43,31 +45,25 @@ leftPos  = data.oMf[leftId]
 rightName = param_server_conf.footFrameNames['Right']
 rightId = model.getFrameId(rightName)
 rightPos = data.oMf[rightId]
-centerTranslation = ( rightPos.translation + leftPos.translation )/2 + np.matrix(param_server_conf.rightFootSoleXYZ).T
-centerPos = pin.SE3(rightPos.rotation,centerTranslation)
 
-comDes = centerPos.actInv(np.matrix(comDes).T)
-comDes = tuple(comDes.flatten().tolist()[0])
+wp = DummyWalkingPatternGenerator('dummy_wp')
+wp.init(robot_name)
+wp.omega.value = omega
+wp.footLeft.value = leftPos.homogeneous.tolist()
+wp.footRight.value = rightPos.homogeneous.tolist()
+plug(robot.comTrajGen.x, wp.com)
+plug(robot.comTrajGen.dx, wp.vcom)
+plug(robot.comTrajGen.ddx, wp.acom)
+robot.wp = wp
 
-# --- Desired DCM and ZMP
-dcmDes = comDes
-zmpDes = comDes[:2] + (0.0,)
-
-# --- Desired CoM acceleration
-ddcomDes = (0.0,0.0,0.0)
-
-# --- Pendulum parameters
-robot_name='robot'
-robotDim = robot.dynamic.getDimension()
-mass = robot.dynamic.data.mass[0]
-h = robot.dynamic.com.value[2]
-g = 9.81
-omega = sqrt(g/h)
+# --- Compute the values to use them in initialization
+robot.wp.comDes.recompute(0)
+robot.wp.dcmDes.recompute(0)
+robot.wp.zmpDes.recompute(0)
 
 # -------------------------- ESTIMATION --------------------------
 
 # --- Base Estimation
-robot.param_server            = create_parameter_server(param_server_conf,dt)
 robot.device_filters          = create_device_filters(robot, dt)
 robot.imu_filters             = create_imu_filters(robot, dt)
 robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf)
@@ -134,8 +130,8 @@ dcm_controller.omega.value = omega
 plug(robot.cdc_estimator.c,dcm_controller.com)
 plug(robot.estimator.dcm,dcm_controller.dcm)
 
-dcm_controller.zmpDes.value = zmpDes # plug a signal here
-dcm_controller.dcmDes.value = dcmDes # plug a signal here
+plug(robot.wp.zmpDes, dcm_controller.zmpDes)
+plug(robot.wp.dcmDes, dcm_controller.dcmDes)
 
 dcm_controller.init(dt)
 
@@ -149,11 +145,11 @@ Kp_adm = [0.0,0.0,0.0] # zero (to be set later)
 com_admittance_control = ComAdmittanceController("comAdmCtrl")
 com_admittance_control.Kp.value = Kp_adm
 plug(robot.zmp_estimator.zmp,com_admittance_control.zmp)
-com_admittance_control.zmpDes.value = zmpDes     # should be plugged to robot.dcm_control.zmpRef
-com_admittance_control.ddcomDes.value = ddcomDes # plug a signal here
+com_admittance_control.zmpDes.value = robot.wp.zmpDes.value     # should be plugged to robot.dcm_control.zmpRef
+plug(robot.wp.acomDes, com_admittance_control.ddcomDes)
 
 com_admittance_control.init(dt)
-com_admittance_control.setState(comDes,[0.0,0.0,0.0])
+com_admittance_control.setState(robot.wp.comDes.value,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
@@ -305,10 +301,7 @@ plug(robot.dvdt.sout,robot.dynamic.acceleration)
 # --- ROS PUBLISHER
 robot.publisher = create_rospublish(robot, 'robot_publisher')        
 
-rospub_signalName = '{0}_{1}'.format('fake', 'comDes')
-topicname = '/sot/{0}/{1}'.format('fake', 'comDes')
-robot.publisher.add('vector',rospub_signalName,topicname)
-plug(robot.dcm_control.dcmDes, robot.publisher.signal(rospub_signalName))                                 # desired CoM (workaround)
+create_topic(robot.publisher, robot.wp, 'comDes', robot = robot, data_type='vector')                      # desired CoM
 
 create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM
 create_topic(robot.publisher, robot.cdc_estimator, 'dc', robot = robot, data_type='vector')               # estimated CoM velocity
@@ -339,12 +332,12 @@ robot.tracer.setBufferSize(80*(2**20))
 robot.tracer.open('/tmp','dg_','.dat')
 robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
-addTrace(robot.tracer, robot.dcm_control, 'dcmDes')             # desired CoM (workaround)
+addTrace(robot.tracer, robot.wp, 'comDes')                      # desired CoM
 addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
 addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
 addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
 
-# addTrace(robot.tracer, robot.dcm_control, 'dcmDes')           # desired DCM (already added)
+addTrace(robot.tracer, robot.dcm_control, 'dcmDes')             # desired DCM
 addTrace(robot.tracer, robot.estimator, 'dcm')                  # estimated DCM
 
 addTrace(robot.tracer, robot.dcm_control, 'zmpDes')             # desired ZMP
