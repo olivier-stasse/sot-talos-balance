@@ -23,6 +23,7 @@ dt = robot.timeStep;
 
 # --- Desired CoM
 robot.dynamic.com.recompute(0)
+robot.dynamic.waist.recompute(0) # trigger frames computation
 comDes = robot.dynamic.com.value
 
 ## --- Translation
@@ -42,7 +43,7 @@ leftPos  = data.oMf[leftId]
 rightName = param_server_conf.footFrameNames['Right']
 rightId = model.getFrameId(rightName)
 rightPos = data.oMf[rightId]
-centerTranslation = ( data.oMf[rightId].translation + data.oMf[leftId].translation )/2 + np.matrix(param_server_conf.rightFootSoleXYZ).T
+centerTranslation = ( rightPos.translation + leftPos.translation )/2 + np.matrix(param_server_conf.rightFootSoleXYZ).T
 centerPos = pin.SE3(rightPos.rotation,centerTranslation)
 
 comDes = centerPos.actInv(np.matrix(comDes).T)
