@@ -26,6 +26,7 @@ from sot_talos_balance.dcm_com_controller import DcmComController
 from sot_talos_balance.simple_zmp_estimator import SimpleZmpEstimator
 from sot_talos_balance.distribute_wrench import DistributeWrench
 from sot_talos_balance.simple_reference_frame import SimpleReferenceFrame
+from sot_talos_balance.state_transformation import StateTransformation
 from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator
 
 # python
