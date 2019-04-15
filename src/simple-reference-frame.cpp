@@ -36,7 +36,7 @@ namespace dynamicgraph
 //Size to be aligned                                         "-------------------------------------------------------"
 #define PROFILE_SIMPLEREFERENCEFRAME_DCM_COMPUTATION "SimpleReferenceFrame: dcm computation          "
 
-#define INPUT_SIGNALS     m_footLeftSIN << m_footRightSIN
+#define INPUT_SIGNALS     m_footLeftSIN << m_footRightSIN << m_resetSIN
 
 #define OUTPUT_SIGNALS m_referenceFrameSOUT
 
@@ -55,10 +55,13 @@ namespace dynamicgraph
                       : Entity(name)
                       , CONSTRUCT_SIGNAL_IN(footLeft,  MatrixHomogeneous)
                       , CONSTRUCT_SIGNAL_IN(footRight, MatrixHomogeneous)
-                      , CONSTRUCT_SIGNAL_OUT(referenceFrame, MatrixHomogeneous, m_footLeftSIN << m_footRightSIN)
+                      , CONSTRUCT_SIGNAL_IN(reset, bool)
+                      , CONSTRUCT_SIGNAL_OUT(referenceFrame, MatrixHomogeneous, m_footLeftSIN << m_footRightSIN << m_resetSIN)
+                      , m_first(true)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
+        m_referenceFrame.setIdentity();
 
         /* Commands. */
         addCommand("init", makeCommandVoid1(*this, &SimpleReferenceFrame::init, docCommandVoid1("Initialize the entity.","Robot name")));
@@ -105,14 +108,17 @@ namespace dynamicgraph
 
         const MatrixHomogeneous & footLeft = m_footLeftSIN(iter);
         const MatrixHomogeneous & footRight = m_footRightSIN(iter);
+        const bool reset = m_resetSIN.isPlugged() ? m_resetSIN(iter) : false;
 
-        const Vector & centerTranslation = ( footLeft.translation() + footRight.translation() )/2 + m_rightFootSoleXYZ;
+        if(reset||m_first)
+        {
+          const Vector & centerTranslation = ( footLeft.translation() + footRight.translation() )/2 + m_rightFootSoleXYZ;
 
-        MatrixHomogeneous referenceFrame;
-        referenceFrame.linear() = footRight.linear();
-        referenceFrame.translation() = centerTranslation;
+          m_referenceFrame.linear() = footRight.linear();
+          m_referenceFrame.translation() = centerTranslation;
+        }
 
-        s = referenceFrame;
+        s = m_referenceFrame;
 
         return s;
       }

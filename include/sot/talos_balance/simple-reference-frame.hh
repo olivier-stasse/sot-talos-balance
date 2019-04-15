@@ -68,6 +68,7 @@ namespace dynamicgraph {
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(footLeft,  MatrixHomogeneous);
         DECLARE_SIGNAL_IN(footRight, MatrixHomogeneous);
+        DECLARE_SIGNAL_IN(reset, bool);
 
         DECLARE_SIGNAL_OUT(referenceFrame, MatrixHomogeneous);
 
@@ -78,6 +79,8 @@ namespace dynamicgraph {
       protected:
         RobotUtilShrPtr  m_robot_util;
         Vector m_rightFootSoleXYZ;
+        MatrixHomogeneous m_referenceFrame;
+        bool m_first;
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
 
       }; // class SimpleReferenceFrame
