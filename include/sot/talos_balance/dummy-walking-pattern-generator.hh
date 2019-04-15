@@ -75,7 +75,7 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(vcom, dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(acom, dynamicgraph::Vector);
 
-        DECLARE_SIGNAL_INNER(feetCenter, MatrixHomogeneous);
+        DECLARE_SIGNAL_INNER(referenceFrame, MatrixHomogeneous);
 
         DECLARE_SIGNAL_OUT(comDes, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(vcomDes, dynamicgraph::Vector);
@@ -94,6 +94,9 @@ namespace dynamicgraph {
         RobotUtilShrPtr  m_robot_util;
         Vector m_rightFootSoleXYZ;
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
+
+        dynamicgraph::Vector actInv(MatrixHomogeneous m, dynamicgraph::Vector v);
+        MatrixHomogeneous actInv(MatrixHomogeneous m1, MatrixHomogeneous m2);
 
       }; // class DummyWalkingPatternGenerator
 
