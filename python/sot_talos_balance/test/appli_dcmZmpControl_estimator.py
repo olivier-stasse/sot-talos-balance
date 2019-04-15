@@ -35,7 +35,7 @@ robot.param_server = create_parameter_server(param_server_conf,dt)
 robot.comTrajGen = create_com_trajectory_generator(dt,robot)
 robot.dynamic.waist.recompute(0) # trigger frames computation
 
-# --- Walking pattern generator
+# --- Reference frame
 
 model = robot.dynamic.model
 data = robot.dynamic.data # DO NOT make any computation with this data object. Kinematic computation have already been done
@@ -46,14 +46,23 @@ rightName = param_server_conf.footFrameNames['Right']
 rightId = model.getFrameId(rightName)
 rightPos = data.oMf[rightId]
 
+rf = SimpleReferenceFrame('rf')
+rf.init(robot_name)
+rf.footLeft.value = leftPos.homogeneous.tolist()
+rf.footRight.value = rightPos.homogeneous.tolist()
+robot.rf = rf
+
+# --- Walking pattern generator
+
 wp = DummyWalkingPatternGenerator('dummy_wp')
-wp.init(robot_name)
+wp.init()
 wp.omega.value = omega
 wp.footLeft.value = leftPos.homogeneous.tolist()
 wp.footRight.value = rightPos.homogeneous.tolist()
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)
+plug(robot.rf.referenceFrame,wp.referenceFrame)
 robot.wp = wp
 
 # --- Compute the values to use them in initialization

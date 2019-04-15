@@ -95,11 +95,20 @@ print("--- Parameter server ---")
 
 param_server = create_parameter_server(param_server_conf,dt)
 
+# --- Reference frame ---
+print("--- Reference frame ---")
+
+rf = SimpleReferenceFrame('rf')
+rf.init(robot_name)
+rf.footLeft.value = leftPos.homogeneous.tolist()
+rf.footRight.value = rightPos.homogeneous.tolist()
+
 # --- Dummy Walking Pattern Generator ---
 print("--- Dummy Walking Pattern Generator ---")
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
-wp.init(robot_name)
+wp.init()
+plug(rf.referenceFrame,wp.referenceFrame)
 wp.omega.value = omega
 wp.footLeft.value = leftPos.homogeneous.tolist()
 wp.footRight.value = rightPos.homogeneous.tolist()

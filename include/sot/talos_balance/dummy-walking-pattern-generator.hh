@@ -63,7 +63,7 @@ namespace dynamicgraph {
         /* --- CONSTRUCTOR ---- */
         DummyWalkingPatternGenerator( const std::string & name );
 
-        void init(const std::string& robotName);
+        void init();
 
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(omega, double);
@@ -75,7 +75,7 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(vcom, dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(acom, dynamicgraph::Vector);
 
-        DECLARE_SIGNAL_INNER(referenceFrame, MatrixHomogeneous);
+        DECLARE_SIGNAL_IN(referenceFrame, MatrixHomogeneous);
 
         DECLARE_SIGNAL_OUT(comDes, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(vcomDes, dynamicgraph::Vector);
@@ -91,8 +91,6 @@ namespace dynamicgraph {
         virtual void display( std::ostream& os ) const;
 
       protected:
-        RobotUtilShrPtr  m_robot_util;
-        Vector m_rightFootSoleXYZ;
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
 
         dynamicgraph::Vector actInv(MatrixHomogeneous m, dynamicgraph::Vector v);
