@@ -9,6 +9,7 @@ from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 from math import sqrt
+import numpy as np
 
 from dynamic_graph.tracer_real_time import TracerRealTime
 
@@ -33,36 +34,24 @@ robot.param_server = create_parameter_server(param_server_conf,dt)
 
 # --- Desired CoM
 robot.comTrajGen = create_com_trajectory_generator(dt,robot)
-robot.dynamic.waist.recompute(0) # trigger frames computation
 
-# --- Reference frame
-
-model = robot.dynamic.model
-data = robot.dynamic.data # DO NOT make any computation with this data object. Kinematic computation have already been done
-leftName = param_server_conf.footFrameNames['Left']
-leftId = model.getFrameId(leftName)
-leftPos  = data.oMf[leftId]
-rightName = param_server_conf.footFrameNames['Right']
-rightId = model.getFrameId(rightName)
-rightPos = data.oMf[rightId]
-
-rf = SimpleReferenceFrame('rf')
-rf.init(robot_name)
-rf.footLeft.value = leftPos.homogeneous.tolist()
-rf.footRight.value = rightPos.homogeneous.tolist()
-robot.rf = rf
+# --- Desired feet
+robot.dynamic.createOpPoint('LF',robot.OperationalPointsMap['left-ankle'])
+robot.dynamic.createOpPoint('RF',robot.OperationalPointsMap['right-ankle'])
+robot.dynamic.LF.recompute(0)
+robot.dynamic.RF.recompute(0)
 
 # --- Walking pattern generator
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
 wp.init()
 wp.omega.value = omega
-wp.footLeft.value = leftPos.homogeneous.tolist()
-wp.footRight.value = rightPos.homogeneous.tolist()
+wp.footLeft.value = robot.dynamic.LF.value
+wp.footRight.value = robot.dynamic.RF.value
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)
-plug(robot.rf.referenceFrame,wp.referenceFrame)
+wp.referenceFrame.value = np.identity(4).tolist()
 robot.wp = wp
 
 # --- Compute the values to use them in initialization
@@ -78,16 +67,32 @@ robot.imu_filters             = create_imu_filters(robot, dt)
 robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf)
 # robot.be_filters              = create_be_filters(robot, dt)
 
+# --- Reference frame
+
+rf = SimpleReferenceFrame('rf')
+rf.init(robot_name)
+plug(robot.dynamic.LF, rf.footLeft)
+plug(robot.dynamic.RF, rf.footRight)
+robot.rf = rf
+
+# --- State transformation
+stf = StateTransformation("stf")
+stf.init()
+plug(robot.rf.referenceFrame,stf.referenceFrame)
+plug(robot.base_estimator.q,stf.q_in)
+plug(robot.base_estimator.v,stf.v_in)
+robot.stf = stf
+
 # --- Conversion
 e2q = EulerToQuat('e2q')
-plug(robot.base_estimator.q,e2q.euler)
+plug(robot.stf.q,e2q.euler)
 robot.e2q = e2q
 
 # --- Kinematic computations
 robot.rdynamic = DynamicPinocchio("real_dynamics")
 robot.rdynamic.setModel(robot.dynamic.model)
 robot.rdynamic.setData(robot.rdynamic.model.createData())
-plug(robot.base_estimator.q,robot.rdynamic.position)
+plug(robot.stf.q,robot.rdynamic.position)
 robot.rdynamic.velocity.value = [0.0]*robotDim
 robot.rdynamic.acceleration.value = [0.0]*robotDim
 
@@ -95,7 +100,7 @@ robot.rdynamic.acceleration.value = [0.0]*robotDim
 cdc_estimator = DcmEstimator('cdc_estimator')
 cdc_estimator.init(dt, robot_name)
 plug(robot.e2q.quaternion, cdc_estimator.q)
-plug(robot.base_estimator.v, cdc_estimator.v)
+plug(robot.stf.v, cdc_estimator.v)
 robot.cdc_estimator = cdc_estimator
 
 # --- DCM Estimation
@@ -211,13 +216,13 @@ plug(robot.dynamic.position, robot.taskUpperBody.feature.state)
 robot.contactLF = MetaTaskKine6d('contactLF',robot.dynamic,'LF',robot.OperationalPointsMap['left-ankle'])
 robot.contactLF.feature.frame('desired')
 robot.contactLF.gain.setConstant(300)
-robot.contactLF.keep()
+plug(robot.wp.footLeftDes, robot.contactLF.featureDes.position) #.errorIN?
 locals()['contactLF'] = robot.contactLF
 
 robot.contactRF = MetaTaskKine6d('contactRF',robot.dynamic,'RF',robot.OperationalPointsMap['right-ankle'])
 robot.contactRF.feature.frame('desired')
 robot.contactRF.gain.setConstant(300)
-robot.contactRF.keep()
+plug(robot.wp.footRightDes, robot.contactRF.featureDes.position) #.errorIN?
 locals()['contactRF'] = robot.contactRF
 
 # --- COM

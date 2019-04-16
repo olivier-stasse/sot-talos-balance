@@ -5,9 +5,12 @@ Created on Mon Feb  9 13:55:16 2015
 """
 import numpy as np
 
+from rospkg import RosPack
+rospack = RosPack()
+
 NJ = 32;
-model_path                  = ["/opt/openrobots/share"];
-urdfFileName                = model_path[0] + "/talos_data/robots/talos_reduced.urdf";
+model_path                  = [rospack.get_path('talos_data')+"/../"]
+urdfFileName                = rospack.get_path('talos_data')+"/urdf/talos_reduced.urdf"
 ImuJointName                = "imu_joint";
 
 mapJointNameToID={
