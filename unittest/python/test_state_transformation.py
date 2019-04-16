@@ -59,12 +59,6 @@ tauy = -fz*lever
 wrenchLeft  = forceLeft  + [0.0, tauy, 0.0]
 wrenchRight = forceRight + [0.0, tauy, 0.0]
 
-centerTranslation = ( data.oMf[rightId].translation + data.oMf[leftId].translation )/2 + np.matrix(param_server_conf.rightFootSoleXYZ).T
-
-centerPos = pin.SE3(rightPos.rotation,centerTranslation)
-print("Center of feet:")
-print(centerPos)
-
 # --- Parameter server ---
 print("--- Parameter server ---")
 
@@ -108,10 +102,16 @@ base_estimator.q.recompute(0)
 print(base_estimator.q.value)
 print(len(base_estimator.q.value))
 
+# --- Reference frame
+rf = SimpleReferenceFrame('rf')
+rf.init(robot_name)
+rf.footLeft.value = leftPos.homogeneous.tolist()
+rf.footRight.value = rightPos.homogeneous.tolist()
+
 # --- State transformation
 stf = StateTransformation("stf")
 stf.init()
-stf.referenceFrame.value = centerPos.homogeneous.tolist()
+plug(rf.referenceFrame,stf.referenceFrame)
 plug(base_estimator.q,stf.input)
 stf.q.recompute(0)
 print(stf.q.value)
