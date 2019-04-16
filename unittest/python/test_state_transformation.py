@@ -65,10 +65,6 @@ centerPos = pin.SE3(rightPos.rotation,centerTranslation)
 print("Center of feet:")
 print(centerPos)
 
-comRel = centerPos.actInv(com)
-print("Relative CoM:")
-print(comRel.flatten().tolist()[0])
-
 # --- Parameter server ---
 print("--- Parameter server ---")
 
@@ -112,27 +108,31 @@ base_estimator.q.recompute(0)
 print(base_estimator.q.value)
 print(len(base_estimator.q.value))
 
+# --- State transformation
+stf = StateTransformation("stf")
+stf.init()
+stf.referenceFrame.value = centerPos.homogeneous.tolist()
+plug(base_estimator.q,stf.input)
+stf.q.recompute(0)
+print(stf.q.value)
+print(len(stf.q.value))
+
 # --- Conversion ---
 print("--- Conversion ---")
 
 e2q = EulerToQuat('e2q')
-plug(base_estimator.q,e2q.euler)
+plug(stf.q,e2q.euler)
 e2q.quaternion.recompute(0)
 print(e2q.quaternion.value)
 print(len(e2q.quaternion.value))
 q_est = np.matrix(e2q.quaternion.value).T
 
+assertApprox(q,q_est,3)
+
 # --- Raw q difference ---
 print("--- Raw q difference ---")
 q_diff = q_est-q
 print(q_diff.flatten().tolist()[0])
-
-# --- Estimated feet ---
-print("--- Estimated feet ---")
-data2 = model.createData()
-pin.framesForwardKinematics(model,data2,q_est)
-print(data2.oMf[rightId])
-print(data2.oMf[leftId])
 
 # --- DCM estimator ---
 print("--- DCM estimator ---")
@@ -148,14 +148,9 @@ print(dcm_estimator.c.value)
 print("--- Direct CoM ---")
 print(com.flatten().tolist()[0])
 
-# --- Raw CoM difference ---
-print("--- Raw CoM difference ---")
+# --- CoM difference ---
+print("--- CoM difference ---")
 com_rawdiff = np.matrix(dcm_estimator.c.value).T - com
 print(com_rawdiff.flatten().tolist()[0])
 
-# --- Relative CoM difference ---
-print("--- Relative CoM difference ---")
-com_reldiff = np.matrix(dcm_estimator.c.value).T - comRel
-print(com_reldiff.flatten().tolist()[0])
-
-assertApprox(np.matrix(dcm_estimator.c.value).T,comRel,3)
+assertApprox(np.matrix(dcm_estimator.c.value).T,com,3)
