@@ -67,9 +67,11 @@ namespace dynamicgraph {
 
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(referenceFrame, MatrixHomogeneous);
-        DECLARE_SIGNAL_IN(input, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(q_in, dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(v_in, dynamicgraph::Vector);
 
         DECLARE_SIGNAL_OUT(q, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(v, dynamicgraph::Vector);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */

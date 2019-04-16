@@ -112,10 +112,16 @@ rf.footRight.value = rightPos.homogeneous.tolist()
 stf = StateTransformation("stf")
 stf.init()
 plug(rf.referenceFrame,stf.referenceFrame)
-plug(base_estimator.q,stf.input)
+plug(base_estimator.q,stf.q_in)
+plug(base_estimator.v,stf.v_in)
+
 stf.q.recompute(0)
 print(stf.q.value)
 print(len(stf.q.value))
+
+stf.v.recompute(0)
+print(stf.v.value)
+print(len(stf.v.value))
 
 # --- Conversion ---
 print("--- Conversion ---")

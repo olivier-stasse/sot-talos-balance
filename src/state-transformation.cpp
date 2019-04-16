@@ -33,12 +33,13 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
 
-//Size to be aligned                             "-------------------------------------------------------"
-#define PROFILE_STATETRANSFORMATION_COMPUTATION  "State transformation computation                       "
+//Size to be aligned                               "-------------------------------------------------------"
+#define PROFILE_STATETRANSFORMATION_Q_COMPUTATION  "State transformation q computation                     "
+#define PROFILE_STATETRANSFORMATION_V_COMPUTATION  "State transformation v computation                     "
 
-#define INPUT_SIGNALS     m_referenceFrameSIN << m_inputSIN
+#define INPUT_SIGNALS     m_referenceFrameSIN << m_q_inSIN << m_v_inSIN
 
-#define OUTPUT_SIGNALS m_qSOUT
+#define OUTPUT_SIGNALS m_qSOUT << m_vSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -54,8 +55,10 @@ namespace dynamicgraph
       StateTransformation::StateTransformation(const std::string& name)
                       : Entity(name)
                       , CONSTRUCT_SIGNAL_IN(referenceFrame, MatrixHomogeneous)
-                      , CONSTRUCT_SIGNAL_IN(input, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_OUT(q, dynamicgraph::Vector, INPUT_SIGNALS)
+                      , CONSTRUCT_SIGNAL_IN(q_in, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_IN(v_in, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_OUT(q, dynamicgraph::Vector, m_referenceFrameSIN << m_q_inSIN)
+                      , CONSTRUCT_SIGNAL_OUT(v, dynamicgraph::Vector, m_referenceFrameSIN << m_v_inSIN)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -75,12 +78,12 @@ namespace dynamicgraph
 
       DEFINE_SIGNAL_OUT_FUNCTION(q, dynamicgraph::Vector)
       {
-        getProfiler().start(PROFILE_STATETRANSFORMATION_COMPUTATION);
+        getProfiler().start(PROFILE_STATETRANSFORMATION_Q_COMPUTATION);
 
         const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
 
         // convert q base to homogeneous matrix
-        const dynamicgraph::Vector & input = m_inputSIN(iter);
+        const dynamicgraph::Vector & input = m_q_inSIN(iter);
 
         const Eigen::Vector3d & euler = input.segment<3>(3);
 
@@ -111,7 +114,32 @@ namespace dynamicgraph
         if(sz>6)
           s.tail(sz-6) = input.tail(sz-6);
 
-        getProfiler().stop(PROFILE_STATETRANSFORMATION_COMPUTATION);
+        getProfiler().stop(PROFILE_STATETRANSFORMATION_Q_COMPUTATION);
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(v, dynamicgraph::Vector)
+      {
+        getProfiler().start(PROFILE_STATETRANSFORMATION_V_COMPUTATION);
+
+        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
+
+        // Retrieve the input
+        const dynamicgraph::Vector & input = m_v_inSIN(iter);
+
+        // Write the result
+        size_t sz = input.size();
+        s.resize(sz);
+
+        s.head<3>() = referenceFrame.linear() * input.head<3>();
+
+        s.segment<3>(3) = referenceFrame.linear() * input.segment<3>(3);
+
+        if(sz>6)
+          s.tail(sz-6) = input.tail(sz-6);
+
+        getProfiler().stop(PROFILE_STATETRANSFORMATION_V_COMPUTATION);
 
         return s;
       }
