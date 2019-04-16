@@ -107,6 +107,11 @@ def create_joint_controller(Kp):
 
 
 def create_end_effector_admittance_controller(robot, endEffector):
+    simu = True
+    if simu :
+        weight = -14.60
+    else :
+        weight = -26,93
     timeStep = robot.timeStep
     controller = AdmittanceControllerEndEffector("admittanceController")
 
@@ -117,7 +122,8 @@ def create_end_effector_admittance_controller(robot, endEffector):
     elif endEffector == 'leftWrist':
         plug(robot.device.forceLARM, forceFilter.x)
     else:
-        print('Error in create_end_effector_admittance_controller : end effector unknown')
+        print('Error in create_end_effector_admittance_controller : end \
+        effector unknown')
     plug(forceFilter.x_filtered, controller.force)
 
     # Plug configuration vector
@@ -131,11 +137,12 @@ def create_end_effector_admittance_controller(robot, endEffector):
     controller.dqSaturation.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     if endEffector == 'rightWrist':
-        controller.init(timeStep, "wrist_right_ft_link", 'arm_right_7_joint', True)
+        controller.init(timeStep, "wrist_right_ft_link", 'arm_right_7_joint', weight)
     elif endEffector == 'leftWrist':
-        controller.init(timeStep, "wrist_left_ft_link", 'arm_left_7_joint', True)
+        controller.init(timeStep, "wrist_left_ft_link", 'arm_left_7_joint', weight)
     else:
-        print('Error in create_end_effector_admittance_controller : end effector unknown')
+        print('Error in create_end_effector_admittance_controller : end \
+        effector unknown')
 
     return controller
 

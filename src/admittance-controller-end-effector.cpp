@@ -67,18 +67,19 @@ AdmittanceControllerEndEffector::AdmittanceControllerEndEffector(const std::stri
       m_robot_util(),
       m_model(),
       m_sensorFrameId(),
-      m_endEffectorId()
+      m_endEffectorId(), 
+      m_endEffectorWeight()
 {
   Entity::signalRegistration(INPUT_SIGNALS << INNER_SIGNALS << OUTPUT_SIGNALS);
 
   /* Commands. */
   addCommand("init", makeCommandVoid4(*this,
-                                      &AdmittanceControllerEndEffector::init,
-                                      docCommandVoid4("Initialize the entity.",
+                                       &AdmittanceControllerEndEffector::init,
+                                       docCommandVoid4("Initialize the entity.",
                                                       "time step",
                                                       "sensor frame name",
                                                       "end Effector Joint Name",
-                                                      "remove weight boolean")));
+                                                      "end-efector weight")));
   addCommand("resetDq", makeCommandVoid0(*this,
     &AdmittanceControllerEndEffector::resetDq,
     docCommandVoid0("resetDq")));
@@ -91,7 +92,7 @@ AdmittanceControllerEndEffector::AdmittanceControllerEndEffector(const std::stri
 void AdmittanceControllerEndEffector::init(const double &dt,
                                            const std::string &sensorFrameName,
                                            const std::string &endEffectorName,
-                                           const bool &removeWeight)
+                                           const double &endEffectorWeight)
 {
   if (!m_KpSIN.isPlugged())
     return SEND_MSG("Init failed: signal dqSaturation is not plugged", MSG_TYPE_ERROR);
@@ -109,7 +110,7 @@ void AdmittanceControllerEndEffector::init(const double &dt,
   m_n = 6;
   m_dt = dt;
   m_w_dq.setZero(m_n);
-  m_removeWeight = removeWeight;
+  m_endEffectorWeight = endEffectorWeight;
 
   try
   {
@@ -187,7 +188,7 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_force, dynamicgraph::Vector)
   {
     // Eigen::Vector3d OC(0.02097597, -0.02460337, -0.00272215);
     // Vector w_OC = sensorPlacement.rotation() * OC;
-    w_vForce(2) -= END_EFFECTOR_WEIGHT;
+    w_vForce(2) -= m_endEffectorWeight;
     // w_forceDes(3) += w_OC(1) * weight;
     // w_forceDes(4) += -w_OC(0) * weight;
   }

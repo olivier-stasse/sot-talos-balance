@@ -100,11 +100,14 @@ public:
    * @brief      Initialize the entity
    *
    * @param[in]  dt  Time step of the control
-   * @param[in]  sensorFrameName  Name of the force sensor of the end-effector 
+   * @param[in]  sensorFrameName  Name of the force sensor of the end-effector
    *             used in the pinocchio model
+   * @param[in]  endeffectorName  Name of the endEffectorJoint
+   * @param[in]  endEffectorWeight  Weight of the end effector (from sensor)
+   * 
    */
-  void init(const double &dt, const std::string &sensorFrameName, 
-            const std::string &endeffectorName, const bool &removeWeight);
+  void init(const double &dt, const std::string &sensorFrameName,
+            const std::string &endeffectorName, const double &endEffectorWeight);
   /**
    * @brief      Reset the velocity
    */
@@ -147,7 +150,7 @@ protected:
   /// robot configuration according to pinocchio convention
   dynamicgraph::Vector m_q;
 
-  const double END_EFFECTOR_WEIGHT = -14.604817920170488;
+  double m_endEffectorWeight;
 
 }; // class AdmittanceControllerEndEffector
 
