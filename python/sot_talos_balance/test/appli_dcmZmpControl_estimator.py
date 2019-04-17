@@ -135,7 +135,7 @@ robot.zmp_estimator = zmp_estimator
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [5.0,5.0,5.0]
+Kp_dcm = [3.0,3.0,3.0]
 Ki_dcm = [0.0,0.0,0.0] # zero (to be set later)
 gamma_dcm = 0.2
 
@@ -173,7 +173,7 @@ com_admittance_control.setState(robot.wp.comDes.value,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [20.0,10.0,0.0] # this value is employed later
+Kp_adm = [12.0,12.0,0.0] # this value is employed later
 
 # --- Control Manager
 robot.cm = create_ctrl_manager(cm_conf, dt, robot_name='robot')
@@ -347,13 +347,16 @@ create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot = robot, d
 create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot = robot, data_type='vector') # calibrated right wrench
 
 # --- TRACER
-robot.tracer = TracerRealTime("zmp_tracer")
+robot.tracer = TracerRealTime("com_tracer")
 robot.tracer.setBufferSize(80*(2**20))
 robot.tracer.open('/tmp','dg_','.dat')
 robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
 addTrace(robot.tracer, robot.wp, 'comDes')                      # desired CoM
+
 addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
+addTrace(robot.tracer, robot.cdc_estimator, 'dc')               # estimated CoM velocity
+
 addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
 addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
 
@@ -361,11 +364,12 @@ addTrace(robot.tracer, robot.dcm_control, 'dcmDes')             # desired DCM
 addTrace(robot.tracer, robot.estimator, 'dcm')                  # estimated DCM
 
 addTrace(robot.tracer, robot.dcm_control, 'zmpDes')             # desired ZMP
+addTrace(robot.tracer, robot.dynamic, 'zmp')                    # SOT ZMP
 addTrace(robot.tracer, robot.zmp_estimator, 'zmp')              # estimated ZMP
 addTrace(robot.tracer, robot.dcm_control, 'zmpRef')             # reference ZMP
-addTrace(robot.tracer, robot.dynamic, 'zmp')                    # SOT ZMP
 
-# -------------------------- SIMULATION --------------------------
+addTrace(robot.tracer, robot.ftc, 'left_foot_force_out')        # calibrated left wrench
+addTrace(robot.tracer,  robot.ftc, 'right_foot_force_out')      # calibrated right wrench
 
 robot.tracer.start()
 
