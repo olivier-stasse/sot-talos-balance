@@ -105,6 +105,8 @@ namespace dynamicgraph
                    makeCommandVoid1(*this, &ControlManager::addEmergencyStopSIN,
                                     docCommandVoid1("Add emergency signal input from another entity that can stop the control if necessary.",
                                                     "(string) signal name : 'emergencyStop_' + name")));
+
+        addCommand("isEmergencyStopTriggered", makeDirectGetter(*this,&m_emergency_stop_triggered, docDirectGetter("Check whether emergency stop is triggered","bool")));
       }
 
       void ControlManager::init(const double & dt,
