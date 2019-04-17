@@ -63,13 +63,15 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_OUT(copRight, dynamicgraph::Vector, m_wrenchRightSIN << m_poseRightSIN)
                       , CONSTRUCT_SIGNAL_OUT(zmp, dynamicgraph::Vector, m_wrenchLeftSIN << m_wrenchRightSIN << m_copLeftSOUT << m_copRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(emergencyStop, bool, m_zmpSOUT)
+                      , m_eps(eps)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
         /* Commands. */
         addCommand("init", makeCommandVoid0(*this, &SimpleZmpEstimator::init, docCommandVoid0("Initialize the entity.")));
-        m_eps = eps;
+        addCommand("getForceThreshold", makeDirectGetter(*this,&m_eps, docDirectGetter("Get force threshold","double")));
+        addCommand("setForceThreshold", makeDirectSetter(*this,&m_eps, docDirectSetter("Set force threshold","double")));
       }
 
       void SimpleZmpEstimator::init()

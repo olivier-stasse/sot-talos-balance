@@ -75,6 +75,8 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_OUT(zmp, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(emergencyStop, bool);
 
+        double m_eps;
+
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
@@ -84,7 +86,6 @@ namespace dynamicgraph {
       protected:
         bool m_initSucceeded;    /// true if the entity has been successfully initialized
         bool m_emergency_stop_triggered;
-        double m_eps;
 
       }; // class SimpleZmpEstimator
 

@@ -69,7 +69,7 @@ namespace dynamicgraph
         /* Commands. */
         addCommand("init", makeCommandVoid2(*this, &AdmittanceController::init, docCommandVoid2("Initialize the entity.","time step","Number of elements")));
         addCommand("setPosition", makeCommandVoid1(*this, &AdmittanceController::setPosition, docCommandVoid1("Set initial reference position.","Initial position")));
-        addCommand("useExternalState", makeDirectSetter(*this,&m_useState, docDirectGetter("use external state","bool")));
+        addCommand("useExternalState", makeDirectSetter(*this,&m_useState, docDirectSetter("use external state","bool")));
         addCommand("isUsingExternalState", makeDirectGetter(*this,&m_useState, docDirectGetter("use external state","bool")));
       }
 
