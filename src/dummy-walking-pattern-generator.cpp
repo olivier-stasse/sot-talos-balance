@@ -38,6 +38,8 @@ namespace dynamicgraph
 
 #define INPUT_SIGNALS     m_omegaSIN << m_footLeftSIN << m_footRightSIN << m_waistSIN << m_comSIN << m_vcomSIN << m_acomSIN << m_referenceFrameSIN
 
+#define INNER_SIGNALS m_rfSINNER
+
 #define OUTPUT_SIGNALS m_comDesSOUT << m_vcomDesSOUT << m_acomDesSOUT << m_dcmDesSOUT << m_zmpDesSOUT << m_footLeftDesSOUT << m_footRightDesSOUT << m_waistDesSOUT
 
       /// Define EntityClassName here rather than in the header file
@@ -61,14 +63,15 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(vcom, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(acom, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(referenceFrame, MatrixHomogeneous)
-                      , CONSTRUCT_SIGNAL_OUT(comDes,  dynamicgraph::Vector, m_comSIN  << m_referenceFrameSIN)
-                      , CONSTRUCT_SIGNAL_OUT(vcomDes, dynamicgraph::Vector, m_vcomSIN << m_referenceFrameSIN)
-                      , CONSTRUCT_SIGNAL_OUT(acomDes, dynamicgraph::Vector, m_acomSIN << m_referenceFrameSIN)
+                      , CONSTRUCT_SIGNAL_INNER(rf, MatrixHomogeneous, m_referenceFrameSIN)
+                      , CONSTRUCT_SIGNAL_OUT(comDes,  dynamicgraph::Vector, m_comSIN  << m_rfSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(vcomDes, dynamicgraph::Vector, m_vcomSIN << m_rfSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(acomDes, dynamicgraph::Vector, m_acomSIN << m_rfSINNER)
                       , CONSTRUCT_SIGNAL_OUT(dcmDes,  dynamicgraph::Vector, m_omegaSIN << m_comDesSOUT << m_vcomDesSOUT)
                       , CONSTRUCT_SIGNAL_OUT(zmpDes,  dynamicgraph::Vector, m_omegaSIN << m_comDesSOUT << m_acomDesSOUT)
-                      , CONSTRUCT_SIGNAL_OUT(footLeftDes,  MatrixHomogeneous, m_footLeftSIN << m_referenceFrameSIN)
-                      , CONSTRUCT_SIGNAL_OUT(footRightDes, MatrixHomogeneous, m_footRightSIN << m_referenceFrameSIN)
-                      , CONSTRUCT_SIGNAL_OUT(waistDes, MatrixHomogeneous, m_waistSIN << m_referenceFrameSIN)
+                      , CONSTRUCT_SIGNAL_OUT(footLeftDes,  MatrixHomogeneous, m_footLeftSIN << m_rfSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(footRightDes, MatrixHomogeneous, m_footRightSIN << m_rfSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(waistDes, MatrixHomogeneous, m_waistSIN << m_rfSINNER)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -99,6 +102,19 @@ namespace dynamicgraph
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
+      DEFINE_SIGNAL_INNER_FUNCTION(rf, MatrixHomogeneous)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal rf before initialization!");
+          return s;
+        }
+
+        s = m_referenceFrameSIN.isPlugged() ? m_referenceFrameSIN(iter) : MatrixHomogeneous::Identity();
+
+        return s;
+      }
+
       DEFINE_SIGNAL_OUT_FUNCTION(comDes, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
@@ -108,7 +124,7 @@ namespace dynamicgraph
         }
 
         const Vector & com = m_comSIN(iter);
-        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
+        const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
         assert( com.size()==3 && "Unexpected size of signal com" );
 
@@ -128,7 +144,7 @@ namespace dynamicgraph
         }
 
         const Vector & vcom = m_vcomSIN(iter);
-        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
+        const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
         assert( vcom.size()==3 && "Unexpected size of signal vcom" );
 
@@ -148,7 +164,7 @@ namespace dynamicgraph
         }
 
         const Vector & acom = m_acomSIN(iter);
-        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
+        const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
         assert( acom.size()==3 && "Unexpected size of signal acom" );
 
@@ -207,7 +223,7 @@ namespace dynamicgraph
         }
 
         const MatrixHomogeneous & footLeft = m_footLeftSIN(iter);
-        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
+        const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
         s = actInv(referenceFrame, footLeft);
 
@@ -223,7 +239,7 @@ namespace dynamicgraph
         }
 
         const MatrixHomogeneous & footRight = m_footRightSIN(iter);
-        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
+        const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
         s = actInv(referenceFrame, footRight);
 
@@ -239,7 +255,7 @@ namespace dynamicgraph
         }
 
         const MatrixHomogeneous & waist = m_waistSIN(iter);
-        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
+        const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
         s = actInv(referenceFrame, waist);
 

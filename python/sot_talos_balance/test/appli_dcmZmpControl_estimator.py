@@ -54,7 +54,6 @@ wp.waist.value = robot.dynamic.WT.value
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)
-wp.referenceFrame.value = np.identity(4).tolist()
 robot.wp = wp
 
 # --- Compute the values to use them in initialization

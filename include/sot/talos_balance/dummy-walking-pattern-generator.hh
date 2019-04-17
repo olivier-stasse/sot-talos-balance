@@ -78,6 +78,8 @@ namespace dynamicgraph {
 
         DECLARE_SIGNAL_IN(referenceFrame, MatrixHomogeneous);
 
+        DECLARE_SIGNAL_INNER(rf, MatrixHomogeneous);
+
         DECLARE_SIGNAL_OUT(comDes, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(vcomDes, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(acomDes, dynamicgraph::Vector);
