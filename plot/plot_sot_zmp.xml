@@ -1,41 +1,43 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root>
- <tabbed_widget name="Main Window" parent="main_window">
-  <plotmatrix tab_name="plot" rows="2" columns="3">
+ <tabbed_widget parent="main_window" name="Main Window">
+  <plotmatrix rows="2" columns="3" tab_name="plot">
    <plot col="0" row="0">
-    <range left="14.262000" right="19.255000" bottom="0.000035" top="0.000037"/>
+    <range top="0.000748" bottom="-0.010062" left="11.716000" right="16.709000"/>
     <limitY/>
-    <curve G="0" custom_transform="noTransform" R="0" B="255" name="/sot/zmpEst/zmp/data.0"/>
+    <curve B="255" G="0" R="0" name="/sot/zmpEst/zmp/data.0" custom_transform="noTransform"/>
     <transform value="noTransform"/>
    </plot>
    <plot col="0" row="1">
-    <range left="14.262000" right="19.255000" bottom="-0.002360" top="-0.002360"/>
+    <range top="0.002393" bottom="-0.013736" left="11.716000" right="16.709000"/>
     <limitY/>
-    <curve G="0" custom_transform="noTransform" R="128" B="0" name="/sot/cdc_estimator/c/data.0"/>
+    <curve B="164" G="160" R="160" name="/sot/robot_dynamic/com/data.0" custom_transform="noTransform"/>
+    <curve B="255" G="0" R="255" name="/sot/robot_dynamic/zmp/data.0" custom_transform="noTransform"/>
     <transform value="noTransform"/>
    </plot>
    <plot col="1" row="0">
-    <range left="14.262000" right="19.255000" bottom="-0.092751" top="-0.092750"/>
+    <range top="0.070737" bottom="-0.046684" left="11.716000" right="16.709000"/>
     <limitY/>
-    <curve G="128" custom_transform="noTransform" R="0" B="0" name="/sot/zmpEst/zmp/data.1"/>
+    <curve B="0" G="128" R="0" name="/sot/zmpEst/zmp/data.1" custom_transform="noTransform"/>
     <transform value="noTransform"/>
    </plot>
    <plot col="1" row="1">
-    <range left="14.262000" right="19.255000" bottom="-0.083197" top="-0.083196"/>
+    <range top="0.057134" bottom="-0.032148" left="11.716000" right="16.709000"/>
     <limitY/>
-    <curve G="0" custom_transform="noTransform" R="0" B="255" name="/sot/cdc_estimator/c/data.1"/>
+    <curve B="0" G="128" R="128" name="/sot/robot_dynamic/com/data.1" custom_transform="noTransform"/>
+    <curve B="128" G="0" R="0" name="/sot/robot_dynamic/zmp/data.1" custom_transform="noTransform"/>
     <transform value="noTransform"/>
    </plot>
    <plot col="2" row="0">
-    <range left="14.262000" right="19.255000" bottom="0.000100" top="0.000100"/>
+    <range top="0.000047" bottom="-0.000097" left="11.716000" right="16.709000"/>
     <limitY/>
-    <curve G="0" custom_transform="noTransform" R="255" B="0" name="/sot/zmpEst/zmp/data.2"/>
+    <curve B="0" G="0" R="255" name="/sot/zmpEst/zmp/data.2" custom_transform="noTransform"/>
     <transform value="noTransform"/>
    </plot>
    <plot col="2" row="1">
-    <range left="14.262000" right="19.255000" bottom="0.874043" top="0.874049"/>
+    <range top="0.100000" bottom="-0.100000" left="11.716000" right="16.709000"/>
     <limitY/>
-    <curve G="128" custom_transform="noTransform" R="0" B="0" name="/sot/cdc_estimator/c/data.2"/>
+    <curve B="128" G="128" R="0" name="/sot/robot_dynamic/zmp/data.2" custom_transform="noTransform"/>
     <transform value="noTransform"/>
    </plot>
   </plotmatrix>
@@ -53,7 +55,7 @@
    <no_params/>
   </DataLoad_ULog>
   <ROS_Topic_Streamer>
-   <selected_topics list="/sot/cdc_estimator/c;/sot/zmpEst/zmp"/>
+   <selected_topics list="/sot/robot_dynamic/zmp;/sot/zmpEst/zmp;/sot/robot_dynamic/com"/>
   </ROS_Topic_Streamer>
   <RosoutPublisherROS/>
   <TopicPublisherROS/>

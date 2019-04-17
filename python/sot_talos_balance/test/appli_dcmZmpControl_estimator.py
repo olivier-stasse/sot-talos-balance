@@ -30,12 +30,7 @@ omega = sqrt(g/h)
 # --- Parameter server
 robot.param_server = create_parameter_server(param_server_conf,dt)
 
-# -------------------------- DESIRED TRAJECTORY --------------------------
-
-# --- Desired CoM
-robot.comTrajGen = create_com_trajectory_generator(dt,robot)
-
-# --- Desired feet and waist
+# --- Initial feet and waist
 robot.dynamic.createOpPoint('LF',robot.OperationalPointsMap['left-ankle'])
 robot.dynamic.createOpPoint('RF',robot.OperationalPointsMap['right-ankle'])
 robot.dynamic.createOpPoint('WT',robot.OperationalPointsMap['waist'])
@@ -43,14 +38,23 @@ robot.dynamic.LF.recompute(0)
 robot.dynamic.RF.recompute(0)
 robot.dynamic.WT.recompute(0)
 
+# -------------------------- DESIRED TRAJECTORY --------------------------
+
+# --- Trajectory generators
+robot.comTrajGen = create_com_trajectory_generator(dt,robot)
+robot.lfPosTrajGen  = create_position_trajectory_generator(dt, robot, 'LF')
+robot.rfPosTrajGen  = create_position_trajectory_generator(dt, robot, 'RF')
+
 # --- Walking pattern generator
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
 wp.init()
 wp.omega.value = omega
+wp.waist.value = robot.dynamic.WT.value
 wp.footLeft.value = robot.dynamic.LF.value
 wp.footRight.value = robot.dynamic.RF.value
-wp.waist.value = robot.dynamic.WT.value
+plug(robot.lfPosTrajGen.x, wp.footPositionLeft)
+plug(robot.rfPosTrajGen.x, wp.footPositionRight)
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)

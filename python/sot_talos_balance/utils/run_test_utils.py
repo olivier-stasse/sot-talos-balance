@@ -92,16 +92,17 @@ def run_test(appli,verbosity=1):
     except rospy.ServiceException, e:
         rospy.logerr("Service call failed: %s" % e)
 
+def ask_for_confirmation(text):
+    c = raw_input(text+" [y/N] ")
+    try:
+        return strtobool(c)
+    except:
+        return False
+
 def run_ft_calibration(sensor_name,force=False):
-    cb = False
-    if force:
-        cb = True
-    else:
-        c = raw_input("Calibrate force sensors? [y/N] ")
-        try:
-            cb = strtobool(c)
-        except:
-            cb = False
+    cb = force
+    if not cb:
+        cb = ask_for_confirmation("Calibrate force sensors?")
     if cb:
         raw_input("Wait before running the calibration")
         print("Calibrating sensors...")

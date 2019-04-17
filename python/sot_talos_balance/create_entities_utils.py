@@ -80,6 +80,16 @@ def create_com_trajectory_generator(dt, robot):
     comTrajGen.init(dt, 3)
     return comTrajGen
 
+def create_position_trajectory_generator(dt, robot, signal_name):
+    trajGen = NdTrajectoryGenerator(signal_name+"TrajGen")
+
+    M = robot.dynamic.signal(signal_name).value
+    v = [ M[i][3] for i in range(3) ]
+    trajGen.initial_value.value = v
+
+    trajGen.trigger.value = 1.0
+    trajGen.init(dt, 3)
+    return trajGen
 
 def create_joint_controller(Kp):
     controller = JointPositionController("posctrl")
