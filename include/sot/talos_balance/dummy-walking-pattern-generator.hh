@@ -70,6 +70,7 @@ namespace dynamicgraph {
 
         DECLARE_SIGNAL_IN(footLeft,  MatrixHomogeneous);
         DECLARE_SIGNAL_IN(footRight, MatrixHomogeneous);
+        DECLARE_SIGNAL_IN(waist, MatrixHomogeneous);
 
         DECLARE_SIGNAL_IN(com,  dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(vcom, dynamicgraph::Vector);
@@ -85,6 +86,7 @@ namespace dynamicgraph {
 
         DECLARE_SIGNAL_OUT(footLeftDes,  MatrixHomogeneous);
         DECLARE_SIGNAL_OUT(footRightDes, MatrixHomogeneous);
+        DECLARE_SIGNAL_OUT(waistDes, MatrixHomogeneous);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */

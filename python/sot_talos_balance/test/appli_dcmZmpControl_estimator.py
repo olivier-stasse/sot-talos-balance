@@ -35,11 +35,13 @@ robot.param_server = create_parameter_server(param_server_conf,dt)
 # --- Desired CoM
 robot.comTrajGen = create_com_trajectory_generator(dt,robot)
 
-# --- Desired feet
+# --- Desired feet and waist
 robot.dynamic.createOpPoint('LF',robot.OperationalPointsMap['left-ankle'])
 robot.dynamic.createOpPoint('RF',robot.OperationalPointsMap['right-ankle'])
+robot.dynamic.createOpPoint('WT',robot.OperationalPointsMap['waist'])
 robot.dynamic.LF.recompute(0)
 robot.dynamic.RF.recompute(0)
+robot.dynamic.WT.recompute(0)
 
 # --- Walking pattern generator
 
@@ -48,6 +50,7 @@ wp.init()
 wp.omega.value = omega
 wp.footLeft.value = robot.dynamic.LF.value
 wp.footRight.value = robot.dynamic.RF.value
+wp.waist.value = robot.dynamic.WT.value
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)
@@ -236,7 +239,7 @@ robot.taskCom.task.setWithDerivative(True)
 robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
 robot.keepWaist.feature.frame('desired')
 robot.keepWaist.gain.setConstant(300)
-robot.keepWaist.keep()
+plug(robot.wp.waistDes, robot.keepWaist.featureDes.position)
 robot.keepWaist.feature.selec.value = '111000'
 locals()['keepWaist'] = robot.keepWaist
 
