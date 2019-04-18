@@ -38,6 +38,7 @@ if c:
         runCommandClient('robot.comTrajGen.stop(1)')
         sleep(5.0)
         runCommandClient('robot.comTrajGen.move(1,0.0,1.0)')
+        sleep(1.0)
         print("The robot is back in position!")
     else:
         print("Not putting the robot back")
