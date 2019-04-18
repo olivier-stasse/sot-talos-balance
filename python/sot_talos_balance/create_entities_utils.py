@@ -80,6 +80,15 @@ def create_com_trajectory_generator(dt, robot):
     comTrajGen.init(dt, 3)
     return comTrajGen
 
+def create_zmp_trajectory_generator(dt, robot):
+    comTrajGen = NdTrajectoryGenerator("zmpTrajGen")
+    zmp = list(robot.dynamic.com.value)
+    zmp[2] = 0.0
+    comTrajGen.initial_value.value = zmp
+    comTrajGen.trigger.value = 1.0
+    comTrajGen.init(dt, 3)
+    return comTrajGen
+
 def create_position_trajectory_generator(dt, robot, signal_name):
     trajGen = NdTrajectoryGenerator(signal_name+"TrajGen")
 

@@ -36,7 +36,7 @@ namespace dynamicgraph
 //Size to be aligned                                         "-------------------------------------------------------"
 #define PROFILE_DUMMYWALKINGPATTERNGENERATOR_DCM_COMPUTATION "DummyWalkingPatternGenerator: dcm computation          "
 
-#define INPUT_SIGNALS     m_omegaSIN << m_footLeftSIN << m_footRightSIN << m_waistSIN << m_footPositionLeftSIN << m_footPositionRightSIN << m_comSIN << m_vcomSIN << m_acomSIN << m_referenceFrameSIN
+#define INPUT_SIGNALS     m_omegaSIN << m_footLeftSIN << m_footRightSIN << m_waistSIN << m_footPositionLeftSIN << m_footPositionRightSIN << m_comSIN << m_vcomSIN << m_acomSIN << m_zmpSIN << m_referenceFrameSIN
 
 #define INNER_SIGNALS m_rfSINNER
 
@@ -64,13 +64,14 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(com,  dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(vcom, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(acom, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_IN(zmp, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(referenceFrame, MatrixHomogeneous)
                       , CONSTRUCT_SIGNAL_INNER(rf, MatrixHomogeneous, m_referenceFrameSIN)
                       , CONSTRUCT_SIGNAL_OUT(comDes,  dynamicgraph::Vector, m_comSIN  << m_rfSINNER)
                       , CONSTRUCT_SIGNAL_OUT(vcomDes, dynamicgraph::Vector, m_vcomSIN << m_rfSINNER)
                       , CONSTRUCT_SIGNAL_OUT(acomDes, dynamicgraph::Vector, m_acomSIN << m_rfSINNER)
                       , CONSTRUCT_SIGNAL_OUT(dcmDes,  dynamicgraph::Vector, m_omegaSIN << m_comDesSOUT << m_vcomDesSOUT)
-                      , CONSTRUCT_SIGNAL_OUT(zmpDes,  dynamicgraph::Vector, m_omegaSIN << m_comDesSOUT << m_acomDesSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(zmpDes,  dynamicgraph::Vector, m_omegaSIN << m_comDesSOUT << m_acomDesSOUT << m_rfSINNER << m_zmpSIN)
                       , CONSTRUCT_SIGNAL_OUT(footLeftDes,  MatrixHomogeneous, m_footLeftSIN  << m_footPositionLeftSIN  << m_rfSINNER)
                       , CONSTRUCT_SIGNAL_OUT(footRightDes, MatrixHomogeneous, m_footRightSIN << m_footPositionRightSIN << m_rfSINNER)
                       , CONSTRUCT_SIGNAL_OUT(waistDes, MatrixHomogeneous, m_waistSIN << m_rfSINNER)
@@ -204,12 +205,29 @@ namespace dynamicgraph
           return s;
         }
 
-        const double & omega = m_omegaSIN(iter);
-        const Vector & comDes = m_comDesSOUT(iter);
-        const Vector & acomDes = m_acomDesSOUT(iter);
+        Vector zmpDes;
 
-        Vector zmpDes = comDes - acomDes/(omega*omega);
-        zmpDes[2] = 0.0;
+        if(m_zmpSIN.isPlugged())
+        {
+          const Vector & zmp = m_zmpSIN(iter);
+          const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
+
+          zmpDes.resize(3);
+          zmpDes[0] = zmp[0];
+          zmpDes[1] = zmp[1];
+          zmpDes[2] = zmp.size()>2 ? zmp[2] : 0.;
+
+          zmpDes = actInv(referenceFrame, zmpDes);
+        }
+        else
+        {
+          const double & omega = m_omegaSIN(iter);
+          const Vector & comDes = m_comDesSOUT(iter);
+          const Vector & acomDes = m_acomDesSOUT(iter);
+
+          Vector zmpDes = comDes - acomDes/(omega*omega);
+          zmpDes[2] = 0.0;
+        }
 
         s = zmpDes;
 

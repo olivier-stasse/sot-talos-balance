@@ -108,6 +108,7 @@ def run_ft_calibration(sensor_name,force=False):
         runCommandClient(sensor_name+'.calibrateFeetSensor()')
         sleep(1.0) # TODO: get time/state from F/T sensor
         print("Sensors are calibrated!")
+        print("You can now put the robot on the ground")
     else:
         print("Skipping sensor calibration")
 
