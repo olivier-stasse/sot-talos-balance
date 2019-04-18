@@ -34,9 +34,10 @@ if c:
 
     c3 = ask_for_confirmation("Put the robot back?")
     if c3:
-        print("Putting the robot back...")
+        print("Stopping the robot...")
         runCommandClient('robot.comTrajGen.stop(1)')
         sleep(5.0)
+        print("Putting the robot back...")
         runCommandClient('robot.comTrajGen.move(1,0.0,1.0)')
         sleep(1.0)
         print("The robot is back in position!")

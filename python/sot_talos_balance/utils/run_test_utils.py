@@ -104,7 +104,6 @@ def run_ft_calibration(sensor_name,force=False):
     if not cb:
         cb = ask_for_confirmation("Calibrate force sensors?")
     if cb:
-        raw_input("Wait before running the calibration")
         print("Calibrating sensors...")
         runCommandClient(sensor_name+'.calibrateFeetSensor()')
         sleep(1.0) # TODO: get time/state from F/T sensor
