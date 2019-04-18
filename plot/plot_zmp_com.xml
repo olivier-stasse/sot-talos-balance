@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root>
  <tabbed_widget parent="main_window" name="Main Window">
-  <plotmatrix tab_name="plot" columns="3" rows="2">
+  <plotmatrix tab_name="plot" columns="4" rows="2">
    <plot row="0" col="0">
     <range top="0.001234" bottom="-0.003271" left="21.177000" right="26.172000"/>
     <limitY/>
@@ -50,6 +50,18 @@
     <curve B="0" G="0" R="255" custom_transform="noTransform" name="/sot/zmpEst/zmp/data.2"/>
     <transform value="noTransform"/>
    </plot>
+   <plot row="0" col="3">
+    <range top="-23.556048" bottom="-23.558718" left="21.177000" right="26.172000"/>
+    <limitY/>
+    <curve name="/sot/ftc/left_foot_force_out/data.2" B="0" custom_transform="noTransform" R="255" G="0"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="3">
+    <range top="888.944024" bottom="888.921802" left="21.177000" right="26.172000"/>
+    <limitY/>
+    <curve name="/sot/ftc/right_foot_force_out/data.2" B="255" custom_transform="noTransform" R="0" G="0"/>
+    <transform value="noTransform"/>
+   </plot>
   </plotmatrix>
   <currentPlotMatrix index="0"/>
  </tabbed_widget>
@@ -65,7 +77,7 @@
    <no_params/>
   </DataLoad_ULog>
   <ROS_Topic_Streamer>
-   <selected_topics list="/gazebo/link_states;/gazebo/model_states;/sot/cdc_estimator/c;/sot/cdc_estimator/dc;/sot/comAdmCtrl/comRef;/sot/dcmCtrl/dcmDes;/sot/dcmCtrl/zmpDes;/sot/dcmCtrl/zmpRef;/sot/dummy_wp/comDes;/sot/dummy/dcm;/sot/robot_dynamic/com;/sot/robot_dynamic/zmp;/sot/zmpEst/zmp"/>
+   <selected_topics list="/gazebo/link_states;/gazebo/model_states;/sot/cdc_estimator/c;/sot/cdc_estimator/dc;/sot/comAdmCtrl/comRef;/sot/dcmCtrl/dcmDes;/sot/dcmCtrl/zmpDes;/sot/dcmCtrl/zmpRef;/sot/dummy_wp/comDes;/sot/dummy/dcm;/sot/robot_dynamic/com;/sot/robot_dynamic/zmp;/sot/zmpEst/zmp;/sot/ftc/left_foot_force_out;/sot/ftc/right_foot_force_out"/>
   </ROS_Topic_Streamer>
   <RosoutPublisherROS/>
   <TopicPublisherROS/>
