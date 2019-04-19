@@ -1,13 +1,14 @@
-from sot_talos_balance.control_manager                        import ControlManager
-from sot_talos_balance.example                                import Example
-from sot_talos_balance.parameter_server                       import ParameterServer
-from dynamic_graph.tracer_real_time                           import TracerRealTime
-from time                                                     import sleep
-from sot_talos_balance.base_estimator                         import BaseEstimator
-from sot_talos_balance.madgwickahrs                           import MadgwickAHRS
-from sot_talos_balance.imu_offset_compensation                import ImuOffsetCompensation
-from sot_talos_balance.dcm_estimator                          import DcmEstimator
-from sot_talos_balance.ft_calibration                         import FtCalibration
+from sot_talos_balance.control_manager            import ControlManager
+from sot_talos_balance.example                    import Example
+from sot_talos_balance.parameter_server           import ParameterServer
+from dynamic_graph.tracer_real_time               import TracerRealTime
+from time                                         import sleep
+from sot_talos_balance.base_estimator             import BaseEstimator
+from sot_talos_balance.madgwickahrs               import MadgwickAHRS
+from sot_talos_balance.imu_offset_compensation    import ImuOffsetCompensation
+from sot_talos_balance.dcm_estimator              import DcmEstimator
+from sot_talos_balance.ft_calibration             import FtCalibration
+from sot_talos_balance.ft_wrist_calibration       import FtWristCalibration
 
 from sot_talos_balance.euler_to_quat import EulerToQuat
 from sot_talos_balance.quat_to_euler import QuatToEuler
@@ -137,9 +138,9 @@ def create_end_effector_admittance_controller(robot, endEffector):
     controller.dqSaturation.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     if endEffector == 'rightWrist':
-        controller.init(timeStep, "wrist_right_ft_link", 'arm_right_7_joint', weight)
+        controller.init(timeStep, "wrist_right_ft_link", 'arm_right_7_joint')
     elif endEffector == 'leftWrist':
-        controller.init(timeStep, "wrist_left_ft_link", 'arm_left_7_joint', weight)
+        controller.init(timeStep, "wrist_left_ft_link", 'arm_left_7_joint')
     else:
         print('Error in create_end_effector_admittance_controller : end \
         effector unknown')
