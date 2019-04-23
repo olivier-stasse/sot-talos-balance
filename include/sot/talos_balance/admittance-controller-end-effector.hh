@@ -137,8 +137,6 @@ protected:
   pinocchio::FrameIndex m_sensorFrameId;
   /// Id of the joint of the end-effector
   pinocchio::JointIndex m_endEffectorId;
-  /// robot configuration according to pinocchio convention
-  dynamicgraph::Vector m_q;
   
 }; // class AdmittanceControllerEndEffector
 

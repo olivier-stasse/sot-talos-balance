@@ -65,6 +65,7 @@ AdmittanceControllerEndEffector::AdmittanceControllerEndEffector(const std::stri
       m_initSucceeded(false),
       m_robot_util(),
       m_model(),
+      m_data(),
       m_sensorFrameId(),
       m_endEffectorId()
 {

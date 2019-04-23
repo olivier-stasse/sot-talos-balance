@@ -1,14 +1,14 @@
-from sot_talos_balance.control_manager            import ControlManager
-from sot_talos_balance.example                    import Example
-from sot_talos_balance.parameter_server           import ParameterServer
-from dynamic_graph.tracer_real_time               import TracerRealTime
-from time                                         import sleep
-from sot_talos_balance.base_estimator             import BaseEstimator
-from sot_talos_balance.madgwickahrs               import MadgwickAHRS
-from sot_talos_balance.imu_offset_compensation    import ImuOffsetCompensation
-from sot_talos_balance.dcm_estimator              import DcmEstimator
-from sot_talos_balance.ft_calibration             import FtCalibration
-from sot_talos_balance.ft_wrist_calibration       import FtWristCalibration
+from sot_talos_balance.control_manager import ControlManager
+from sot_talos_balance.example import Example
+from sot_talos_balance.parameter_server import ParameterServer
+from dynamic_graph.tracer_real_time import TracerRealTime
+from time import sleep
+from sot_talos_balance.base_estimator import BaseEstimator
+from sot_talos_balance.madgwickahrs import MadgwickAHRS
+from sot_talos_balance.imu_offset_compensation import ImuOffsetCompensation
+from sot_talos_balance.dcm_estimator import DcmEstimator
+from sot_talos_balance.ft_calibration import FtCalibration
+from sot_talos_balance.ft_wrist_calibration import FtWristCalibration
 
 from sot_talos_balance.euler_to_quat import EulerToQuat
 from sot_talos_balance.quat_to_euler import QuatToEuler
@@ -120,10 +120,7 @@ def create_end_effector_admittance_controller(robot, endEffector):
         print('Error in create_end_effector_admittance_controller : end \
         effector unknown')
 
-    # Plug configuration vector
-    configurationTransform = EulerToQuat("configurationTransform")
-    plug(robot.baseEstimator.q, configurationTransform.euler)
-    plug(configurationTransform.quaternion, controller.q)
+    plug(robot.e2q.quaternion, controller.q)
 
     controller.Kp.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     controller.Kd.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -500,20 +497,23 @@ def create_zmp_estimator(robot, filter=False):
     estimator.init()
     return estimator
 
-def create_ft_calibrator(robot,conf):
-  ftc = FtCalibration('ftc')
-  ftc.init(robot.name)
-  ftc.setRightFootWeight(conf.rfw)
-  ftc.setLeftFootWeight(conf.lfw)
-  plug(robot.device_filters.ft_RF_filter.x_filtered, ftc.right_foot_force_in)
-  plug(robot.device_filters.ft_LF_filter.x_filtered, ftc.left_foot_force_in)
-  return ftc
+
+def create_ft_calibrator(robot, conf):
+    ftc = FtCalibration('ftc')
+    ftc.init(robot.name)
+    ftc.setRightFootWeight(conf.rfw)
+    ftc.setLeftFootWeight(conf.lfw)
+    plug(robot.device_filters.ft_RF_filter.x_filtered, ftc.right_foot_force_in)
+    plug(robot.device_filters.ft_LF_filter.x_filtered, ftc.left_foot_force_in)
+    return ftc
+
 
 def create_ft_wrist_calibrator(robot, endEffectorWeight):
-  forceCalibrator = FtWristCalibration('forceCalibrator')
-  forceCalibrator.init(robot.name)
-  forceCalibrator.setRightHandWeight(endEffectorWeight)
-  forceCalibrator.setLeftHandWeight(endEffectorWeight)
-  plug(robot.device_filters.ft_RH_filter.x_filtered, forceCalibrator.rightWristForceIn)
-  plug(robot.device_filters.ft_LH_filter.x_filtered, forceCalibrator.leftWristForceIn)
-  return forceCalibrator
+    forceCalibrator = FtWristCalibration('forceCalibrator')
+    forceCalibrator.init(robot.name)
+    forceCalibrator.setRightHandWeight(endEffectorWeight)
+    forceCalibrator.setLeftHandWeight(endEffectorWeight)
+    plug(robot.e2q.quaternion, forceCalibrator.q)
+    plug(robot.device_filters.ft_RH_filter.x_filtered, forceCalibrator.rightWristForceIn)
+    plug(robot.device_filters.ft_LH_filter.x_filtered, forceCalibrator.leftWristForceIn)
+    return forceCalibrator

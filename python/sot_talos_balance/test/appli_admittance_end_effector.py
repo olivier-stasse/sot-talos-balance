@@ -42,7 +42,12 @@ robot.device_filters = create_device_filters(robot, robot.timeStep)
 robot.imu_filters = create_imu_filters(robot, robot.timeStep)
 robot.baseEstimator = create_base_estimator(robot, robot.timeStep, baseEstimatorConf)
 
+# Get configuration vector
+robot.e2q = EulerToQuat("e2q")
+plug(robot.baseEstimator.q, robot.e2q.euler)
+
 robot.forceCalibrator = create_ft_wrist_calibrator(robot, endEffectorWeight)
+robot.forceCalibrator.setRemoveWeight(True)
 robot.controller = create_end_effector_admittance_controller(robot, endEffector)
 
 robot.controlManager = create_ctrl_manager(controlManagerConfig, robot.timeStep)

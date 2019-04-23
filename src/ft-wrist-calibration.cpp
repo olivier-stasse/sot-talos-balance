@@ -31,7 +31,8 @@ namespace dynamicgraph
       using namespace dynamicgraph::command;
       using namespace dg::sot::talos_balance;
 
-#define INPUT_SIGNALS  m_rightWristForceInSIN   << m_leftWristForceInSIN
+#define INPUT_SIGNALS  m_rightWristForceInSIN   << m_leftWristForceInSIN << m_qSIN
+#define INNER_SIGNALS  m_rightWeightSINNER << m_leftWeightSINNER
 #define OUTPUT_SIGNALS m_rightWristForceOutSOUT << m_leftWristForceOutSOUT
 
       /// Define EntityClassName here rather than in the header file
@@ -48,12 +49,20 @@ namespace dynamicgraph
       FtWristCalibration::
       FtWristCalibration(const std::string& name)
         : Entity(name)
-        , CONSTRUCT_SIGNAL_IN(rightWristForceIn,  dynamicgraph::Vector)
-        , CONSTRUCT_SIGNAL_IN(leftWristForceIn,   dynamicgraph::Vector)
-        , CONSTRUCT_SIGNAL_OUT(rightWristForceOut, dynamicgraph::Vector, m_rightWristForceInSIN)
-        , CONSTRUCT_SIGNAL_OUT(leftWristForceOut,  dynamicgraph::Vector, m_leftWristForceInSIN)
-        ,m_robot_util(RefVoidRobotUtil())
-        ,m_initSucceeded(false)  
+        , CONSTRUCT_SIGNAL_IN(rightWristForceIn,   dynamicgraph::Vector)
+        , CONSTRUCT_SIGNAL_IN(leftWristForceIn,    dynamicgraph::Vector)
+        , CONSTRUCT_SIGNAL_IN(q,                   dynamicgraph::Vector)
+        , CONSTRUCT_SIGNAL_INNER(rightWeight, dynamicgraph::Vector, INPUT_SIGNALS)
+        , CONSTRUCT_SIGNAL_INNER(leftWeight, dynamicgraph::Vector, INPUT_SIGNALS)
+        , CONSTRUCT_SIGNAL_OUT(rightWristForceOut, dynamicgraph::Vector, INPUT_SIGNALS << INNER_SIGNALS)
+        , CONSTRUCT_SIGNAL_OUT(leftWristForceOut,  dynamicgraph::Vector, INPUT_SIGNALS << INNER_SIGNALS)
+        , m_robot_util(RefVoidRobotUtil())
+        , m_model()
+        , m_data()
+        , m_rightSensorId()
+        , m_leftSensorId()
+        , m_initSucceeded(false)  
+        , m_removeWeight(false)  
       {
 
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS);
@@ -74,6 +83,11 @@ namespace dynamicgraph
         addCommand("calibrateWristSensor",
                     makeCommandVoid0(*this, &FtWristCalibration::calibrateWristSensor,
                             docCommandVoid0("Calibrate the wrist sensors")));
+        
+        addCommand("setRemoveWeight", 
+                   makeCommandVoid1(*this, &FtWristCalibration::setRemoveWeight,
+                     docCommandVoid1("set RemoveWeight", "desired removeWeight")));
+
 
       }
 
@@ -81,7 +95,6 @@ namespace dynamicgraph
       {
         dgADD_OSTREAM_TO_RTLOG (std::cout);
         std::string localName(robotRef);
-        m_initSucceeded = true;
         if (!isNameInRobotUtil(localName))
         {
             m_robot_util = createRobotUtil(localName);
@@ -90,11 +103,19 @@ namespace dynamicgraph
         {
             m_robot_util = getRobotUtil(localName);
         }
-        m_right_FT_offset                 << 0,0,0,0,0,0;
-        m_left_FT_offset                  << 0,0,0,0,0,0;
-        m_right_FT_offset_calibration_sum << 0,0,0,0,0,0;
-        m_left_FT_offset_calibration_sum  << 0,0,0,0,0,0;
-        SEND_MSG("Entity Initialized",MSG_TYPE_INFO);
+        m_right_FT_offset                 << 0, 0, 0, 0, 0, 0;
+        m_left_FT_offset                  << 0, 0, 0, 0, 0, 0;
+        m_right_FT_offset_calibration_sum << 0, 0, 0, 0, 0, 0;
+        m_left_FT_offset_calibration_sum  << 0, 0, 0, 0, 0, 0;
+
+        pinocchio::urdf::buildModel(m_robot_util->m_urdf_filename, pinocchio::JointModelFreeFlyer(), m_model);
+        m_data = new pinocchio::Data(m_model);
+
+        m_rightSensorId = m_model.getFrameId("wrist_right_ft_link");
+        m_leftSensorId = m_model.getFrameId("wrist_left_ft_link");
+        
+        m_initSucceeded = true;
+        SEND_MSG("Entity Initialized", MSG_TYPE_INFO);
       }
 
 
@@ -102,6 +123,51 @@ namespace dynamicgraph
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
+      DEFINE_SIGNAL_INNER_FUNCTION(rightWeight, dynamicgraph::Vector)
+      {
+        if (!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal rightWeight before initialization!");
+          return s;
+        }
+            
+        const pinocchio::Force &weight = pinocchio::Force(m_rightHandWeight);
+        const Vector &q = m_qSIN(iter);
+        assert(q.size() == m_model.nq && "Unexpected size of signal q");
+      
+        // Get sensorPlacement
+        pinocchio::framesForwardKinematics(m_model, *m_data, q);
+        pinocchio::SE3 rightSensorPlacement = m_data->oMf[m_rightSensorId];
+      
+        pinocchio::Force rightWeight = rightSensorPlacement.actInv(weight);
+      
+        s = rightWeight.toVector();
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_INNER_FUNCTION(leftWeight, dynamicgraph::Vector)
+      {
+        if (!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal rightWeight before initialization!");
+          return s;
+        }
+            
+        const pinocchio::Force &weight = pinocchio::Force(m_leftHandWeight);
+        const Vector &q = m_qSIN(iter);
+        assert(q.size() == m_model.nq && "Unexpected size of signal q");
+      
+        pinocchio::framesForwardKinematics(m_model, *m_data, q);
+        pinocchio::SE3 leftSensorPlacement = m_data->oMf[m_leftSensorId];
+      
+        pinocchio::Force leftWeight = leftSensorPlacement.actInv(weight);
+      
+        s = leftWeight.toVector();
+
+        return s;
+      }
+      
       DEFINE_SIGNAL_OUT_FUNCTION(rightWristForceOut, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
@@ -111,6 +177,8 @@ namespace dynamicgraph
         }
         const Vector & rightWristForce = m_rightWristForceInSIN(iter);
         assert(rightWristForce.size() == 6  && "Unexpected size of signal rightWristForceIn, should be 6.");
+        const Vector & rightWeight = m_rightWeightSINNER(iter);
+        assert(rightWeight.size() == 6  && "Unexpected size of signal rightWeight, should be 6.");
         
         //do offset calibration if needed
         if (m_rightCalibrationIter > 0)
@@ -122,12 +190,17 @@ namespace dynamicgraph
 		    {
          SEND_INFO_STREAM_MSG("Calibrating ft sensors...");  
 			   m_right_FT_offset = m_right_FT_offset_calibration_sum / CALIB_ITER_TIME ;
-         std::cout <<  m_rightHandWeight + m_right_FT_offset << std::endl;
+         m_right_FT_offset -= rightWeight;
+         std::cout << m_right_FT_offset << std::endl;
          m_rightCalibrationIter--;
 		    }
+
+        s = rightWristForce - m_right_FT_offset;
 		
-		    //remove offset and hand weight
-		    s = rightWristForce - m_rightHandWeight - m_right_FT_offset;
+		    if (m_removeWeight)
+        {
+          s -= rightWeight;
+        }
         return s;
       }
       
@@ -140,6 +213,8 @@ namespace dynamicgraph
         }
         const Vector & leftWristForce = m_leftWristForceInSIN(iter);
         assert(leftWristForce.size() == 6  && "Unexpected size of signal leftWristForceIn, should be 6.");
+        const Vector & leftWeight = m_leftWeightSINNER(iter);
+        assert(leftWeight.size() == 6  && "Unexpected size of signal leftWeight, should be 6.");
         
         //do offset calibration if needed
         if (m_leftCalibrationIter > 0)
@@ -149,13 +224,20 @@ namespace dynamicgraph
 	    	}
 		    else if (m_leftCalibrationIter == 0)
 	    	{
-			   m_left_FT_offset = m_left_FT_offset_calibration_sum / CALIB_ITER_TIME ; 
+			   m_left_FT_offset = m_left_FT_offset_calibration_sum / CALIB_ITER_TIME ;
+         m_left_FT_offset -= leftWeight;
          m_leftCalibrationIter--;
 		    }
 	    	//remove offset and hand weight
-		    s = leftWristForce - m_leftHandWeight - m_left_FT_offset;
+		    s = leftWristForce - m_left_FT_offset;
+
+        if (m_removeWeight)
+        {
+          s -= leftWeight;
+        }
         return s;
       }
+
       /* --- COMMANDS ---------------------------------------------------------- */
 
       void FtWristCalibration::setRightHandWeight(const Vector &rightW)
@@ -185,6 +267,11 @@ namespace dynamicgraph
         m_leftCalibrationIter = CALIB_ITER_TIME;
         m_right_FT_offset_calibration_sum << 0,0,0,0,0,0; 
         m_left_FT_offset_calibration_sum  << 0,0,0,0,0,0; 
+      }
+
+      void FtWristCalibration::setRemoveWeight(const bool &removeWeight)
+      {
+        m_removeWeight = removeWeight;
       }
       
       /* --- PROTECTED MEMBER METHODS ---------------------------------------------------------- */
