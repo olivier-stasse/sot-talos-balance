@@ -118,10 +118,14 @@ namespace dynamicgraph {
         Vector6d m_right_FT_offset;
         /// Offset or bias to be removed from Left FT sensor
         Vector6d m_left_FT_offset;
-        /// Variable used durring average computation of the offset
+        /// Variable used during average computation of the offset
         Vector6d m_right_FT_offset_calibration_sum;
-        /// Variable used durring average computation of the offset
+        /// Variable used during average computation of the offset
         Vector6d m_left_FT_offset_calibration_sum;
+        /// Variable used during average computation of the weight
+        Vector6d m_right_weight_calibration_sum;
+        /// Variable used during average computation of the weight
+        Vector6d m_left_weight_calibration_sum;
         /// true if the entity has been successfully initialized
         bool m_initSucceeded;
         /// weight of the right hand

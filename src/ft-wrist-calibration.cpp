@@ -107,6 +107,8 @@ namespace dynamicgraph
         m_left_FT_offset                  << 0, 0, 0, 0, 0, 0;
         m_right_FT_offset_calibration_sum << 0, 0, 0, 0, 0, 0;
         m_left_FT_offset_calibration_sum  << 0, 0, 0, 0, 0, 0;
+        m_right_weight_calibration_sum << 0, 0, 0, 0, 0, 0;
+        m_left_weight_calibration_sum << 0, 0, 0, 0, 0, 0;
 
         pinocchio::urdf::buildModel(m_robot_util->m_urdf_filename, pinocchio::JointModelFreeFlyer(), m_model);
         m_data = new pinocchio::Data(m_model);
@@ -184,14 +186,14 @@ namespace dynamicgraph
         if (m_rightCalibrationIter > 0)
         {
 			   m_right_FT_offset_calibration_sum += rightWristForce ;
+			   m_right_weight_calibration_sum += rightWeight ;
 			   m_rightCalibrationIter--;
 	    	}
 		    else if (m_rightCalibrationIter == 0)
 		    {
          SEND_INFO_STREAM_MSG("Calibrating ft sensors...");  
 			   m_right_FT_offset = m_right_FT_offset_calibration_sum / CALIB_ITER_TIME ;
-         m_right_FT_offset -= rightWeight;
-         std::cout << m_right_FT_offset << std::endl;
+         m_right_FT_offset -= m_right_weight_calibration_sum / CALIB_ITER_TIME;
          m_rightCalibrationIter--;
 		    }
 
@@ -220,12 +222,13 @@ namespace dynamicgraph
         if (m_leftCalibrationIter > 0)
         {
 			   m_left_FT_offset_calibration_sum += leftWristForce;
+         m_left_weight_calibration_sum += leftWeight ;
 			   m_leftCalibrationIter--;
 	    	}
 		    else if (m_leftCalibrationIter == 0)
 	    	{
 			   m_left_FT_offset = m_left_FT_offset_calibration_sum / CALIB_ITER_TIME ;
-         m_left_FT_offset -= leftWeight;
+         m_left_FT_offset -= m_left_weight_calibration_sum / CALIB_ITER_TIME;
          m_leftCalibrationIter--;
 		    }
 	    	//remove offset and hand weight
