@@ -23,12 +23,12 @@
 
 #if defined (WIN32)
 #  if defined (position_controller_EXPORTS)
-#    define EULERTOQUAT_EXPORT __declspec(dllexport)
+#    define QUATTOEULER_EXPORT __declspec(dllexport)
 #  else
-#    define EULERTOQUAT_EXPORT __declspec(dllimport)
+#    define QUATTOEULER_EXPORT __declspec(dllimport)
 #  endif
 #else
-#  define EULERTOQUAT_EXPORT
+#  define QUATTOEULER_EXPORT
 #endif
 
 
@@ -52,7 +52,7 @@ namespace dynamicgraph {
       /* --- CLASS ----------------------------------------------------------- */
       /* --------------------------------------------------------------------- */
 
-      class EULERTOQUAT_EXPORT QuatToEuler
+      class QUATTOEULER_EXPORT QuatToEuler
                                : public ::dynamicgraph::Entity
       {
         DYNAMIC_GRAPH_ENTITY_DECL();
