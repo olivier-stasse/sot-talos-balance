@@ -29,3 +29,19 @@ q2e.euler.recompute(0)
 print(q2e.euler.value)
 
 assertApprox(q2e.euler.value,[0.0,0.0,0.5,0.0,0.0,np.pi,0.2,0.6],6)
+
+# --- Quat to homogeneous ---
+print("--- Quat to homogeneous ---")
+
+from sot_talos_balance.pose_quaternion_to_matrix_homo import PoseQuaternionToMatrixHomo
+
+
+signal_in = [0.0,0.0,0.5,0.0,0.0,1.0,0.0]
+q2m = PoseQuaternionToMatrixHomo('q2m')
+q2m.sin.value = signal_in
+print(q2m.sin.value)
+q2m.sout.recompute(0)
+print(q2m.sout.value)
+
+expected = ((-1.0, 0.0, 0.0, 0.0), (0.0, -1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.5), (0.0, 0.0, 0.0, 1.0))
+assertApprox(q2m.sout.value,expected,6)
