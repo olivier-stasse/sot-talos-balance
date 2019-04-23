@@ -72,14 +72,16 @@ namespace dynamicgraph
                    makeCommandVoid1(*this, &FtWristCalibration::init,
                                     docCommandVoid1("Initialize the entity.",
                                                     "Robot reference (string)")));
-        addCommand("setRightHandWeight",
-                   makeCommandVoid1(*this, &FtWristCalibration::setRightHandWeight,
-                                    docCommandVoid1("Set the weight of the right hand after the sensor",
-                                                    "Vector of default forces in Newton")));
-        addCommand("setLeftHandWeight",
-                   makeCommandVoid1(*this, &FtWristCalibration::setLeftHandWeight,
-                            docCommandVoid1("Set the weight of the left hand after the sensor",
-                                            "Vector of default forces in Newton")));
+        addCommand("setRightHandConf",
+                   makeCommandVoid2(*this, &FtWristCalibration::setRightHandConf,
+                                    docCommandVoid2("Set the data of the right hand",
+                                                    "Vector of default forces in Newton",
+                                                    "Vector of the weight lever arm")));
+        addCommand("setLeftHandConf",
+                   makeCommandVoid2(*this, &FtWristCalibration::setLeftHandConf,
+                            docCommandVoid2("Set the data of the left hand",
+                                            "Vector of default forces in Newton",
+                                            "Vector of the weight lever arm")));
         addCommand("calibrateWristSensor",
                     makeCommandVoid0(*this, &FtWristCalibration::calibrateWristSensor,
                             docCommandVoid0("Calibrate the wrist sensors")));
@@ -133,17 +135,21 @@ namespace dynamicgraph
           return s;
         }
             
-        const pinocchio::Force &weight = pinocchio::Force(m_rightHandWeight);
         const Vector &q = m_qSIN(iter);
         assert(q.size() == m_model.nq && "Unexpected size of signal q");
       
         // Get sensorPlacement
         pinocchio::framesForwardKinematics(m_model, *m_data, q);
         pinocchio::SE3 rightSensorPlacement = m_data->oMf[m_rightSensorId];
+
+        const pinocchio::Force &weight = pinocchio::Force(m_rightHandWeight);
+        Vector rightWeight = rightSensorPlacement.actInv(weight).toVector();
+
+        rightWeight[3] = m_rightOC(1)*rightWeight(2) - m_rightOC(2)*rightWeight(1);
+        rightWeight[4] = m_rightOC(2)*rightWeight(0) - m_rightOC(0)*rightWeight(2);
+        rightWeight[5] = m_rightOC(0)*rightWeight(1) - m_rightOC(1)*rightWeight(0);
       
-        pinocchio::Force rightWeight = rightSensorPlacement.actInv(weight);
-      
-        s = rightWeight.toVector();
+        s = rightWeight;
 
         return s;
       }
@@ -243,7 +249,7 @@ namespace dynamicgraph
 
       /* --- COMMANDS ---------------------------------------------------------- */
 
-      void FtWristCalibration::setRightHandWeight(const Vector &rightW)
+      void FtWristCalibration::setRightHandConf(const Vector &rightW, const Vector &rightOC)
       {
         if(!m_initSucceeded)
         {
@@ -251,9 +257,10 @@ namespace dynamicgraph
           return;
         }
         m_rightHandWeight << rightW[0],rightW[1],rightW[2],0,0,0;
+        m_rightOC << rightOC[0],rightOC[1],rightOC[2];
       }
 
-      void FtWristCalibration::setLeftHandWeight(const Vector &leftW)
+      void FtWristCalibration::setLeftHandConf(const Vector &leftW, const Vector &leftOC)
       {
         if(!m_initSucceeded)
         {
@@ -261,6 +268,7 @@ namespace dynamicgraph
           return;
         }
         m_leftHandWeight << leftW[0],leftW[1],leftW[2],0,0,0;
+        m_leftOC << leftOC[0],leftOC[1],leftOC[2];
       }
       
       void FtWristCalibration::calibrateWristSensor()

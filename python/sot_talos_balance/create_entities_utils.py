@@ -178,8 +178,8 @@ def create_device_filters(robot, dt):
     filters.joints_kin = create_chebi1_checby2_series_filter("joints_kin", dt, N_JOINTS)
     filters.ft_RF_filter = create_butter_lp_filter_Wn_04_N_2("ft_RF_filter", dt, 6)
     filters.ft_LF_filter = create_butter_lp_filter_Wn_04_N_2("ft_LF_filter", dt, 6)
-    filters.ft_RH_filter = create_chebi1_checby2_series_filter("ft_RH_filter", dt, 6)
-    filters.ft_LH_filter = create_chebi1_checby2_series_filter("ft_LH_filter", dt, 6)
+    filters.ft_RH_filter = create_butter_lp_filter_Wn_04_N_2("ft_RH_filter", dt, 6)
+    filters.ft_LH_filter = create_butter_lp_filter_Wn_04_N_2("ft_LH_filter", dt, 6)
     filters.torque_filter = create_chebi1_checby2_series_filter("ptorque_filter", dt, N_JOINTS)
     filters.acc_filter = create_chebi1_checby2_series_filter("acc_filter", dt, 3)
     filters.gyro_filter = create_chebi1_checby2_series_filter("gyro_filter", dt, 3)
@@ -508,11 +508,12 @@ def create_ft_calibrator(robot, conf):
     return ftc
 
 
-def create_ft_wrist_calibrator(robot, endEffectorWeight):
+def create_ft_wrist_calibrator(robot, endEffectorWeight, rightOC, leftOC):
     forceCalibrator = FtWristCalibration('forceCalibrator')
     forceCalibrator.init(robot.name)
-    forceCalibrator.setRightHandWeight(endEffectorWeight)
-    forceCalibrator.setLeftHandWeight(endEffectorWeight)
+    forceCalibrator.setRightHandConf(endEffectorWeight, rightOC)
+    forceCalibrator.setLeftHandConf(endEffectorWeight, leftOC)
+    forceCalibrator.setRemoveWeight(True)
     plug(robot.e2q.quaternion, forceCalibrator.q)
     plug(robot.device_filters.ft_RH_filter.x_filtered, forceCalibrator.rightWristForceIn)
     plug(robot.device_filters.ft_LH_filter.x_filtered, forceCalibrator.leftWristForceIn)

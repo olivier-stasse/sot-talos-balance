@@ -21,6 +21,8 @@ robot.timeStep = robot.device.getTimeStep()
 device = 'simu'
 endEffector = 'rightWrist'
 endEffectorWeight = forceConf.handWeight[device]
+rightOC = forceConf.rightLeverArm
+leftOC = forceConf.leftLeverArm
 
 # --- SET INITIAL CONFIGURATION ------------------------------------------------
 
@@ -46,8 +48,7 @@ robot.baseEstimator = create_base_estimator(robot, robot.timeStep, baseEstimator
 robot.e2q = EulerToQuat("e2q")
 plug(robot.baseEstimator.q, robot.e2q.euler)
 
-robot.forceCalibrator = create_ft_wrist_calibrator(robot, endEffectorWeight)
-robot.forceCalibrator.setRemoveWeight(True)
+robot.forceCalibrator = create_ft_wrist_calibrator(robot, endEffectorWeight, rightOC, leftOC)
 robot.controller = create_end_effector_admittance_controller(robot, endEffector)
 
 robot.controlManager = create_ctrl_manager(controlManagerConfig, robot.timeStep)
