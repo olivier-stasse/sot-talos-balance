@@ -61,6 +61,7 @@ SET(plugins
     dcm-estimator
     qualisys-client
     ft-calibration
+    ft-wrist-calibration
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)

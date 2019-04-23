@@ -108,24 +108,17 @@ def create_joint_controller(Kp):
 
 
 def create_end_effector_admittance_controller(robot, endEffector):
-    simu = True
-    if simu :
-        weight = -14.60
-    else :
-        weight = -26,93
     timeStep = robot.timeStep
     controller = AdmittanceControllerEndEffector("admittanceController")
 
-    # Filter and plug the force
-    forceFilter = create_butter_lp_filter_Wn_04_N_2("forceFilter", timeStep, 6)
+    # Filter and plug the force from force calibrator
     if endEffector == 'rightWrist':
-        plug(robot.device.forceRARM, forceFilter.x)
+        plug(robot.forceCalibrator.rightWristForceOut, controller.force)
     elif endEffector == 'leftWrist':
-        plug(robot.device.forceLARM, forceFilter.x)
+        plug(robot.forceCalibrator.leftWristForceOut, controller.force)
     else:
         print('Error in create_end_effector_admittance_controller : end \
         effector unknown')
-    plug(forceFilter.x_filtered, controller.force)
 
     # Plug configuration vector
     configurationTransform = EulerToQuat("configurationTransform")
@@ -515,3 +508,12 @@ def create_ft_calibrator(robot,conf):
   plug(robot.device_filters.ft_RF_filter.x_filtered, ftc.right_foot_force_in)
   plug(robot.device_filters.ft_LF_filter.x_filtered, ftc.left_foot_force_in)
   return ftc
+
+def create_ft_wrist_calibrator(robot, endEffectorWeight):
+  forceCalibrator = FtWristCalibration('forceCalibrator')
+  forceCalibrator.init(robot.name)
+  forceCalibrator.setRightHandWeight(endEffectorWeight)
+  forceCalibrator.setLeftHandWeight(endEffectorWeight)
+  plug(robot.device_filters.ft_RH_filter.x_filtered, forceCalibrator.rightWristForceIn)
+  plug(robot.device_filters.ft_LH_filter.x_filtered, forceCalibrator.leftWristForceIn)
+  return forceCalibrator
