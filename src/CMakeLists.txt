@@ -44,6 +44,7 @@ SET(plugins
     simple-reference-frame
     dummy-walking-pattern-generator
     simple-zmp-estimator
+    simple-distribute-wrench
     distribute-wrench
     dcm-com-controller
     dcm-controller

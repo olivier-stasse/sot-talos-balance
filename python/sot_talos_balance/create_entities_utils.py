@@ -30,6 +30,7 @@ from sot_talos_balance.com_admittance_controller import ComAdmittanceController
 from sot_talos_balance.dcm_controller import DcmController
 from sot_talos_balance.dcm_com_controller import DcmComController
 from sot_talos_balance.simple_zmp_estimator import SimpleZmpEstimator
+from sot_talos_balance.simple_distribute_wrench import SimpleDistributeWrench
 from sot_talos_balance.distribute_wrench import DistributeWrench
 from sot_talos_balance.simple_reference_frame import SimpleReferenceFrame
 from sot_talos_balance.state_transformation import StateTransformation
