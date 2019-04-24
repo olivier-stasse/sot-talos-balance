@@ -65,7 +65,7 @@ namespace dynamicgraph
         , m_removeWeight(false)  
       {
 
-        Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS);
+        Entity::signalRegistration(INPUT_SIGNALS << INNER_SIGNALS << OUTPUT_SIGNALS);
 
         /* Commands. */
          addCommand("init",
@@ -140,16 +140,19 @@ namespace dynamicgraph
       
         // Get sensorPlacement
         pinocchio::framesForwardKinematics(m_model, *m_data, q);
-        pinocchio::SE3 rightSensorPlacement = m_data->oMf[m_rightSensorId];
+        const pinocchio::SE3 &sensorPlacement = m_data->oMf[m_rightSensorId];
 
-        const pinocchio::Force &weight = pinocchio::Force(m_rightHandWeight);
-        Vector rightWeight = rightSensorPlacement.actInv(weight).toVector();
+        Vector leverArm = sensorPlacement.rotation() * m_rightLeverArm;
 
-        rightWeight[3] = m_rightOC(1)*rightWeight(2) - m_rightOC(2)*rightWeight(1);
-        rightWeight[4] = m_rightOC(2)*rightWeight(0) - m_rightOC(0)*rightWeight(2);
-        rightWeight[5] = m_rightOC(0)*rightWeight(1) - m_rightOC(1)*rightWeight(0);
-      
-        s = rightWeight;
+        m_rightHandWeight[3] =  leverArm(1)*m_rightHandWeight(2);
+        m_rightHandWeight[4] = -leverArm(0)*m_rightHandWeight(2);
+
+        Vector weight(6);
+        
+        weight.head<3>() = sensorPlacement.rotation().transpose() * m_rightHandWeight.head<3>();
+        weight.tail<3>() = sensorPlacement.rotation().transpose() * m_rightHandWeight.tail<3>();
+  
+        s = weight;
 
         return s;
       }
@@ -162,16 +165,23 @@ namespace dynamicgraph
           return s;
         }
             
-        const pinocchio::Force &weight = pinocchio::Force(m_leftHandWeight);
         const Vector &q = m_qSIN(iter);
         assert(q.size() == m_model.nq && "Unexpected size of signal q");
       
         pinocchio::framesForwardKinematics(m_model, *m_data, q);
-        pinocchio::SE3 leftSensorPlacement = m_data->oMf[m_leftSensorId];
-      
-        pinocchio::Force leftWeight = leftSensorPlacement.actInv(weight);
-      
-        s = leftWeight.toVector();
+        const pinocchio::SE3 &sensorPlacement = m_data->oMf[m_leftSensorId];
+
+        Vector leverArm = sensorPlacement.rotation() * m_leftLeverArm;
+
+        m_leftHandWeight[3] =  leverArm(1) * m_leftHandWeight(2);
+        m_leftHandWeight[4] = -leverArm(0) * m_leftHandWeight(2);
+
+        Vector weight(6);
+        
+        weight.head<3>() = sensorPlacement.rotation().transpose() * m_leftHandWeight.head<3>();
+        weight.tail<3>() = sensorPlacement.rotation().transpose() * m_leftHandWeight.tail<3>();
+  
+        s = weight;
 
         return s;
       }
@@ -249,26 +259,26 @@ namespace dynamicgraph
 
       /* --- COMMANDS ---------------------------------------------------------- */
 
-      void FtWristCalibration::setRightHandConf(const Vector &rightW, const Vector &rightOC)
+      void FtWristCalibration::setRightHandConf(const double &rightW, const Vector &rightLeverArm)
       {
         if(!m_initSucceeded)
         {
           SEND_WARNING_STREAM_MSG("Cannot set right hand weight before initialization!");
           return;
         }
-        m_rightHandWeight << rightW[0],rightW[1],rightW[2],0,0,0;
-        m_rightOC << rightOC[0],rightOC[1],rightOC[2];
+        m_rightHandWeight << 0, 0, rightW, 0, 0, 0;
+        m_rightLeverArm << rightLeverArm[0],rightLeverArm[1],rightLeverArm[2];
       }
 
-      void FtWristCalibration::setLeftHandConf(const Vector &leftW, const Vector &leftOC)
+      void FtWristCalibration::setLeftHandConf(const double &leftW, const Vector &leftLeverArm)
       {
         if(!m_initSucceeded)
         {
           SEND_WARNING_STREAM_MSG("Cannot set left hand weight before initialization!");
           return;
         }
-        m_leftHandWeight << leftW[0],leftW[1],leftW[2],0,0,0;
-        m_leftOC << leftOC[0],leftOC[1],leftOC[2];
+        m_leftHandWeight << 0, 0, leftW, 0, 0, 0;
+        m_leftLeverArm << leftLeverArm[0],leftLeverArm[1],leftLeverArm[2];
       }
       
       void FtWristCalibration::calibrateWristSensor()

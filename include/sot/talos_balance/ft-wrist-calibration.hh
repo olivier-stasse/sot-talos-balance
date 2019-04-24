@@ -78,8 +78,8 @@ namespace dynamicgraph {
         /* --- COMMANDS --- */
 
         /// Commands for setting the hand weight
-        void setRightHandConf(const Vector &rightW, const Vector &rightOC);
-        void setLeftHandConf(const  Vector &leftW,  const Vector &leftOC);
+        void setRightHandConf(const double &rightW, const Vector &rightLeverArm);
+        void setLeftHandConf(const  double &leftW,  const Vector &leftLeverArm);
         
         /// Command to calibrate the wrist sensors when the robot is in half sitting with the hands aligned
         void calibrateWristSensor();
@@ -98,6 +98,7 @@ namespace dynamicgraph {
         
         /* --- TYPEDEFS ---- */
         typedef Eigen::Matrix<double, 6, 1>    Vector6d;
+        typedef Eigen::Matrix<double, 3, 1>    Vector3d;
 
       protected:
         /// Robot Util instance to get the sensor frame
@@ -133,9 +134,9 @@ namespace dynamicgraph {
         /// weight of the left hand
         Vector6d m_leftHandWeight;
         /// right hand lever arm
-        Vector6d m_rightOC;
+        Vector3d m_rightLeverArm;
         /// left hand lever arm
-        Vector6d m_leftOC;
+        Vector3d m_leftLeverArm;
         /// If true, the weight of the end effector is removed from the force
         bool m_removeWeight;
 
