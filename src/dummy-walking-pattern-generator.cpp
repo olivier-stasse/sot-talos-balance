@@ -225,7 +225,7 @@ namespace dynamicgraph
           const Vector & comDes = m_comDesSOUT(iter);
           const Vector & acomDes = m_acomDesSOUT(iter);
 
-          Vector zmpDes = comDes - acomDes/(omega*omega);
+          zmpDes = comDes - acomDes/(omega*omega);
           zmpDes[2] = 0.0;
         }
 
