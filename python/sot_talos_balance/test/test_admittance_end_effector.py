@@ -1,10 +1,14 @@
-from sot_talos_balance.utils.run_test_utils import run_test, runCommandClient, evalCommandClient
+from sot_talos_balance.utils.run_test_utils import *
 from time import sleep
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 run_test('appli_admittance_end_effector.py')
+
+run_ft_wrist_calibration('robot.forceCalibrator')
+
+raw_input("Wait before running the test")
 
 sleep(10.0)
 
@@ -30,6 +34,5 @@ sleep(10.0)
 # plt.legend(['w_force x', 'w_force y', 'w_force z'])
 
 raw_input("Wait before leaving the simulation")
-
 
 runCommandClient('dump_tracer(robot.tracer)')

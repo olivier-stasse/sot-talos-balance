@@ -112,3 +112,22 @@ def run_ft_calibration(sensor_name,force=False):
     else:
         print("Skipping sensor calibration")
 
+def run_ft_wrist_calibration(sensor_name,force=False):
+    cb = False
+    if force:
+        cb = True
+    else:
+        c = raw_input("Calibrate wrist force sensors? [y/N] ")
+        try:
+            cb = strtobool(c)
+        except:
+            cb = False
+    if cb:
+        raw_input("Wait before running the calibration")
+        print("Calibrating sensors...")
+        runCommandClient(sensor_name+'.calibrateWristSensor()')
+        sleep(1.0) # TODO: get time/state from F/T sensor
+        print("Sensors are calibrated!")
+    else:
+        print("Skipping sensor calibration")
+

@@ -1,13 +1,14 @@
-from sot_talos_balance.control_manager                        import ControlManager
-from sot_talos_balance.example                                import Example
-from sot_talos_balance.parameter_server                       import ParameterServer
-from dynamic_graph.tracer_real_time                           import TracerRealTime
-from time                                                     import sleep
-from sot_talos_balance.base_estimator                         import BaseEstimator
-from sot_talos_balance.madgwickahrs                           import MadgwickAHRS
-from sot_talos_balance.imu_offset_compensation                import ImuOffsetCompensation
-from sot_talos_balance.dcm_estimator                          import DcmEstimator
-from sot_talos_balance.ft_calibration                         import FtCalibration
+from sot_talos_balance.control_manager import ControlManager
+from sot_talos_balance.example import Example
+from sot_talos_balance.parameter_server import ParameterServer
+from dynamic_graph.tracer_real_time import TracerRealTime
+from time import sleep
+from sot_talos_balance.base_estimator import BaseEstimator
+from sot_talos_balance.madgwickahrs import MadgwickAHRS
+from sot_talos_balance.imu_offset_compensation import ImuOffsetCompensation
+from sot_talos_balance.dcm_estimator import DcmEstimator
+from sot_talos_balance.ft_calibration import FtCalibration
+from sot_talos_balance.ft_wrist_calibration import FtWristCalibration
 
 from sot_talos_balance.euler_to_quat import EulerToQuat
 from sot_talos_balance.quat_to_euler import QuatToEuler
@@ -110,20 +111,16 @@ def create_end_effector_admittance_controller(robot, endEffector):
     timeStep = robot.timeStep
     controller = AdmittanceControllerEndEffector("admittanceController")
 
-    # Filter and plug the force
-    forceFilter = create_butter_lp_filter_Wn_04_N_2("forceFilter", timeStep, 6)
+    # Filter and plug the force from force calibrator
     if endEffector == 'rightWrist':
-        plug(robot.device.forceRARM, forceFilter.x)
+        plug(robot.forceCalibrator.rightWristForceOut, controller.force)
     elif endEffector == 'leftWrist':
-        plug(robot.device.forceLARM, forceFilter.x)
+        plug(robot.forceCalibrator.leftWristForceOut, controller.force)
     else:
-        print('Error in create_end_effector_admittance_controller : end effector unknown')
-    plug(forceFilter.x_filtered, controller.force)
+        print('Error in create_end_effector_admittance_controller : end \
+        effector unknown')
 
-    # Plug configuration vector
-    configurationTransform = EulerToQuat("configurationTransform")
-    plug(robot.baseEstimator.q, configurationTransform.euler)
-    plug(configurationTransform.quaternion, controller.q)
+    plug(robot.e2q.quaternion, controller.q)
 
     controller.Kp.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     controller.Kd.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -131,11 +128,12 @@ def create_end_effector_admittance_controller(robot, endEffector):
     controller.dqSaturation.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     if endEffector == 'rightWrist':
-        controller.init(timeStep, "wrist_right_ft_link", 'arm_right_7_joint', True)
+        controller.init(timeStep, "wrist_right_ft_link", 'arm_right_7_joint')
     elif endEffector == 'leftWrist':
-        controller.init(timeStep, "wrist_left_ft_link", 'arm_left_7_joint', True)
+        controller.init(timeStep, "wrist_left_ft_link", 'arm_left_7_joint')
     else:
-        print('Error in create_end_effector_admittance_controller : end effector unknown')
+        print('Error in create_end_effector_admittance_controller : end \
+        effector unknown')
 
     return controller
 
@@ -180,8 +178,8 @@ def create_device_filters(robot, dt):
     filters.joints_kin = create_chebi1_checby2_series_filter("joints_kin", dt, N_JOINTS)
     filters.ft_RF_filter = create_butter_lp_filter_Wn_04_N_2("ft_RF_filter", dt, 6)
     filters.ft_LF_filter = create_butter_lp_filter_Wn_04_N_2("ft_LF_filter", dt, 6)
-    filters.ft_RH_filter = create_chebi1_checby2_series_filter("ft_RH_filter", dt, 6)
-    filters.ft_LH_filter = create_chebi1_checby2_series_filter("ft_LH_filter", dt, 6)
+    filters.ft_RH_filter = create_butter_lp_filter_Wn_04_N_2("ft_RH_filter", dt, 6)
+    filters.ft_LH_filter = create_butter_lp_filter_Wn_04_N_2("ft_LH_filter", dt, 6)
     filters.torque_filter = create_chebi1_checby2_series_filter("ptorque_filter", dt, N_JOINTS)
     filters.acc_filter = create_chebi1_checby2_series_filter("acc_filter", dt, 3)
     filters.gyro_filter = create_chebi1_checby2_series_filter("gyro_filter", dt, 3)
@@ -499,11 +497,24 @@ def create_zmp_estimator(robot, filter=False):
     estimator.init()
     return estimator
 
-def create_ft_calibrator(robot,conf):
-  ftc = FtCalibration('ftc')
-  ftc.init(robot.name)
-  ftc.setRightFootWeight(conf.rfw)
-  ftc.setLeftFootWeight(conf.lfw)
-  plug(robot.device_filters.ft_RF_filter.x_filtered, ftc.right_foot_force_in)
-  plug(robot.device_filters.ft_LF_filter.x_filtered, ftc.left_foot_force_in)
-  return ftc
+
+def create_ft_calibrator(robot, conf):
+    ftc = FtCalibration('ftc')
+    ftc.init(robot.name)
+    ftc.setRightFootWeight(conf.rfw)
+    ftc.setLeftFootWeight(conf.lfw)
+    plug(robot.device_filters.ft_RF_filter.x_filtered, ftc.right_foot_force_in)
+    plug(robot.device_filters.ft_LF_filter.x_filtered, ftc.left_foot_force_in)
+    return ftc
+
+
+def create_ft_wrist_calibrator(robot, endEffectorWeight, rightOC, leftOC):
+    forceCalibrator = FtWristCalibration('forceCalibrator')
+    forceCalibrator.init(robot.name)
+    forceCalibrator.setRightHandConf(endEffectorWeight, rightOC)
+    forceCalibrator.setLeftHandConf(endEffectorWeight, leftOC)
+    forceCalibrator.setRemoveWeight(True)
+    plug(robot.e2q.quaternion, forceCalibrator.q)
+    plug(robot.device_filters.ft_RH_filter.x_filtered, forceCalibrator.rightWristForceIn)
+    plug(robot.device_filters.ft_LH_filter.x_filtered, forceCalibrator.leftWristForceIn)
+    return forceCalibrator

@@ -1,6 +1,7 @@
 import sot_talos_balance.talos.parameter_server_conf as paramServerConfig
 import sot_talos_balance.talos.control_manager_conf as controlManagerConfig
 import sot_talos_balance.talos.base_estimator_conf as baseEstimatorConf
+import sot_talos_balance.talos.ft_wrist_calibration_conf as forceConf
 from sot_talos_balance.create_entities_utils import *
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d
 from dynamic_graph.sot.core import SOT, Task, GainAdaptive, FeaturePosture
@@ -15,6 +16,14 @@ from sot_talos_balance.create_entities_utils import addTrace, dump_tracer
 
 robot.timeStep = robot.device.getTimeStep()
 
+# --- EXPERIMENTAL SET UP ------------------------------------------------------
+
+device = 'simu'
+endEffector = 'rightWrist'
+endEffectorWeight = forceConf.handWeight[device]
+rightOC = forceConf.rightLeverArm
+leftOC = forceConf.leftLeverArm
+
 # --- SET INITIAL CONFIGURATION ------------------------------------------------
 
 q = [0., 0., 1.018213, 0., 0., 0.]  # Base
@@ -23,7 +32,8 @@ q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]  # Right Leg
 q += [0.0,  0.006761]  # Chest
 q += [0.25847, 0.173046, -0.0002, -0.525366, 0., 0., 0.1, -0.005]  # Left Arm
 # q += [-0.25847, -0.173046, 0.0002, -0.525366, 0., 0., 0.1, -0.005]  # Right Arm
-q += [-0.25847, -0.0, 0.19, -1.61, 0., 0., 0.1, -0.005]              #Right Arm
+# q += [-0.25847, -0.0, 0.19, -1.61, 0., 0., 0.1, -0.005]             # Right Arm
+q += [-0.0, -0.01, 0.00, -1.58, -0.01, 0., 0., -0.005]  # Right Arm
 q += [0.,  0.]  # Head
 robot.device.set(q)
 
@@ -33,11 +43,18 @@ robot.param_server = create_parameter_server(paramServerConfig, robot.timeStep)
 robot.device_filters = create_device_filters(robot, robot.timeStep)
 robot.imu_filters = create_imu_filters(robot, robot.timeStep)
 robot.baseEstimator = create_base_estimator(robot, robot.timeStep, baseEstimatorConf)
-robot.controller = create_end_effector_admittance_controller(robot, 'rightWrist')
+
+# Get configuration vector
+robot.e2q = EulerToQuat("e2q")
+plug(robot.baseEstimator.q, robot.e2q.euler)
+
+robot.forceCalibrator = create_ft_wrist_calibrator(robot, endEffectorWeight, rightOC, leftOC)
+robot.controller = create_end_effector_admittance_controller(robot, endEffector)
 
 robot.controlManager = create_ctrl_manager(controlManagerConfig, robot.timeStep)
 robot.controlManager.addCtrlMode('sot_input')
 robot.controlManager.setCtrlMode('all', 'sot_input')
+
 
 # --- HAND TASK ----------------------------------------------------------------
 
@@ -113,7 +130,9 @@ create_topic(robot.publisher, robot.controller, 'force', robot=robot, data_type=
 create_topic(robot.publisher, robot.controller, 'dq', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.controller, 'w_dq', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.controller, 'w_forceDes', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.device, 'velocity', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.forceCalibrator, 'leftWristForceOut', robot=robot, data_type='vector')  # calibrated left wrench
+create_topic(robot.publisher, robot.forceCalibrator, 'rightWristForceOut', robot=robot, data_type='vector')  # calibrated right wrench
+
 
 # # --- ROS SUBSCRIBER
 robot.subscriber = RosSubscribe("end_effector_subscriber")
@@ -122,7 +141,8 @@ robot.subscriber.add("vector", "force", "/sot/controller/force")
 robot.subscriber.add("vector", "dq", "/sot/controller/dq")
 robot.subscriber.add("vector", "w_dq", "/sot/controller/w_dq")
 robot.subscriber.add("vector", "w_forceDes", "/sot/controller/w_forceDes")
-robot.subscriber.add("vector", "velocity", "/sot/device/velocity")
+robot.subscriber.add("vector", "leftWristForceOut", "/sot/forceCalibrator/leftWristForceOut")
+robot.subscriber.add("vector", "rightWristForceOut", "/sot/forceCalibrator/rightWristForceOut")
 
 # --- TRACER  ------------------------------------------------------------------
 

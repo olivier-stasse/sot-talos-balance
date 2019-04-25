@@ -100,22 +100,17 @@ public:
    * @brief      Initialize the entity
    *
    * @param[in]  dt  Time step of the control
-   * @param[in]  sensorFrameName  Name of the force sensor of the end-effector 
+   * @param[in]  sensorFrameName  Name of the force sensor of the end-effector
    *             used in the pinocchio model
+   * @param[in]  endeffectorName  Name of the endEffectorJoint 
    */
-  void init(const double &dt, const std::string &sensorFrameName, 
-            const std::string &endeffectorName, const bool &removeWeight);
+  void init(const double &dt, const std::string &sensorFrameName,
+            const std::string &endeffectorName);
+
   /**
    * @brief      Reset the velocity
    */
   void resetDq();
-
-   /**
-   * @brief      Set to true if you want to remove the weight
-   * 
-   * @param[in]  removeWeight  Boolean used to remove the weight or not
-   */
-  void setRemoveWeight(const bool &removeWeight);
 
   /* --- ENTITY INHERITANCE --- */
   virtual void display(std::ostream &os) const;
@@ -131,8 +126,6 @@ protected:
   double m_dt;
   // Weight of the end-effector
   double m_mass;
-  // If true, the weight of the end effector is removed from the force
-  bool m_removeWeight;
 
   /// Robot Util instance to get the sensor frame
   RobotUtilShrPtr m_robot_util;
@@ -144,11 +137,7 @@ protected:
   pinocchio::FrameIndex m_sensorFrameId;
   /// Id of the joint of the end-effector
   pinocchio::JointIndex m_endEffectorId;
-  /// robot configuration according to pinocchio convention
-  dynamicgraph::Vector m_q;
-
-  const double END_EFFECTOR_WEIGHT = -14.604817920170488;
-
+  
 }; // class AdmittanceControllerEndEffector
 
 } // namespace talos_balance

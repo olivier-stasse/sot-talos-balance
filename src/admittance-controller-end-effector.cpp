@@ -63,41 +63,35 @@ AdmittanceControllerEndEffector::AdmittanceControllerEndEffector(const std::stri
       CONSTRUCT_SIGNAL_INNER(w_dq, dynamicgraph::Vector, INPUT_SIGNALS << m_w_forceSINNER),
       CONSTRUCT_SIGNAL_OUT(dq, dynamicgraph::Vector, m_w_dqSINNER),
       m_initSucceeded(false),
-      m_removeWeight(false),
       m_robot_util(),
       m_model(),
+      m_data(),
       m_sensorFrameId(),
       m_endEffectorId()
 {
   Entity::signalRegistration(INPUT_SIGNALS << INNER_SIGNALS << OUTPUT_SIGNALS);
 
   /* Commands. */
-  addCommand("init", makeCommandVoid4(*this,
-                                      &AdmittanceControllerEndEffector::init,
-                                      docCommandVoid4("Initialize the entity.",
+  addCommand("init", makeCommandVoid3(*this,
+                                       &AdmittanceControllerEndEffector::init,
+                                       docCommandVoid3("Initialize the entity.",
                                                       "time step",
                                                       "sensor frame name",
-                                                      "end Effector Joint Name",
-                                                      "remove weight boolean")));
+                                                      "end Effector Joint Name")));
   addCommand("resetDq", makeCommandVoid0(*this,
     &AdmittanceControllerEndEffector::resetDq,
     docCommandVoid0("resetDq")));
-
-  addCommand("setRemoveWeight", makeCommandVoid1(*this,
-    &AdmittanceControllerEndEffector::setRemoveWeight,
-    docCommandVoid1("set RemoveWeight", "desired removeWeight")));
 }
 
 void AdmittanceControllerEndEffector::init(const double &dt,
                                            const std::string &sensorFrameName,
-                                           const std::string &endEffectorName,
-                                           const bool &removeWeight)
+                                           const std::string &endEffectorName)
 {
-  if (!m_KpSIN.isPlugged())
+  if (!m_dqSaturationSIN.isPlugged())
     return SEND_MSG("Init failed: signal dqSaturation is not plugged", MSG_TYPE_ERROR);
-  if (!m_dqSaturationSIN.isPlugged())
+  if (!m_KpSIN.isPlugged())
     return SEND_MSG("Init failed: signal Kp is not plugged", MSG_TYPE_ERROR);
-  if (!m_dqSaturationSIN.isPlugged())
+  if (!m_KdSIN.isPlugged())
     return SEND_MSG("Init failed: signal Kd is not plugged", MSG_TYPE_ERROR);
   if (!m_forceSIN.isPlugged())
     return SEND_MSG("Init failed: signal force is not plugged", MSG_TYPE_ERROR);
@@ -109,7 +103,6 @@ void AdmittanceControllerEndEffector::init(const double &dt,
   m_n = 6;
   m_dt = dt;
   m_w_dq.setZero(m_n);
-  m_removeWeight = removeWeight;
 
   try
   {
@@ -128,11 +121,8 @@ void AdmittanceControllerEndEffector::init(const double &dt,
 
     pinocchio::urdf::buildModel(m_robot_util->m_urdf_filename, pinocchio::JointModelFreeFlyer(), m_model);
     m_data = new pinocchio::Data(m_model);
-    const Vector &q = Vector::Zero(m_model.nq);
 
-    assert(m_model.existJoint(endEffectorName));
     m_endEffectorId = m_model.getJointId(endEffectorName);
-    assert(m_model.existFrame(sensorFrameName));
     m_sensorFrameId = m_model.getFrameId(sensorFrameName);
   }
   catch (const std::exception &e)
@@ -152,11 +142,6 @@ void AdmittanceControllerEndEffector::resetDq()
   return;
 }
 
-void AdmittanceControllerEndEffector::setRemoveWeight(const bool &removeWeight)
-{
-  m_removeWeight = removeWeight;
-}
-
 /* ------------------------------------------------------------------- */
 /* --- SIGNALS ------------------------------------------------------- */
 /* ------------------------------------------------------------------- */
@@ -170,29 +155,18 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_force, dynamicgraph::Vector)
 
   getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WFORCE_COMPUTATION);
 
-  const Vector &vForce = m_forceSIN(iter);
+  const Vector &force = m_forceSIN(iter);
   const Vector &q = m_qSIN(iter);
-  assert(vForce.size() == m_n && "Unexpected size of signal force");
+  assert(force.size() == m_n && "Unexpected size of signal force");
   assert(q.size() == m_model.nq && "Unexpected size of signal q");
 
   // Get sensorPlacement
   pinocchio::framesForwardKinematics(m_model, *m_data, q);
   pinocchio::SE3 sensorPlacement = m_data->oMf[m_sensorFrameId];
 
-  pinocchio::Force force = pinocchio::Force(vForce);
-  pinocchio::Force w_force = sensorPlacement.act(force);
-  Vector w_vForce = w_force.toVector();
+  Vector w_force = sensorPlacement.act(pinocchio::Force(force)).toVector();
 
-  if (m_removeWeight)
-  {
-    // Eigen::Vector3d OC(0.02097597, -0.02460337, -0.00272215);
-    // Vector w_OC = sensorPlacement.rotation() * OC;
-    w_vForce(2) -= END_EFFECTOR_WEIGHT;
-    // w_forceDes(3) += w_OC(1) * weight;
-    // w_forceDes(4) += -w_OC(0) * weight;
-  }
-
-  s = w_vForce;
+  s = w_force;
 
   getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WFORCE_COMPUTATION);
 
@@ -253,10 +227,9 @@ DEFINE_SIGNAL_OUT_FUNCTION(dq, dynamicgraph::Vector)
   // Get endEffectorPlacement
   pinocchio::SE3 placement = m_data->oMi[m_endEffectorId];
 
-  pinocchio::Motion velocityWorldFrame = pinocchio::Motion(w_dq);
-  pinocchio::Motion velocity = placement.actInv(velocityWorldFrame);
+  Vector velocity = placement.actInv(pinocchio::Motion(w_dq)).toVector();
 
-  s = velocity.toVector();
+  s = velocity;
 
   getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQ_COMPUTATION);
 
