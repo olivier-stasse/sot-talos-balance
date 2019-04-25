@@ -8,6 +8,7 @@ from dynamic_graph.sot.core import Task, FeaturePosture
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
+from dynamic_graph.sot.core import operator
 from math import sqrt
 import numpy as np
 
@@ -42,19 +43,23 @@ robot.dynamic.WT.recompute(0)
 
 # --- Trajectory generators
 robot.comTrajGen = create_com_trajectory_generator(dt,robot)
-robot.lfPosTrajGen  = create_position_trajectory_generator(dt, robot, 'LF')
-robot.rfPosTrajGen  = create_position_trajectory_generator(dt, robot, 'RF')
+
+robot.lfTrajGen  = create_pose_rpy_trajectory_generator(dt, robot, 'LF')
+robot.lfToMatrix = PoseRollPitchYawToMatrixHomo('lf2m')
+plug(robot.lfTrajGen.x, robot.lfToMatrix.sin)
+
+robot.rfTrajGen  = create_pose_rpy_trajectory_generator(dt, robot, 'RF')
+robot.rfToMatrix = PoseRollPitchYawToMatrixHomo('rf2m')
+plug(robot.rfTrajGen.x, robot.rfToMatrix.sin)
 
 # --- Interface with controller entities
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
 wp.init()
 wp.omega.value = omega
-wp.waist.value = robot.dynamic.WT.value          # wait receives a full homogeneous matrix, but only the rotational part is controlled
-wp.footLeft.value = robot.dynamic.LF.value
-wp.footRight.value = robot.dynamic.RF.value
-plug(robot.lfPosTrajGen.x, wp.footPositionLeft)  # if given, footPositionLeft overrides the translation in footLeft
-plug(robot.rfPosTrajGen.x, wp.footPositionRight) # if given, footPositionRight overrides the translation in footRight
+wp.waist.value = robot.dynamic.WT.value          # waist receives a full homogeneous matrix, but only the rotational part is controlled
+plug(robot.lfToMatrix.sout, wp.footLeft)
+plug(robot.rfToMatrix.sout, wp.footRight)
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)
@@ -134,15 +139,59 @@ robot.zmp_estimator = zmp_estimator
 
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
+# --- CoM control
+Kp_com = [0.]*2 + [4.]
+
+comErr = operator.Substract_of_vector('comErr')
+plug(robot.wp.comDes, comErr.sin1)
+plug(robot.cdc_estimator.c, comErr.sin2)
+robot.comErr = comErr
+
+comControl = operator.Multiply_of_vector('comControl')
+comControl.sin0.value = Kp_com
+plug(robot.comErr.sout, comControl.sin1)
+robot.comControl = comControl
+
+forceControl = operator.Add_of_vector('forceControl')
+plug(robot.comControl.sout, forceControl.sin1)
+forceControl.sin2.value = [0.0, 0.0, mass*g]
+robot.forceControl = forceControl
+
+wrenchControl = operator.Mix_of_vector('wrenchControl')
+wrenchControl.setSignalNumber(3)
+wrenchControl.addSelec(1, 0, 3)
+wrenchControl.addSelec(2, 3, 3)
+wrenchControl.default.value = [0.0]*6
+plug(robot.forceControl.sout, wrenchControl.signal("sin1"))
+wrenchControl.signal("sin2").value = [0.0]*3
+robot.wrenchControl = wrenchControl
+
+# --- Distribute wrench
+distribute = SimpleDistributeWrench('distribute')
+plug(robot.e2q.quaternion, distribute.q)
+distribute.rho.value = 0.5
+plug(robot.wrenchControl.sout, distribute.wrenchDes)
+distribute.init(robot_name)
+robot.distribute = distribute
+
+# --- Trick to command both feet controllers at the same time
+robot.admBF_Kp = Selec_of_vector('admBF_Kp')
+robot.admBF_Kp.selec(0,6)
+robot.admBF_Kp.sin.value = [0.0]*2 + [3.0] + [0.0]*3
+
+robot.admBF_dqSaturation = Selec_of_vector('admBF_dqSaturation')
+robot.admBF_dqSaturation.selec(0,6)
+robot.admBF_dqSaturation.sin.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
 # --- Left foot
 controller = AdmittanceControllerEndEffector("admLF")
 
 plug(robot.ftc.left_foot_force_out, controller.force)
 plug(robot.e2q.quaternion, controller.q)
-controller.Kp.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-controller.Kd.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-controller.w_forceDes.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-controller.dqSaturation.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+plug(robot.admBF_Kp.sout, controller.Kp)
+controller.Kd.value = [1.0] * 6
+plug(robot.distribute.wrenchLeft, controller.w_forceDes)
+plug(robot.admBF_dqSaturation.sout, controller.dqSaturation)
 
 controller.init(dt, "right_sole_link", 'leg_right_6_joint')
 
@@ -153,10 +202,10 @@ controller = AdmittanceControllerEndEffector("admRF")
 
 plug(robot.ftc.right_foot_force_out, controller.force)
 plug(robot.e2q.quaternion, controller.q)
-controller.Kp.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-controller.Kd.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-controller.w_forceDes.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-controller.dqSaturation.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+plug(robot.admBF_Kp.sout, controller.Kp)
+controller.Kd.value = [1.0] * 6
+plug(robot.distribute.wrenchRight, controller.w_forceDes)
+plug(robot.admBF_dqSaturation.sout, controller.dqSaturation)
 
 controller.init(dt, "left_sole_link", 'leg_right_6_joint')
 
@@ -245,7 +294,7 @@ locals()['contactRF'] = robot.contactRF
 robot.taskCom = MetaTaskKineCom(robot.dynamic)
 plug(robot.wp.comDes,robot.taskCom.featureDes.errorIN)
 robot.taskCom.task.controlGain.value = 10
-robot.taskCom.task.setWithDerivative(True)
+robot.taskCom.feature.selec.value = '011' # needed ?
 
 # --- Waist
 robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
@@ -347,6 +396,10 @@ create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot = robot, data_ty
 
 #create_topic(robot.publisher, robot.device_filters.ft_LF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered left wrench
 #create_topic(robot.publisher, robot.device_filters.ft_RF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered right wrench
+
+create_topic(robot.publisher, robot.distribute, 'wrenchLeft', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.distribute, 'wrenchRight', robot = robot, data_type='vector')
+
 
 create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot = robot, data_type='vector')  # calibrated left wrench
 create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot = robot, data_type='vector') # calibrated right wrench
