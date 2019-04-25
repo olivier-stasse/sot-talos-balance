@@ -12,6 +12,7 @@ from sot_talos_balance.ft_wrist_calibration import FtWristCalibration
 
 from sot_talos_balance.euler_to_quat import EulerToQuat
 from sot_talos_balance.quat_to_euler import QuatToEuler
+from sot_talos_balance.pose_quaternion_to_matrix_homo import PoseQuaternionToMatrixHomo
 
 from dynamic_graph.sot.core.operator import Mix_of_vector
 from dynamic_graph.sot.core.operator import Selec_of_vector

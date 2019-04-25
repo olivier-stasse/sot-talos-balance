@@ -5,6 +5,7 @@ from numpy.testing import assert_almost_equal as assertApprox
 
 from sot_talos_balance.euler_to_quat import EulerToQuat
 from sot_talos_balance.quat_to_euler import QuatToEuler
+from sot_talos_balance.pose_quaternion_to_matrix_homo import PoseQuaternionToMatrixHomo
 
 # --- Euler to quat ---
 print("--- Euler to quat ---")
@@ -32,9 +33,6 @@ assertApprox(q2e.euler.value,[0.0,0.0,0.5,0.0,0.0,np.pi,0.2,0.6],6)
 
 # --- Quat to homogeneous ---
 print("--- Quat to homogeneous ---")
-
-from sot_talos_balance.pose_quaternion_to_matrix_homo import PoseQuaternionToMatrixHomo
-
 
 signal_in = [0.0,0.0,0.5,0.0,0.0,1.0,0.0]
 q2m = PoseQuaternionToMatrixHomo('q2m')
