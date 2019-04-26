@@ -229,7 +229,7 @@ namespace dynamicgraph
           {
             if(!m_textFileTrajGen->checkRange(m_t))
             {
-              s = (*m_textFileTrajGen)(m_textFileTrajGen->tmax());
+              s = (*m_textFileTrajGen)(m_textFileTrajGen->tmax()-m_dt); // HACK!!! m_dt avoids buffer overflow
               for(unsigned int i=0; i<m_n; i++)
               {
                 m_noTrajGen[i]->setInitialPoint(s(i));
