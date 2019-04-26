@@ -135,7 +135,7 @@ robot.zmp_estimator = zmp_estimator
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [3.0,3.0,3.0]
+Kp_dcm = [5.0,5.0,5.0]
 Ki_dcm = [0.0,0.0,0.0] # zero (to be set later)
 gamma_dcm = 0.2
 
@@ -173,7 +173,7 @@ com_admittance_control.setState(robot.wp.comDes.value,[0.0,0.0,0.0])
 
 robot.com_admittance_control = com_admittance_control
 
-Kp_adm = [12.0,12.0,0.0] # this value is employed later
+Kp_adm = [20.0,10.0,0.0] # this value is employed later
 
 # --- Control Manager
 robot.cm = create_ctrl_manager(cm_conf, dt, robot_name='robot')
