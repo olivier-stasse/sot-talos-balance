@@ -168,6 +168,8 @@ namespace dynamicgraph
         }
         m_splineTrajGen   = new parametriccurves::Spline<double,Eigen::Dynamic>();
         m_textFileTrajGen = new parametriccurves::TextFile<double, Eigen::Dynamic>(dt, n);
+
+        NdTrajectoryGenerator::setLoggerVerbosityLevel(dynamicgraph::LoggerVerbosity::VERBOSITY_ALL);
         m_initSucceeded = true;
       }
 
@@ -359,11 +361,16 @@ namespace dynamicgraph
         bool needToMoveToInitConf = false;
         const VectorXd& xInit = m_textFileTrajGen->getInitialPoint();
         for(unsigned int i=0; i<m_n; i++)
-          if(fabs(xInit[i] - (*m_currentTrajGen[i])(m_t)[0]) > 0.001)
+        {
+          const double currentVal = (*m_currentTrajGen[i])(m_t)[0];
+          if(fabs(xInit[i] - currentVal) > 0.001)
           {
             needToMoveToInitConf = true;
-            SEND_MSG("Component "+ toString(i) +" is too far from initial configuration so first i will move it there.", MSG_TYPE_WARNING);
+            //SEND_MSG("Component "+ toString(i) +" is too far from initial configuration so first i will move it there.", MSG_TYPE_WARNING);
+            SEND_MSG("Component "+ toString(i) +" is far from initial configuration (" + toString(xInit[i]) + "->" + toString(currentVal) + ")", MSG_TYPE_WARNING);
           }
+        }
+/*
         // if necessary move joints to initial configuration
         if(needToMoveToInitConf)
         {
@@ -381,6 +388,7 @@ namespace dynamicgraph
           m_t = 0.0;
           return;
         }
+*/
 
         m_t = 0.0;
         for(unsigned int i=0; i<m_n; i++)
