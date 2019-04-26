@@ -193,8 +193,19 @@ namespace dynamicgraph
         const double fzLeft = wrenchLeft[2];
         const double fzRight = wrenchRight[2];
 
+        const double e2 = m_eps/2;
         const double fz = fzLeft + fzRight;
-        if(fz >= m_eps)
+        if(fzLeft >= e2 && fzRight < e2)
+        {
+          m_emergency_stop_triggered = false;
+          s = copLeft;
+        }
+        else if(fzLeft < e2 && fzRight >= e2)
+        {
+          m_emergency_stop_triggered = false;
+          s = copRight;
+        }
+        else if(fz >= m_eps)
         {
           m_emergency_stop_triggered = false;
           s = ( copLeft*fzLeft + copRight*fzRight ) / fz;
