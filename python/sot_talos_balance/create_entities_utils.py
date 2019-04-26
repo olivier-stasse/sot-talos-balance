@@ -17,6 +17,8 @@ from sot_talos_balance.pose_quaternion_to_matrix_homo import PoseQuaternionToMat
 from dynamic_graph.sot.core.operator import Mix_of_vector
 from dynamic_graph.sot.core.operator import Selec_of_vector
 from dynamic_graph.sot.core.operator import MatrixHomoToPoseQuaternion
+from dynamic_graph.sot.core.operator import PoseRollPitchYawToMatrixHomo
+from dynamic_graph.sot.core.operator import MatrixHomoToPoseRollPitchYaw
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.joint_position_controller import JointPositionController
 from sot_talos_balance.admittance_controller import AdmittanceController
@@ -38,8 +40,17 @@ from sot_talos_balance.utils.sot_utils import Bunch
 from dynamic_graph import plug
 from dynamic_graph.ros import RosPublish
 
+import numpy as np
+
 N_JOINTS = 32
 
+# helper function. May need to move somewhere else
+def rotation_matrix_to_rpy(R):
+    rx = np.arctan2(R[2,1], R[2,2])
+    ry = np.arctan2(-R[2,0], np.sqrt(R[2,1]*R[2,1] + R[2,2]*R[2,2]))
+    rz = np.arctan2(R[1,0], R[0,0])
+
+    return (rx, ry, rz)
 
 def create_extend_mix(n_in, n_out):
     assert n_out > n_in
@@ -56,7 +67,6 @@ def create_extend_mix(n_in, n_out):
     mix_of_vector.signal("sin2").value = [2.0]*n_in
 
     return mix_of_vector
-
 
 def create_joint_trajectory_generator(dt):
     jtg = NdTrajectoryGenerator("jtg")
@@ -92,7 +102,7 @@ def create_zmp_trajectory_generator(dt, robot):
     return comTrajGen
 
 def create_position_trajectory_generator(dt, robot, signal_name):
-    trajGen = NdTrajectoryGenerator(signal_name+"TrajGen")
+    trajGen = NdTrajectoryGenerator(signal_name+"PosTrajGen")
 
     M = robot.dynamic.signal(signal_name).value
     v = [ M[i][3] for i in range(3) ]
@@ -102,11 +112,34 @@ def create_position_trajectory_generator(dt, robot, signal_name):
     trajGen.init(dt, 3)
     return trajGen
 
+def create_orientation_rpy_trajectory_generator(dt, robot, signal_name):
+    trajGen = NdTrajectoryGenerator(signal_name+"OrientationTrajGen")
+
+    M = robot.dynamic.signal(signal_name).value
+    v = list(rotation_matrix_to_rpy(np.array(M)[:3,:3]))
+    trajGen.initial_value.value = v
+
+    trajGen.trigger.value = 1.0
+    trajGen.init(dt, 3)
+    return trajGen
+
+def create_pose_rpy_trajectory_generator(dt, robot, signal_name):
+    trajGen = NdTrajectoryGenerator(signal_name+"TrajGen")
+
+    M = robot.dynamic.signal(signal_name).value
+    pos = [ M[i][3] for i in range(3) ]
+    euler = list(rotation_matrix_to_rpy(np.array(M)[:3,:3]))
+    v = pos + euler
+    trajGen.initial_value.value = v
+
+    trajGen.trigger.value = 1.0
+    trajGen.init(dt, 6)
+    return trajGen
+
 def create_joint_controller(Kp):
     controller = JointPositionController("posctrl")
     controller.Kp.value = Kp
     return controller
-
 
 def create_end_effector_admittance_controller(robot, endEffector):
     timeStep = robot.timeStep
