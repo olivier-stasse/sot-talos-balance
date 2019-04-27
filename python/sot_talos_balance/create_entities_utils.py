@@ -16,9 +16,11 @@ from sot_talos_balance.pose_quaternion_to_matrix_homo import PoseQuaternionToMat
 
 from dynamic_graph.sot.core.operator import Mix_of_vector
 from dynamic_graph.sot.core.operator import Selec_of_vector
+from dynamic_graph.sot.core.operator import Component_of_vector
 from dynamic_graph.sot.core.operator import MatrixHomoToPoseQuaternion
 from dynamic_graph.sot.core.operator import PoseRollPitchYawToMatrixHomo
 from dynamic_graph.sot.core.operator import MatrixHomoToPoseRollPitchYaw
+from sot_talos_balance.boolean_identity import BooleanIdentity
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.joint_position_controller import JointPositionController
 from sot_talos_balance.admittance_controller import AdmittanceController

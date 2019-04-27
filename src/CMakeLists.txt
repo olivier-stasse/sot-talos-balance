@@ -36,6 +36,7 @@ ENDIF(UNIX)
 #This project will create many plugins as shared libraries, listed here
 SET(plugins
     example
+    boolean-identity
     pose-quaternion-to-matrix-homo
     euler-to-quat
     quat-to-euler
