@@ -15,7 +15,7 @@ from dynamic_graph.tracer_real_time import TracerRealTime
 
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 
-cm_conf.CTRL_MAX = 100.0 # temporary hack
+cm_conf.CTRL_MAX = 10.0 # temporary hack
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep
