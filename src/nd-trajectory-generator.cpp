@@ -222,12 +222,25 @@ namespace dynamicgraph
             return s;
           }
           m_iterLast = iter;
-          m_t += m_dt;
 
-          if (m_triggerSIN(iter)==true && m_splineReady) startSpline();
+          const bool & isTriggered = m_triggerSIN(iter);
+
+          if(isTriggered || m_status[0]!=JTG_TEXT_FILE)
+              m_t += m_dt;
+
+          if (isTriggered && m_splineReady)
+              startSpline();
+
           if(m_status[0]==JTG_TEXT_FILE)
           {
-            if(!m_textFileTrajGen->checkRange(m_t))
+            if(!isTriggered)
+            {
+              for(unsigned int i=0; i<m_n; i++)
+              {
+                s(i) = (*m_noTrajGen[i])(m_t)[0];
+              }
+            }
+            else if(!m_textFileTrajGen->checkRange(m_t))
             {
               s = (*m_textFileTrajGen)(m_textFileTrajGen->tmax()-m_dt); // HACK!!! m_dt avoids buffer overflow
               for(unsigned int i=0; i<m_n; i++)
@@ -293,9 +306,15 @@ namespace dynamicgraph
 
         if(s.size()!=m_n)
           s.resize(m_n);
+
+        const bool & isTriggered = m_triggerSIN(iter);
+
         if(m_status[0]==JTG_TEXT_FILE)
         {
-          s = m_textFileTrajGen->derivate(m_t, 1);
+          if(isTriggered)
+            s = m_textFileTrajGen->derivate(m_t, 1);
+          else
+            s.setZero();
         }
         else if(m_status[0]==JTG_SPLINE)
           s = m_splineTrajGen->derivate(m_t, 1);
@@ -320,9 +339,14 @@ namespace dynamicgraph
         if(s.size()!=m_n)
           s.resize(m_n);
 
+        const bool & isTriggered = m_triggerSIN(iter);
+
         if(m_status[0]==JTG_TEXT_FILE)
         {
-          s = m_textFileTrajGen->derivate(m_t, 2);
+          if(isTriggered)
+            s = m_textFileTrajGen->derivate(m_t, 2);
+          else
+            s.setZero();
         }
         else if(m_status[0]==JTG_SPLINE)
           s = m_splineTrajGen->derivate(m_t, 2);
