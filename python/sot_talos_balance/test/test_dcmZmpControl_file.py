@@ -10,11 +10,12 @@ runCommandClient('test_folder = "' + test_folder + '"')
 
 run_test('appli_dcmZmpControl_file.py')
 
-#run_ft_calibration('robot.ftc')
-#raw_input("Wait before running the test")
+run_ft_calibration('robot.ftc')
+raw_input("Wait before running the test")
 
 # Connect ZMP reference and reset controllers
-print('Connect ZMP reference')
+print('Trigger trajectory')
+runCommandClient('robot.triggerTrajGen.sin.value = 1')
 # runCommandClient('plug(robot.zmp_estimator.emergencyStop,robot.cm.emergencyStop_zmp)')
 runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
 runCommandClient('robot.com_admittance_control.setState(robot.wp.comDes.value,[0.0,0.0,0.0])')

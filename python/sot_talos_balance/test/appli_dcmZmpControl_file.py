@@ -50,10 +50,15 @@ folder = data_folder + test_folder + '/'
 
 # --- Trajectory generators
 
+# --- General trigger
+robot.triggerTrajGen = BooleanIdentity('triggerTrajGen')
+robot.triggerTrajGen.sin.value = 0
+
 # --- CoM
 robot.comTrajGen = create_com_trajectory_generator(dt, robot)
 robot.comTrajGen.x.recompute(0) # trigger computation of initial value
 robot.comTrajGen.playTrajectoryFile(folder+'CoM.dat')
+plug(robot.triggerTrajGen.sout, robot.comTrajGen.trigger)
 
 # --- Left foot
 robot.lfTrajGen  = create_pose_rpy_trajectory_generator(dt, robot, 'LF')
@@ -62,6 +67,7 @@ robot.lfTrajGen.x.recompute(0) # trigger computation of initial value
 robot.lfToMatrix = PoseRollPitchYawToMatrixHomo('lf2m')
 plug(robot.lfTrajGen.x, robot.lfToMatrix.sin)
 robot.lfTrajGen.playTrajectoryFile(folder+'LeftFoot.dat')
+plug(robot.triggerTrajGen.sout, robot.lfTrajGen.trigger)
 
 # --- Right foot
 robot.rfTrajGen  = create_pose_rpy_trajectory_generator(dt, robot, 'RF')
@@ -70,11 +76,13 @@ robot.rfTrajGen.x.recompute(0) # trigger computation of initial value
 robot.rfToMatrix = PoseRollPitchYawToMatrixHomo('rf2m')
 plug(robot.rfTrajGen.x, robot.rfToMatrix.sin)
 robot.rfTrajGen.playTrajectoryFile(folder+'RightFoot.dat')
+plug(robot.triggerTrajGen.sout, robot.rfTrajGen.trigger)
 
 # --- ZMP
 robot.zmpTrajGen = create_zmp_trajectory_generator(dt,robot)
 robot.zmpTrajGen.x.recompute(0) # trigger computation of initial value
 robot.zmpTrajGen.playTrajectoryFile(folder+'ZMP.dat')
+plug(robot.triggerTrajGen.sout, robot.zmpTrajGen.trigger)
 
 # --- Waist
 robot.waistTrajGen = create_orientation_rpy_trajectory_generator(dt, robot, 'WT')
@@ -91,6 +99,7 @@ plug(robot.waistTrajGen.x, robot.waistMix.signal("sin2"))
 robot.waistToMatrix = PoseRollPitchYawToMatrixHomo('w2m')
 plug(robot.waistMix.sout, robot.waistToMatrix.sin)
 robot.waistTrajGen.playTrajectoryFile(folder+'WaistOrientation.dat')
+plug(robot.triggerTrajGen.sout, robot.waistTrajGen.trigger)
 
 # --- Interface with controller entities
 
@@ -375,6 +384,9 @@ plug(robot.dvdt.sout,robot.dynamic.acceleration)
 robot.publisher = create_rospublish(robot, 'robot_publisher')        
 
 create_topic(robot.publisher, robot.comTrajGen, 'x', robot = robot, data_type='vector')                   # generated CoM
+create_topic(robot.publisher, robot.comTrajGen, 'dx', robot = robot, data_type='vector')                  # generated CoM velocity
+create_topic(robot.publisher, robot.comTrajGen, 'ddx', robot = robot, data_type='vector')                 # generated CoM acceleration
+
 create_topic(robot.publisher, robot.wp, 'comDes', robot = robot, data_type='vector')                      # desired CoM
 
 create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM
