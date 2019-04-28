@@ -118,7 +118,7 @@ plug(robot.rfToMatrix.sout, wp.footRight)
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)
-plug(robot.zmpTrajGen.x, wp.zmp)
+#plug(robot.zmpTrajGen.x, wp.zmp)
 
 robot.wp = wp
 
