@@ -14,14 +14,17 @@ run_ft_calibration('robot.ftc')
 raw_input("Wait before running the test")
 
 # Connect ZMP reference and reset controllers
-print('Trigger trajectory')
-runCommandClient('robot.triggerTrajGen.sin.value = 1')
+print('Connect ZMP reference')
 runCommandClient('plug(robot.zmp_estimator.emergencyStop,robot.cm.emergencyStop_zmp)')
 runCommandClient('plug(robot.dcm_control.zmpRef,robot.com_admittance_control.zmpDes)')
 runCommandClient('robot.com_admittance_control.setState(robot.wp.comDes.value,[0.0,0.0,0.0])')
 runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
 runCommandClient('robot.dcm_control.resetDcmIntegralError()')
 runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
+
+raw_input("Wait before executing the trajectory")
+print('Executing the trajectory')
+runCommandClient('robot.triggerTrajGen.sin.value = 1')
 
 raw_input("Wait before dumping the data")
 
