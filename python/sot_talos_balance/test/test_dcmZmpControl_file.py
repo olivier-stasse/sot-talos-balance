@@ -22,9 +22,12 @@ runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
 runCommandClient('robot.dcm_control.resetDcmIntegralError()')
 runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
 
-raw_input("Wait before executing the trajectory")
-print('Executing the trajectory')
-runCommandClient('robot.triggerTrajGen.sin.value = 1')
+c = ask_for_confirmation('Execute trajectory?')
+if c:
+    print('Executing the trajectory')
+    runCommandClient('robot.triggerTrajGen.sin.value = 1')
+else:
+    print('Not executing the trajectory')
 
 raw_input("Wait before dumping the data")
 
