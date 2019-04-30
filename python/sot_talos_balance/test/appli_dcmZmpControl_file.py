@@ -418,6 +418,9 @@ create_topic(robot.publisher, robot.rfTrajGen, 'x', robot = robot, data_type='ve
 create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot = robot, data_type='vector')  # calibrated left wrench
 create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot = robot, data_type='vector') # calibrated right wrench
 
+create_topic(robot.publisher,  robot.dynamic, 'LF', robot = robot, data_type='matrixHomo')  # left foot
+create_topic(robot.publisher,  robot.dynamic, 'RF', robot = robot, data_type='matrixHomo')  # right foot
+
 # --- TRACER
 robot.tracer = TracerRealTime("com_tracer")
 robot.tracer.setBufferSize(80*(2**20))
@@ -442,6 +445,9 @@ addTrace(robot.tracer, robot.dcm_control, 'zmpRef')             # reference ZMP
 
 addTrace(robot.tracer, robot.ftc, 'left_foot_force_out')        # calibrated left wrench
 addTrace(robot.tracer,  robot.ftc, 'right_foot_force_out')      # calibrated right wrench
+
+addTrace(robot.tracer,  robot.dynamic, 'LF')                    # left foot
+addTrace(robot.tracer,  robot.dynamic, 'RF')                    # right foot
 
 robot.tracer.start()
 
