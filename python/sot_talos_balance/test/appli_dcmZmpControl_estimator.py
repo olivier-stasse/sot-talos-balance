@@ -41,23 +41,49 @@ robot.dynamic.WT.recompute(0)
 # -------------------------- DESIRED TRAJECTORY --------------------------
 
 # --- Trajectory generators
-robot.comTrajGen = create_com_trajectory_generator(dt,robot)
-robot.lfPosTrajGen  = create_position_trajectory_generator(dt, robot, 'LF')
-robot.rfPosTrajGen  = create_position_trajectory_generator(dt, robot, 'RF')
 
-# --- Walking pattern generator
+# --- CoM
+robot.comTrajGen = create_com_trajectory_generator(dt, robot)
+
+# --- Left foot
+robot.lfTrajGen  = create_pose_rpy_trajectory_generator(dt, robot, 'LF')
+# robot.lfTrajGen.x.recompute(0) # trigger computation of initial value
+robot.lfToMatrix = PoseRollPitchYawToMatrixHomo('lf2m')
+plug(robot.lfTrajGen.x, robot.lfToMatrix.sin)
+
+# --- Right foot
+robot.rfTrajGen  = create_pose_rpy_trajectory_generator(dt, robot, 'RF')
+# robot.rfTrajGen.x.recompute(0) # trigger computation of initial value
+robot.rfToMatrix = PoseRollPitchYawToMatrixHomo('rf2m')
+plug(robot.rfTrajGen.x, robot.rfToMatrix.sin)
+
+# --- Waist
+robot.waistTrajGen = create_orientation_rpy_trajectory_generator(dt, robot, 'WT')
+# robot.waistTrajGen.x.recompute(0) # trigger computation of initial value
+
+robot.waistMix = Mix_of_vector("waistMix")
+robot.waistMix.setSignalNumber(3)
+robot.waistMix.addSelec(1, 0, 3)
+robot.waistMix.addSelec(2, 3, 3)
+robot.waistMix.default.value = [0.0]*6
+robot.waistMix.signal("sin1").value = [0.0]*3
+plug(robot.waistTrajGen.x, robot.waistMix.signal("sin2"))
+
+robot.waistToMatrix = PoseRollPitchYawToMatrixHomo('w2m')
+plug(robot.waistMix.sout, robot.waistToMatrix.sin)
+
+# --- Interface with controller entities
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
 wp.init()
 wp.omega.value = omega
-wp.waist.value = robot.dynamic.WT.value
-wp.footLeft.value = robot.dynamic.LF.value
-wp.footRight.value = robot.dynamic.RF.value
-plug(robot.lfPosTrajGen.x, wp.footPositionLeft)
-plug(robot.rfPosTrajGen.x, wp.footPositionRight)
+plug(robot.waistToMatrix.sout, wp.waist)
+plug(robot.lfToMatrix.sout, wp.footLeft)
+plug(robot.rfToMatrix.sout, wp.footRight)
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)
+
 robot.wp = wp
 
 # --- Compute the values to use them in initialization

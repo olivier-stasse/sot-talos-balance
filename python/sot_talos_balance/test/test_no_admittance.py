@@ -21,6 +21,8 @@ if c:
         print("Executing the sinusoid...")
         runCommandClient('robot.comTrajGen.startSinusoid(1,0.025,2.0)')
         print("Sinusoid started!")
+    else:
+        print("Not executing the sinusoid")
 
     c3 = ask_for_confirmation("Put the robot back?")
     if c3:
@@ -47,7 +49,7 @@ if c:
     if c2:
         print("Raising the foot...")
         runCommandClient('h = robot.dynamic.LF.value[2][3]')
-        runCommandClient('robot.lfPosTrajGen.move(2,h+0.05,10.0)')
+        runCommandClient('robot.lfTrajGen.move(2,h+0.05,10.0)')
         sleep(10.0)
         print("Foot has been raised!")
         c3 = ask_for_confirmation("Put the foot back?")
@@ -57,7 +59,7 @@ if c:
 
     if c3:
         print("Putting the foot back...")
-        runCommandClient('robot.lfPosTrajGen.move(2,h,10.0)')
+        runCommandClient('robot.lfTrajGen.move(2,h,10.0)')
         sleep(10.0)
         print("The foot is back in position!")
         c4 = ask_for_confirmation("Put the robot back?")

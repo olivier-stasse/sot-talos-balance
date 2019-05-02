@@ -72,9 +72,6 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(footRight, MatrixHomogeneous);
         DECLARE_SIGNAL_IN(waist, MatrixHomogeneous);
 
-        DECLARE_SIGNAL_IN(footPositionLeft,  dynamicgraph::Vector);
-        DECLARE_SIGNAL_IN(footPositionRight, dynamicgraph::Vector);
-
         DECLARE_SIGNAL_IN(com,  dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(vcom, dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(acom, dynamicgraph::Vector);
