@@ -423,7 +423,7 @@ COLS_IN_ALPHA_INDEX    = 4
 # have to redo this when upgrading to a newer version of doxygen or when
 # changing the value of configuration settings such as GENERATE_TREEVIEW!
 
-# HTML_HEADER            = 
+HTML_HEADER            = @PROJECT_SOURCE_DIR@/doc/header.html
 # HTML_EXTRA_FILES       += 
 
 # The HTML_FOOTER tag can be used to specify a personal HTML footer for
@@ -451,7 +451,7 @@ HTML_FOOTER            =
 # the standard style sheet and is therefore more robust against future updates.
 # Doxygen will copy the style sheet files to the output directory.
 
-# HTML_EXTRA_STYLESHEET        = @PROJECT_SOURCE_DIR@/doc/customdoxygen.css
+HTML_EXTRA_STYLESHEET        = @PROJECT_SOURCE_DIR@/doc/customdoxygen.css
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output.
 # Doxygen will adjust the colors in the style sheet and background images
