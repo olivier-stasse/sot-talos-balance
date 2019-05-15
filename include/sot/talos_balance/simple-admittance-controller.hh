@@ -48,21 +48,21 @@ namespace dynamicgraph {
       /* --- CLASS ----------------------------------------------------------- */
       /* --------------------------------------------------------------------- */
 
-      class ADMITTANCECONTROLLER_EXPORT AdmittanceController
-          : public ::dynamicgraph::Entity
+      class ADMITTANCECONTROLLER_EXPORT SimpleAdmittanceController
+	: public ::dynamicgraph::Entity
       {
-      DYNAMIC_GRAPH_ENTITY_DECL();
+	DYNAMIC_GRAPH_ENTITY_DECL();
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-        /* --- CONSTRUCTOR ---- */
-        AdmittanceController( const std::string & name );
-
+	  
+	  /* --- CONSTRUCTOR ---- */
+	  SimpleAdmittanceController( const std::string & name );
+	
         void init(const double & dt, const unsigned & n);
-
+	
         void setPosition(const dynamicgraph::Vector & position);
-
+	
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(Kp, dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(state, dynamicgraph::Vector);

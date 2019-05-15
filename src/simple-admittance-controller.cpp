@@ -35,9 +35,9 @@ namespace dynamicgraph
 
 //Size to be aligned                                   "-------------------------------------------------------"
 
-#define PROFILE_ADMITTANCECONTROLLER_QREF_COMPUTATION  "AdmittanceController: qRef computation                 "
+#define PROFILE_SIMPLE_ADMITTANCECONTROLLER_QREF_COMPUTATION  "SimpleAdmittanceController: qRef computation                 "
 
-#define PROFILE_ADMITTANCECONTROLLER_DQREF_COMPUTATION "AdmittanceController: dqRef computation                "
+#define PROFILE_SIMPLE_ADMITTANCECONTROLLER_DQREF_COMPUTATION "SimpleAdmittanceController: dqRef computation                "
 
 #define INPUT_SIGNALS     m_KpSIN << m_stateSIN << m_tauSIN << m_tauDesSIN
 
@@ -45,16 +45,16 @@ namespace dynamicgraph
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
-      typedef AdmittanceController EntityClassName;
+      typedef SimpleAdmittanceController EntityClassName;
 
       /* --- DG FACTORY ---------------------------------------------------- */
-      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(AdmittanceController,
-                                         "AdmittanceController");
+      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(SimpleAdmittanceController,
+                                         "SimpleAdmittanceController");
 
       /* ------------------------------------------------------------------- */
       /* --- CONSTRUCTION -------------------------------------------------- */
       /* ------------------------------------------------------------------- */
-      AdmittanceController::AdmittanceController(const std::string& name)
+      SimpleAdmittanceController::SimpleAdmittanceController(const std::string& name)
           : Entity(name)
           , CONSTRUCT_SIGNAL_IN(Kp, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_IN(state, dynamicgraph::Vector)
@@ -67,13 +67,13 @@ namespace dynamicgraph
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
         /* Commands. */
-        addCommand("init", makeCommandVoid2(*this, &AdmittanceController::init, docCommandVoid2("Initialize the entity.","time step","Number of elements")));
-        addCommand("setPosition", makeCommandVoid1(*this, &AdmittanceController::setPosition, docCommandVoid1("Set initial reference position.","Initial position")));
+        addCommand("init", makeCommandVoid2(*this, &SimpleAdmittanceController::init, docCommandVoid2("Initialize the entity.","time step","Number of elements")));
+        addCommand("setPosition", makeCommandVoid1(*this, &SimpleAdmittanceController::setPosition, docCommandVoid1("Set initial reference position.","Initial position")));
         addCommand("useExternalState", makeDirectSetter(*this,&m_useState, docDirectSetter("use external state","bool")));
         addCommand("isUsingExternalState", makeDirectGetter(*this,&m_useState, docDirectGetter("use external state","bool")));
       }
 
-      void AdmittanceController::init(const double & dt, const unsigned & n)
+      void SimpleAdmittanceController::init(const double & dt, const unsigned & n)
       {
         if(n<1)
           return SEND_MSG("n must be at least 1", MSG_TYPE_ERROR);
@@ -90,7 +90,7 @@ namespace dynamicgraph
         m_initSucceeded = true;
       }
 
-      void AdmittanceController::setPosition(const dynamicgraph::Vector & position)
+      void SimpleAdmittanceController::setPosition(const dynamicgraph::Vector & position)
 
       {
         m_q = position;
@@ -108,7 +108,7 @@ namespace dynamicgraph
           return s;
         }
 
-        getProfiler().start(PROFILE_ADMITTANCECONTROLLER_DQREF_COMPUTATION);
+        getProfiler().start(PROFILE_SIMPLE_ADMITTANCECONTROLLER_DQREF_COMPUTATION);
 
         const Vector & tauDes = m_tauDesSIN(iter);
         const Vector & tau = m_tauSIN(iter);
@@ -122,7 +122,7 @@ namespace dynamicgraph
 
         s = dqRef;
 
-        getProfiler().stop(PROFILE_ADMITTANCECONTROLLER_DQREF_COMPUTATION);
+        getProfiler().stop(PROFILE_SIMPLE_ADMITTANCECONTROLLER_DQREF_COMPUTATION);
 
         return s;
       }
@@ -135,7 +135,7 @@ namespace dynamicgraph
           return s;
         }
 
-        getProfiler().start(PROFILE_ADMITTANCECONTROLLER_QREF_COMPUTATION);
+        getProfiler().start(PROFILE_SIMPLE_ADMITTANCECONTROLLER_QREF_COMPUTATION);
 
         const Vector & dqRef = m_dqRefSOUT(iter);
 
@@ -157,7 +157,7 @@ namespace dynamicgraph
 
         s = m_q;
 
-        getProfiler().stop(PROFILE_ADMITTANCECONTROLLER_QREF_COMPUTATION);
+        getProfiler().stop(PROFILE_SIMPLE_ADMITTANCECONTROLLER_QREF_COMPUTATION);
 
         return s;
       }
@@ -169,9 +169,9 @@ namespace dynamicgraph
       /* --- ENTITY -------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      void AdmittanceController::display(std::ostream& os) const
+      void SimpleAdmittanceController::display(std::ostream& os) const
       {
-        os << "AdmittanceController " << getName();
+        os << "SimpleAdmittanceController " << getName();
         try
         {
           getProfiler().report_all(3, os);
