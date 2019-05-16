@@ -34,7 +34,10 @@ namespace dynamicgraph
       using namespace pinocchio;
       using boost::math::normal; // typedef provides default type is double.
 
-      void se3Interp(const pinocchio::SE3 & s1, const pinocchio::SE3 & s2, const double alpha, pinocchio::SE3 & s12)
+      void se3Interp(const pinocchio::SE3 & s1,
+		     const pinocchio::SE3 & s2,
+		     const double alpha,
+		     pinocchio::SE3 & s12)
       {
         const Eigen::Vector3d t_( s1.translation() * alpha+
                                   s2.translation() * (1-alpha));
@@ -45,7 +48,8 @@ namespace dynamicgraph
         s12 =  pinocchio::SE3(pinocchio::exp3(w),t_);
       }
 
-      void rpyToMatrix(double roll, double pitch, double yaw, Eigen::Matrix3d & R)
+      void rpyToMatrix(double roll,
+		       double pitch, double yaw, Eigen::Matrix3d & R)
       {
         Eigen::AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
         Eigen::AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
@@ -75,7 +79,9 @@ namespace dynamicgraph
         }
       }
 
-      void quanternionMult(const Eigen::Vector4d & q1, const Eigen::Vector4d & q2,  Eigen::Vector4d & q12)
+      void quanternionMult(const Eigen::Vector4d & q1,
+			   const Eigen::Vector4d & q2,
+			   Eigen::Vector4d & q12)
       {
         q12(0) = q2(0)*q1(0)-q2(1)*q1(1)-q2(2)*q1(2)-q2(3)*q1(3);
         q12(1) = q2(0)*q1(1)+q2(1)*q1(0)-q2(2)*q1(3)+q2(3)*q1(2);
@@ -83,7 +89,10 @@ namespace dynamicgraph
         q12(3) = q2(0)*q1(3)-q2(1)*q1(2)+q2(2)*q1(1)+q2(3)*q1(0);
       }
 
-      void pointRotationByQuaternion(const Eigen::Vector3d & point,const Eigen::Vector4d & quat, Eigen::Vector3d & rotatedPoint)
+      void pointRotationByQuaternion
+      (const Eigen::Vector3d & point,
+       const Eigen::Vector4d & quat,
+       Eigen::Vector3d & rotatedPoint)
       {
         const Eigen::Vector4d p4(0.0, point(0),point(1),point(2));
         const Eigen::Vector4d quat_conj(quat(0),-quat(1),-quat(2),-quat(3));
@@ -111,9 +120,14 @@ namespace dynamicgraph
       {
         double wMean = (a1*w1+ a2*w2)/(w1+w2);
         if ( a1-a2 >= EIGEN_PI )
-            return (EIGEN_PI*(w1-w2)/(w2+w1) - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*(w1-w2)/(w2+w1) : EIGEN_PI + wMean - EIGEN_PI*(w1-w2)/(w2+w1); 
+	  return (EIGEN_PI*(w1-w2)/(w2+w1) - wMean)
+	    < 0 ? -EIGEN_PI +
+	      wMean - EIGEN_PI*(w1-w2)/(w2+w1) : EIGEN_PI +
+	      wMean - EIGEN_PI*(w1-w2)/(w2+w1); 
         else if ( a1-a2 < -EIGEN_PI )
-            return (EIGEN_PI*(w2-w1)/(w1+w2) - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2) : EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2); 
+	  return (EIGEN_PI*(w2-w1)/(w1+w2) - wMean)
+	    < 0 ? -EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2) :
+	      EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2); 
         return wMean;
       }
 
@@ -129,7 +143,8 @@ namespace dynamicgraph
       //     pa  = a1; //positive angle
       //     paw = w1; //positive angle weight 
       //     double piFac = (paw-naw)/(naw+paw);
-      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac;        
+      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI +
+      //       wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac;
       //   }
       //   else if ( a1-a2 < -EIGEN_PI )
       //   {
@@ -138,7 +153,8 @@ namespace dynamicgraph
       //     pa  = a2; //positive angle
       //     paw = w2; //positive angle weight
       //     double piFac = (paw-naw)/(naw+paw);
-      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac; 
+      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean -
+      //    EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac; 
       //   }
       //   return wMean;
       // }

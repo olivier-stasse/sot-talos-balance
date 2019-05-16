@@ -47,17 +47,17 @@ namespace dynamicgraph
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
-      typedef ControlManager EntityClassName;
+      typedef TalosControlManager EntityClassName;
 
       /* --- DG FACTORY ---------------------------------------------------- */
-      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(ControlManager,
-                                         "ControlManager");
+      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(TalosControlManager,
+                                         "TalosControlManager");
 
       /* ------------------------------------------------------------------- */
       /* --- CONSTRUCTION -------------------------------------------------- */
       /* ------------------------------------------------------------------- */
-      ControlManager::
-      ControlManager(const std::string& name)
+      TalosControlManager::
+      TalosControlManager(const std::string& name)
         : Entity(name)
         ,CONSTRUCT_SIGNAL_IN(u_max,        dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_OUT(u,           dynamicgraph::Vector, m_u_maxSIN)
@@ -73,43 +73,43 @@ namespace dynamicgraph
 
         /* Commands. */
         addCommand("init",
-                   makeCommandVoid2(*this, &ControlManager::init,
+                   makeCommandVoid2(*this, &TalosControlManager::init,
                                     docCommandVoid2("Initialize the entity.",
                                                     "Time period in seconds (double)",
                                                     "Robot reference (string)")));
         addCommand("addCtrlMode",
-                   makeCommandVoid1(*this, &ControlManager::addCtrlMode,
+                   makeCommandVoid1(*this, &TalosControlManager::addCtrlMode,
                                     docCommandVoid1("Create an input signal with name 'ctrl_x' where x is the specified name.",
                                                     "Name (string)")));
 
         addCommand("ctrlModes",
-                   makeCommandVoid0(*this, &ControlManager::ctrlModes,
+                   makeCommandVoid0(*this, &TalosControlManager::ctrlModes,
                                     docCommandVoid0("Get a list of all the available control modes.")));
 
         addCommand("setCtrlMode",
-                   makeCommandVoid2(*this, &ControlManager::setCtrlMode,
+                   makeCommandVoid2(*this, &TalosControlManager::setCtrlMode,
                                     docCommandVoid2("Set the control mode for a joint.",
                                                     "(string) joint name",
                                                     "(string) control mode")));
 
         addCommand("getCtrlMode",
-                   makeCommandVoid1(*this, &ControlManager::getCtrlMode,
+                   makeCommandVoid1(*this, &TalosControlManager::getCtrlMode,
                                     docCommandVoid1("Get the control mode of a joint.",
                                                     "(string) joint name")));
 
         addCommand("resetProfiler",
-                   makeCommandVoid0(*this, &ControlManager::resetProfiler,
+                   makeCommandVoid0(*this, &TalosControlManager::resetProfiler,
                                     docCommandVoid0("Reset the statistics computed by the profiler (print this entity to see them).")));
 
         addCommand("addEmergencyStopSIN",
-                   makeCommandVoid1(*this, &ControlManager::addEmergencyStopSIN,
+                   makeCommandVoid1(*this, &TalosControlManager::addEmergencyStopSIN,
                                     docCommandVoid1("Add emergency signal input from another entity that can stop the control if necessary.",
                                                     "(string) signal name : 'emergencyStop_' + name")));
 
         addCommand("isEmergencyStopTriggered", makeDirectGetter(*this,&m_emergency_stop_triggered, docDirectGetter("Check whether emergency stop is triggered","bool")));
       }
 
-      void ControlManager::init(const double & dt,
+      void TalosControlManager::init(const double & dt,
                                 const std::string &robotRef)
       {
         if(dt<=0.0)
@@ -129,7 +129,7 @@ namespace dynamicgraph
         }
         m_numDofs = m_robot_util->m_nbJoints + 6;
 
-        //ControlManager::setLoggerVerbosityLevel((dynamicgraph::LoggerVerbosity) 4);
+        //TalosControlManager::setLoggerVerbosityLevel((dynamicgraph::LoggerVerbosity) 4);
         m_jointCtrlModes_current.resize(m_numDofs);
         m_jointCtrlModes_previous.resize(m_numDofs);
         m_jointCtrlModesCountDown.resize(m_numDofs,0);
@@ -252,7 +252,7 @@ namespace dynamicgraph
 
       /* --- COMMANDS ---------------------------------------------------------- */
 
-      void ControlManager::addCtrlMode(const string& name)
+      void TalosControlManager::addCtrlMode(const string& name)
       {
         // check there is no other control mode with the same name
         for(unsigned int i=0;i<m_ctrlModes.size(); i++)
@@ -280,13 +280,13 @@ namespace dynamicgraph
         updateJointCtrlModesOutputSignal();
       }
 
-      void ControlManager::ctrlModes()
+      void TalosControlManager::ctrlModes()
       {
         SEND_MSG(toString(m_ctrlModes), MSG_TYPE_INFO);
       }
 
 
-      void ControlManager::setCtrlMode(const string& jointName, const string& ctrlMode)
+      void TalosControlManager::setCtrlMode(const string& jointName, const string& ctrlMode)
       {
         CtrlMode cm;
         if(convertStringToCtrlMode(ctrlMode,cm)==false)
@@ -316,7 +316,7 @@ namespace dynamicgraph
         updateJointCtrlModesOutputSignal();
       }
 
-      void ControlManager::setCtrlMode(const int jid, const CtrlMode& cm)
+      void TalosControlManager::setCtrlMode(const int jid, const CtrlMode& cm)
       {
         if(m_jointCtrlModesCountDown[jid]!=0)
           return SEND_MSG("Cannot change control mode of joint "+toString(jid)+
@@ -341,7 +341,7 @@ namespace dynamicgraph
         }
       }
 
-      void ControlManager::getCtrlMode(const std::string& jointName)
+      void TalosControlManager::getCtrlMode(const std::string& jointName)
       {
         if(jointName=="all")
         {
@@ -358,25 +358,25 @@ namespace dynamicgraph
         SEND_MSG("The control mode of joint "+jointName+" is "+m_jointCtrlModes_current[i].name,MSG_TYPE_INFO);
       }
 
-      void ControlManager::resetProfiler()
+      void TalosControlManager::resetProfiler()
       {
         getProfiler().reset_all();
         getStatistics().reset_all();
       }
 
-//      void ControlManager::setStreamPrintPeriod(const double & s)
+//      void TalosControlManager::setStreamPrintPeriod(const double & s)
 //      {
 //        getLogger().setStreamPrintPeriod(s);
 //      }
 
-      void ControlManager::setSleepTime(const double &seconds)
+      void TalosControlManager::setSleepTime(const double &seconds)
       {
         if(seconds<0.0)
           return SEND_MSG("Sleep time cannot be negative!", MSG_TYPE_ERROR);
         m_sleep_time = seconds;
       }
 
-      void ControlManager::addEmergencyStopSIN(const string& name)
+      void TalosControlManager::addEmergencyStopSIN(const string& name)
       {
         SEND_MSG("New emergency signal input emergencyStop_" + name + " created",MSG_TYPE_INFO);
         // create a new input signal
@@ -390,7 +390,7 @@ namespace dynamicgraph
 
       /* --- PROTECTED MEMBER METHODS ---------------------------------------------------------- */
 
-      void ControlManager::updateJointCtrlModesOutputSignal()
+      void TalosControlManager::updateJointCtrlModesOutputSignal()
       {
         if (m_numDofs==0)
         {
@@ -416,7 +416,7 @@ namespace dynamicgraph
 
       }
 
-      bool ControlManager::convertStringToCtrlMode(const std::string& name, CtrlMode& cm)
+      bool TalosControlManager::convertStringToCtrlMode(const std::string& name, CtrlMode& cm)
       {
         // Check if the ctrl mode name exists
         for(unsigned int i=0;i<m_ctrlModes.size(); i++)
@@ -430,7 +430,7 @@ namespace dynamicgraph
         return false;
       }
 
-      bool ControlManager::convertJointNameToJointId(const std::string& name, unsigned int& id)
+      bool TalosControlManager::convertJointNameToJointId(const std::string& name, unsigned int& id)
       {
         // Check if the joint name exists
         int jid = int(m_robot_util->get_id_from_name(name)); // cast needed due to bug in robot-utils
@@ -449,7 +449,7 @@ namespace dynamicgraph
       }
 
 /*
-      bool ControlManager::isJointInRange(unsigned int id, double q)
+      bool TalosControlManager::isJointInRange(unsigned int id, double q)
       {
         const JointLimits & JL = m_robot_util->get_joint_limits_from_id((Index)id);
 
@@ -475,9 +475,9 @@ namespace dynamicgraph
       /* ------------------------------------------------------------------- */
 
 
-      void ControlManager::display(std::ostream& os) const
+      void TalosControlManager::display(std::ostream& os) const
       {
-        os << "ControlManager "<<getName();
+        os << "TalosControlManager "<<getName();
         try
         {
           getProfiler().report_all(3, os);

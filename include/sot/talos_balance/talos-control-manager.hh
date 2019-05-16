@@ -70,16 +70,16 @@ namespace dynamicgraph {
         return os;
       }
 
-      class SOTCONTROLMANAGER_EXPORT ControlManager
+      class SOTCONTROLMANAGER_EXPORT TalosControlManager
         :public::dynamicgraph::Entity
       {
         typedef Eigen::VectorXd::Index Index;
-        typedef ControlManager EntityClassName;
+        typedef TalosControlManager EntityClassName;
         DYNAMIC_GRAPH_ENTITY_DECL();
 
       public:
         /* --- CONSTRUCTOR ---- */
-        ControlManager( const std::string & name);
+        TalosControlManager( const std::string & name);
 
         /// Initialize
         /// @param dt: control interval
@@ -142,7 +142,7 @@ namespace dynamicgraph {
         //bool isJointInRange(unsigned int id, double q);
         void updateJointCtrlModesOutputSignal();
 
-      }; // class ControlManager
+      }; // class TalosControlManager
 
     }    // namespace talos_balance
   }      // namespace sot
