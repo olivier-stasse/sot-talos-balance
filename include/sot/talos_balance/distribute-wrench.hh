@@ -76,9 +76,9 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_INNER(qp_computations,  int);
 
         DECLARE_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector);
-//        DECLARE_SIGNAL_OUT(copLeft, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(copLeft, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector);
-//        DECLARE_SIGNAL_OUT(copRight, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(copRight, dynamicgraph::Vector);
 
         DECLARE_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(zmpRef, dynamicgraph::Vector);
@@ -88,13 +88,18 @@ namespace dynamicgraph {
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
 
-//        dynamicgraph::Vector computeCoP(const dynamicgraph::Vector & wrench, const MatrixHomogeneous & pose) const;
+        dynamicgraph::Vector computeCoP(const dynamicgraph::Vector & wrench, const pinocchio::SE3 & pose) const;
 
       protected:
         bool  m_initSucceeded;    /// true if the entity has been successfully initialized
         pinocchio::Model m_model;       /// Pinocchio robot model
         pinocchio::Data  m_data;        /// Pinocchio robot data
         RobotUtilShrPtr  m_robot_util;
+
+        pinocchio::SE3 m_ankle_M_ftSens; /// ankle to F/T sensor transformation
+
+        pinocchio::FrameIndex m_left_foot_id;
+        pinocchio::FrameIndex m_right_foot_id;
 
         dynamicgraph::Vector m_wrenchLeft;
         dynamicgraph::Vector m_wrenchRight;

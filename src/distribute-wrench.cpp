@@ -16,6 +16,8 @@
 
 #include "sot/talos_balance/distribute-wrench.hh"
 
+#include <iostream>
+
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
 #include <dynamic-graph/command-bind.h>
@@ -45,8 +47,7 @@ namespace dynamicgraph
 
 #define INNER_SIGNALS m_kinematics_computations << m_qp_computations
 
-//#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_copLeftSOUT << m_wrenchRightSOUT << m_copRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
-#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_wrenchRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
+#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_copLeftSOUT << m_wrenchRightSOUT << m_copRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -66,9 +67,9 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN)
                       , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_kinematics_computationsSINNER)
                       , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_qp_computationsSINNER)
-//                      , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector, m_qp_computationsSINNER)
-//                      , CONSTRUCT_SIGNAL_OUT(copRight, dynamicgraph::Vector, m_wrenchRightSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(copRight, dynamicgraph::Vector, m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector, m_wrenchLeftSOUT << m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(zmpRef, dynamicgraph::Vector, m_wrenchRefSOUT)
                       , CONSTRUCT_SIGNAL_OUT(emergencyStop, bool, m_zmpRefSOUT)
@@ -114,6 +115,14 @@ namespace dynamicgraph
           return;
         }
 
+
+        assert(m_model.existFrame(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name));
+        assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
+        m_left_foot_id       = m_model.getFrameId(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name);
+        m_right_foot_id      = m_model.getFrameId(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name);
+
+        m_ankle_M_ftSens = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Force_Sensor_XYZ.head<3>());
+
         // TODO: initialize m_qp1
 
         m_qp2.problem(12,6,0);
@@ -121,11 +130,12 @@ namespace dynamicgraph
         m_initSucceeded = true;
       }
 
-/*
       dynamicgraph::Vector
-      DistributeWrench::computeCoP(const dg::Vector & wrench, const MatrixHomogeneous & pose) const
+      DistributeWrench::computeCoP(const dg::Vector & wrenchGlobal, const pinocchio::SE3 & pose) const
       {
-        const double h = pose(2,3);
+        dg::Vector wrench = pose.actInv(pinocchio::Force(wrenchGlobal)).toVector();
+
+        const double h = pose.translation()[2];
 
         const double fx = wrench[0];
         const double fy = wrench[1];
@@ -136,6 +146,7 @@ namespace dynamicgraph
         double m_eps = 0.1; // temporary
 
         double px, py;
+
         if(fz >= m_eps/2)
         {
           px = (- ty - fx*h)/fz;
@@ -146,18 +157,15 @@ namespace dynamicgraph
           px = 0.0;
           py = 0.0;
         }
-        const double pz = - h;
+        const double pz = 0.0;
 
-        dg::Vector copLocal(3);
-        copLocal[0] = px;
-        copLocal[1] = py;
-        copLocal[2] = pz;
-
-        dg::Vector cop = pose.linear()*copLocal + pose.translation();
+        dg::Vector cop(3);
+        cop[0] = px;
+        cop[1] = py;
+        cop[2] = pz;
 
         return cop;
       }
-*/
 
       /* ------------------------------------------------------------------- */
       /* --- SIGNALS ------------------------------------------------------- */
@@ -264,7 +272,6 @@ namespace dynamicgraph
         return s;
       }
 
-/*
       DEFINE_SIGNAL_OUT_FUNCTION(copLeft, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
@@ -276,7 +283,7 @@ namespace dynamicgraph
         const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
 
         // stub
-        const MatrixHomogeneous & pose = MatrixHomogeneous::Identity();
+        const pinocchio::SE3 pose = m_data.oMf[m_left_foot_id] * m_ankle_M_ftSens;
 
         s = computeCoP(wrenchLeft,pose);
 
@@ -293,14 +300,12 @@ namespace dynamicgraph
 
         const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
 
-        // stub
-        const MatrixHomogeneous & pose = MatrixHomogeneous::Identity();
+        const pinocchio::SE3 pose = m_data.oMf[m_right_foot_id] * m_ankle_M_ftSens;
 
         s = computeCoP(wrenchRight,pose);
 
         return s;
       }
-*/
 
       DEFINE_SIGNAL_OUT_FUNCTION(wrenchRef, dynamicgraph::Vector)
       {
