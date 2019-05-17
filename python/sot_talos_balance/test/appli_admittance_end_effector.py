@@ -49,7 +49,7 @@ robot.e2q = EulerToQuat("e2q")
 plug(robot.baseEstimator.q, robot.e2q.euler)
 
 robot.forceCalibrator = create_ft_wrist_calibrator(robot, endEffectorWeight, rightOC, leftOC)
-robot.controller = create_end_effector_admittance_controller(robot, endEffector)
+robot.controller = create_end_effector_admittance_controller(robot, endEffector, "EEAdmittance")
 
 robot.controlManager = create_ctrl_manager(controlManagerConfig, robot.timeStep)
 robot.controlManager.addCtrlMode('sot_input')
