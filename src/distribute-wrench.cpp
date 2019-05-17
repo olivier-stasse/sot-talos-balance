@@ -121,10 +121,11 @@ namespace dynamicgraph
         m_right_foot_id      = m_model.getFrameId(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name);
 
         m_ankle_M_ftSens = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Force_Sensor_XYZ.head<3>());
+//        m_ankle_M_sole   = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Sole_XYZ.head<3>());
 
         // TODO: initialize m_qp1
 
-        m_qp2.problem(12,6,0);
+        m_qp2.problem(12,0,0);
 
         m_initSucceeded = true;
       }
@@ -132,7 +133,11 @@ namespace dynamicgraph
       dynamicgraph::Vector
       DistributeWrench::computeCoP(const dg::Vector & wrenchGlobal, const pinocchio::SE3 & pose) const
       {
-        dg::Vector wrench = pose.actInv(pinocchio::Force(wrenchGlobal)).toVector();
+        std::cout << "++++++++++++" << std::endl;
+        std::cout << wrenchGlobal.transpose() << std::endl;
+        dg::Vector wrench = pose.act(pinocchio::Force(wrenchGlobal)).toVector();
+        std::cout << wrench.transpose() << std::endl;
+        std::cout << "------------" << std::endl;
 
         const double h = pose.translation()[2];
 
@@ -202,28 +207,56 @@ namespace dynamicgraph
         }
 
         const Eigen::VectorXd & wrenchDes = m_wrenchDesSIN(iter);
-        m_kinematics_computationsSINNER(iter);
+        const int & dummy = m_kinematics_computationsSINNER(iter);
+        (void) dummy;
+
         assert(wrenchDes.size()==6     && "Unexpected size of signal q");
 
         getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
 
-        // stub
+        // --- COSTS
+
+        const double wSum = 100.0; // TODO: signal/conf
+        const double wNorm = 1.0; // TODO: signal/conf
+        Eigen::VectorXd wAnkle(6);
+        wAnkle << 1e-3, 1e-3, 1e-4, 1., 1., 1e-4; // TODO: signal/conf
+
+        // Initialize cost matrices
         Eigen::MatrixXd Q(12,12);
-        Q.setIdentity();
-
         Eigen::VectorXd C(12);
-        C.setZero();
 
-        Eigen::MatrixXd Aeq(6,12);
-        Aeq.block<6,6>(0,0).setIdentity();
-        Aeq.block<6,6>(0,6).setIdentity();
+        // min |wrenchLeft + wrenchRight - wrenchDes|^2
+        Q.topLeftCorner<6,6>().setIdentity();
+        Q.topRightCorner<6,6>().setIdentity();
+        Q.bottomLeftCorner<6,6>().setIdentity();
+        Q.bottomRightCorner<6,6>().setIdentity();
+        Q *= wSum;
 
-        Eigen::VectorXd Beq(6);
-        Beq = wrenchDes;
+        C.head<6>() = -wrenchDes;
+        C.tail<6>() = -wrenchDes;
+        C *= wSum;
+
+        // min |wrenchLeft|^2 + |wrenchRight|^2
+        Eigen::MatrixXd tmp = wAnkle.asDiagonal() * m_data.oMf[m_left_foot_id].toDualActionMatrix();
+        tmp = tmp.transpose() * tmp * wNorm;
+        Q.topLeftCorner<6,6>() += tmp;
+
+        tmp = wAnkle.asDiagonal() * m_data.oMf[m_right_foot_id].toDualActionMatrix();
+        tmp = tmp.transpose() * tmp * wNorm;
+        Q.bottomRightCorner<6,6>() += tmp;
+
+        // --- Equality constraints
+
+        Eigen::MatrixXd Aeq(0,12);
+
+        Eigen::VectorXd Beq(0);
+
+        // --- Inequality constraints
 
         Eigen::MatrixXd Aineq(0,12);
 
         Eigen::VectorXd Bineq(0);
+
 
         bool success = m_qp2.solve(Q, C, Aeq, Beq, Aineq, Bineq);
 

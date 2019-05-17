@@ -97,6 +97,7 @@ namespace dynamicgraph {
         RobotUtilShrPtr  m_robot_util;
 
         pinocchio::SE3 m_ankle_M_ftSens; /// ankle to F/T sensor transformation
+//        pinocchio::SE3 m_ankle_M_sole; /// ankle to sole transformation
 
         pinocchio::FrameIndex m_left_foot_id;
         pinocchio::FrameIndex m_right_foot_id;
