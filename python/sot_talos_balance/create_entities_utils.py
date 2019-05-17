@@ -26,6 +26,7 @@ from sot_talos_balance.simple_pidd import SimplePIDD
 from sot_talos_balance.joint_position_controller import JointPositionController
 from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController
 from sot_talos_balance.admittance_controller_end_effector import AdmittanceControllerEndEffector
+from sot_talos_balance.ankle_admittance_controller import AnkleAdmittanceController
 from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
 from sot_talos_balance.com_admittance_controller import ComAdmittanceController
 from sot_talos_balance.dcm_controller import DcmController
@@ -145,9 +146,9 @@ def create_joint_controller(Kp):
     controller.Kp.value = Kp
     return controller
 
-def create_end_effector_admittance_controller(robot, endEffector):
+def create_end_effector_admittance_controller(robot, endEffector, name):
     timeStep = robot.timeStep
-    controller = AdmittanceControllerEndEffector("admittanceController")
+    controller = AdmittanceControllerEndEffector(name)
 
     # Filter and plug the force from force calibrator
     if endEffector == 'rightWrist':
@@ -196,6 +197,24 @@ def create_joint_admittance_controller(joint, Kp, dt, robot, filter=False):
     controller.tauDes.value = [0.0]
     controller.init(dt, 1)
     controller.setPosition([robot.device.state.value[joint+6]])
+    return controller
+
+def create_ankle_admittance_controller(gains, robot, side, name):
+    controller = AnkleAdmittanceController(name)
+
+    # Filter and plug the force from force calibrator
+    if side == 0:
+        plug(robot.forceCalibrator.right_foot_force_out, controller.wrench)
+    elif side == 1:
+        plug(robot.forceCalibrator.left_foot_force_out, controller.wrench)
+    else:
+        print('Error in create_ankle_admittance_controller : side unknown')
+
+    controller.gainsXY.value = gains
+    plug(robot.wrenchDistributor.p, controller.pRef)
+
+    controller.init()
+
     return controller
 
 
