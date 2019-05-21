@@ -49,14 +49,12 @@ SET(plugins
     dcm-controller
     dummy-dcm-estimator
     com-admittance-controller
-    admittance-controller
+    simple-admittance-controller
     admittance-controller-end-effector
     joint-position-controller
     nd-trajectory-generator
-    base-estimator
-    filter-differentiator
-    madgwickahrs
-    control-manager
+    talos-base-estimator
+    talos-control-manager
     imu_offset_compensation
     parameter-server
     dcm-estimator
