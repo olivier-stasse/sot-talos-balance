@@ -14,7 +14,7 @@
  * with sot-torque-control.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sot/talos_balance/base-estimator.hh>
+#include <sot/talos_balance/talos-base-estimator.hh>
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
 #include <dynamic-graph/all-commands.h>

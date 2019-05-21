@@ -14,7 +14,7 @@
  * with sot-talos-balance.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sot/talos_balance/admittance-controller.hh"
+#include "sot/talos_balance/simple-admittance-controller.hh"
 
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>

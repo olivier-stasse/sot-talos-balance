@@ -82,10 +82,10 @@ namespace dynamicgraph {
       /** Avoids singularity while taking the mean of euler angles**/
       double wEulerMean(double a1, double a2, double w1, double w2);
 
-      class SOTBASEESTIMATOR_EXPORT BaseEstimator
+      class SOTBASEESTIMATOR_EXPORT TalosBaseEstimator
           :public::dynamicgraph::Entity
       {
-        typedef BaseEstimator EntityClassName;
+        typedef TalosBaseEstimator EntityClassName;
         typedef pinocchio::SE3 SE3;
         typedef Eigen::Vector2d Vector2;
         typedef Eigen::Vector3d Vector3;
@@ -101,7 +101,7 @@ namespace dynamicgraph {
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         /* --- CONSTRUCTOR ---- */
-        BaseEstimator( const std::string & name );
+        TalosBaseEstimator( const std::string & name );
 
         void init(const double & dt, const std::string& urdfFile);
 
@@ -249,7 +249,7 @@ namespace dynamicgraph {
         Vector3 m_last_DCvel;
         Vector3 m_last_DCacc;
 
-      }; // class BaseEstimator
+      }; // class TalosBaseEstimator
 
     }    // namespace talos_balance
   }      // namespace sot
