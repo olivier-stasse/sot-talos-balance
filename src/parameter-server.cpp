@@ -21,7 +21,7 @@
 
 
 #include <dynamic-graph/all-commands.h>
-#include <sot/talos_balance/utils/stop-watch.hh>
+#include <sot/core/stop-watch.hh>
 #include <sot/talos_balance/utils/statistics.hh>
 
 

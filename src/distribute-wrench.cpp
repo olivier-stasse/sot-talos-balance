@@ -21,7 +21,7 @@
 #include <dynamic-graph/command-bind.h>
 
 #include "sot/talos_balance/utils/commands-helper.hh"
-#include "sot/talos_balance/utils/stop-watch.hh"
+#include "sot/core/stop-watch.hh"
 
 #include <pinocchio/parsers/urdf.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
