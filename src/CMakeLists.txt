@@ -55,8 +55,6 @@ SET(plugins
     nd-trajectory-generator
     talos-base-estimator
     talos-control-manager
-    imu_offset_compensation
-    parameter-server
     dcm-estimator
     qualisys-client
     ft-calibration
