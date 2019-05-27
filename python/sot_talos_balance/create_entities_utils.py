@@ -203,15 +203,21 @@ def create_ankle_admittance_controller(gains, robot, side, name):
     controller = AnkleAdmittanceController(name)
 
     # Filter and plug the force from force calibrator
-    if side == 0:
-        plug(robot.forceCalibrator.right_foot_force_out, controller.wrench)
-    elif side == 1:
-        plug(robot.forceCalibrator.left_foot_force_out, controller.wrench)
+    if side == "right":
+        plug(robot.ftc.right_foot_force_out, controller.wrench)
+    elif side == "left":
+        plug(robot.ftc.left_foot_force_out, controller.wrench)
     else:
         print('Error in create_ankle_admittance_controller : side unknown')
 
     controller.gainsXY.value = gains
-    plug(robot.wrenchDistributor.p, controller.pRef)
+    if side == "right":
+        plug(robot.wrenchDistributor.copRight, controller.pRef)
+    elif side == "left":
+        plug(robot.wrenchDistributor.copLeft, controller.pRef)
+    else:
+        print('Error in create_ankle_admittance_controller : side unknown')
+    
 
     controller.init()
 
