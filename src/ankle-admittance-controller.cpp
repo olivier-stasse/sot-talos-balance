@@ -91,7 +91,7 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_ANKLEADMITTANCECONTROLLER_DRP_COMPUTATION);
 
-        const Vector & pRef = m_pRefSIN(iter);
+        const Eigen::Vector3d pRef = m_pRefSIN(iter);
         const Vector & wrench = m_wrenchSIN(iter);
         const Vector & gainsXY = m_gainsXYSIN(iter);
 
@@ -100,10 +100,10 @@ namespace dynamicgraph
         assert(gainsXY.size() == 2  && "Unexpected size of signal gainsXY");
 
         const Vector & error = pRef.cross(wrench.head<3>()) - wrench.tail<3>();
-        Vector & dRP(0, 0);
+        Eigen::Vector2d dRP;
 
-        dRP[0] = A[1] * error[0];
-        dRP[1] = A[0] * error[1];
+        dRP[0] = gainsXY[1] * error[0];
+        dRP[1] = gainsXY[0] * error[1];
 
         s = dRP;
 
