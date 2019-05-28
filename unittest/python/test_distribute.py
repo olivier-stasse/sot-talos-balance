@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from sot_talos_balance.create_entities_utils import *
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
 import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
@@ -21,8 +23,7 @@ halfSitting = [0.0, 0.0,  1.018213,  0.00  ,  0.0, 0.0, 1.0,                    
 ]
 
 q = np.matrix(halfSitting).T
-print("q:")
-print(q.flatten().tolist()[0])
+print("q: %s\n" % str(q.flatten().tolist()[0]))
 
 from rospkg import RosPack
 rospack = RosPack()
@@ -34,21 +35,26 @@ data = model.createData()
 com = pin.centerOfMass(model,data,q)
 pin.updateFramePlacements(model,data)
 m = data.mass[0]
+#com[1] = 0. # ensure perfect symmetry
 
-#print("com:")
-#print(com.flatten().tolist()[0])
+print("com: %s\n" % str(com.flatten().tolist()[0]))
 
 leftName = param_server_conf.footFrameNames['Left']
 leftId = model.getFrameId(leftName)
 leftPos  = data.oMf[leftId]
-#print( "%s: %d" % (leftName,leftId) )
-#print(leftPos)
+#leftPos.rotation = pin.utils.eye(3) # ensure perfect alignment
+print( "%s: %d" % (leftName,leftId) )
+print(leftPos)
 
 rightName = param_server_conf.footFrameNames['Right']
 rightId = model.getFrameId(rightName)
 rightPos = data.oMf[rightId]
-#print( "%s: %d" % (rightName,rightId) )
-#print(rightPos)
+#rightPos.rotation = pin.utils.eye(3) # ensure perfect alignment
+#pR = leftPos.translation # ensure perfect symmetry
+#pR[1] = -pR[1]
+#rightPos.translation = pR
+print( "%s: %d" % (rightName,rightId) )
+print(rightPos)
 
 print( "wrenches in GLOBAL frame:" )
 
@@ -58,12 +64,12 @@ force      = [0.0, 0.0, fz]
 forceLeft  = [0.0, 0.0, fz/2]
 forceRight = [0.0, 0.0, fz/2]
 lx = float(com[0])
-ly = float(leftPos.translation[1] - com[1])
+ly = float(leftPos.translation[1])
 taux = fz*ly/2
 tauy = -fz*lx
-wrench      = force      + [0.0, tauy,   0.0]
-wrenchLeft  = forceLeft  + [-taux, tauy/2, 0.0]
-wrenchRight = forceRight + [taux, tauy/2, 0.0]
+wrench      = force      + [  0.0, tauy,   0.0]
+wrenchLeft  = forceLeft  + [ taux, tauy/2, 0.0]
+wrenchRight = forceRight + [-taux, tauy/2, 0.0]
 
 print( "desired wrench: %s" % str(wrench) )
 print( "expected left wrench: %s"  % str(wrenchLeft) )
@@ -76,6 +82,7 @@ copRight = [float(com[0] - rightPos.translation[0]), 0., 0.]
 
 print( "expected left CoP: %s"  % str(copLeft) )
 print( "expected right CoP: %s" % str(copRight) )
+print()
 
 # --- Parameter server ---
 print("--- Parameter server ---")
@@ -95,19 +102,19 @@ distribute.init(robot_name)
 distribute.zmpRef.recompute(0)
 
 print( "resulting wrench: %s" % str(distribute.wrenchRef.value) )
-#assertApprox(wrench,distribute.wrenchRef.value,6)
+assertApprox(wrench,distribute.wrenchRef.value,2)
 print( "resulting left wrench: %s"  % str(distribute.wrenchLeft.value) )
-#assertApprox(wrenchLeft,distribute.wrenchLeft.value,6)
+assertApprox(wrenchLeft,distribute.wrenchLeft.value,3)
 print( "resulting right wrench: %s" % str(distribute.wrenchRight.value) )
-#assertApprox(wrenchRight,distribute.wrenchRight.value,6)
+assertApprox(wrenchRight,distribute.wrenchRight.value,3)
 
 distribute.copLeft.recompute(0)
 distribute.copRight.recompute(0)
 
 print( "resulting left CoP: %s"  % str(distribute.copLeft.value) )
-# assertApprox(copLeft,distribute.copLeft.value,3)
+assertApprox(copLeft,distribute.copLeft.value,3)
 print( "resulting right CoP: %s" % str(distribute.copRight.value) )
-# assertApprox(copRight,distribute.copRight.value,3)
+assertApprox(copRight,distribute.copRight.value,3)
 
 distribute.emergencyStop.recompute(0)
 stop = distribute.emergencyStop.value

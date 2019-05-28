@@ -133,11 +133,11 @@ namespace dynamicgraph
       dynamicgraph::Vector
       DistributeWrench::computeCoP(const dg::Vector & wrenchGlobal, const pinocchio::SE3 & pose) const
       {
-        std::cout << "++++++++++++" << std::endl;
-        std::cout << wrenchGlobal.transpose() << std::endl;
-        dg::Vector wrench = pose.act(pinocchio::Force(wrenchGlobal)).toVector();
-        std::cout << wrench.transpose() << std::endl;
-        std::cout << "------------" << std::endl;
+//        std::cout << "++++++++++++" << std::endl;
+//        std::cout << wrenchGlobal.transpose() << std::endl;
+        dg::Vector wrench = pose.actInv(pinocchio::Force(wrenchGlobal)).toVector();
+//        std::cout << wrench.transpose() << std::endl;
+//        std::cout << "------------" << std::endl;
 
         const double h = pose.translation()[2];
 
@@ -216,10 +216,10 @@ namespace dynamicgraph
 
         // --- COSTS
 
-        const double wSum = 100.0; // TODO: signal/conf
+        const double wSum = 1000.0; // TODO: signal/conf
         const double wNorm = 1.0; // TODO: signal/conf
         Eigen::VectorXd wAnkle(6);
-        wAnkle << 1e-3, 1e-3, 1e-4, 1., 1., 1e-4; // TODO: signal/conf
+        wAnkle << 1., 1., 1e-4, 1., 1., 1e-4; // TODO: signal/conf
 
         // Initialize cost matrices
         Eigen::MatrixXd Q(12,12);
@@ -237,11 +237,11 @@ namespace dynamicgraph
         C *= wSum;
 
         // min |wrenchLeft|^2 + |wrenchRight|^2
-        Eigen::MatrixXd tmp = wAnkle.asDiagonal() * m_data.oMf[m_left_foot_id].toDualActionMatrix();
+        Eigen::MatrixXd tmp = wAnkle.asDiagonal() * m_data.oMf[m_left_foot_id].inverse().toDualActionMatrix();
         tmp = tmp.transpose() * tmp * wNorm;
         Q.topLeftCorner<6,6>() += tmp;
 
-        tmp = wAnkle.asDiagonal() * m_data.oMf[m_right_foot_id].toDualActionMatrix();
+        tmp = wAnkle.asDiagonal() * m_data.oMf[m_right_foot_id].inverse().toDualActionMatrix();
         tmp = tmp.transpose() * tmp * wNorm;
         Q.bottomRightCorner<6,6>() += tmp;
 
