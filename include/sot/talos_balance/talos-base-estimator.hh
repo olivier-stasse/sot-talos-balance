@@ -23,12 +23,12 @@
 
 #if defined (WIN32)
 #  if defined (base_estimator_EXPORTS)
-#    define SOTBASEESTIMATOR_EXPORT __declspec(dllexport)
+#    define TALOS_BASE_ESTIMATOR_EXPORT __declspec(dllexport)
 #  else
-#    define SOTBASEESTIMATOR_EXPORT __declspec(dllimport)
+#    define TALOS_BASE_ESTIMATOR_EXPORT __declspec(dllimport)
 #  endif
 #else
-#  define SOTBASEESTIMATOR_EXPORT
+#  define TALOS_BASE_ESTIMATOR_EXPORT
 #endif
 
 
@@ -82,7 +82,7 @@ namespace dynamicgraph {
       /** Avoids singularity while taking the mean of euler angles**/
       double wEulerMean(double a1, double a2, double w1, double w2);
 
-      class SOTBASEESTIMATOR_EXPORT TalosBaseEstimator
+      class TALOS_BASE_ESTIMATOR_EXPORT TalosBaseEstimator
           :public::dynamicgraph::Entity
       {
         typedef TalosBaseEstimator EntityClassName;

@@ -23,12 +23,12 @@
 
 #if defined (WIN32)
 #  if defined (__sot_torque_control_control_manager_H__)
-#    define SOTCONTROLMANAGER_EXPORT __declspec(dllexport)
+#    define TALOS_CONTROL_MANAGER_EXPORT __declspec(dllexport)
 #  else
-#    define SOTCONTROLMANAGER_EXPORT __declspec(dllimport)
+#    define TALOS_CONTROL_MANAGER_EXPORT __declspec(dllimport)
 #  endif
 #else
-#  define SOTCONTROLMANAGER_EXPORT
+#  define TALOS_CONTROL_MANAGER_EXPORT
 #endif
 
 
@@ -70,7 +70,7 @@ namespace dynamicgraph {
         return os;
       }
 
-      class SOTCONTROLMANAGER_EXPORT TalosControlManager
+      class TALOS_CONTROL_MANAGER_EXPORT TalosControlManager
         :public::dynamicgraph::Entity
       {
         typedef Eigen::VectorXd::Index Index;

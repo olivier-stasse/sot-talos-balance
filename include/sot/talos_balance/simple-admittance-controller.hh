@@ -23,12 +23,12 @@
 
 #if defined (WIN32)
 #  if defined (admittance_controller_EXPORTS)
-#    define ADMITTANCECONTROLLER_EXPORT __declspec(dllexport)
+#    define SIMPLEADMITTANCECONTROLLER_EXPORT __declspec(dllexport)
 #  else
-#    define ADMITTANCECONTROLLER_EXPORT __declspec(dllimport)
+#    define SIMPLEADMITTANCECONTROLLER_EXPORT __declspec(dllimport)
 #  endif
 #else
-#  define ADMITTANCECONTROLLER_EXPORT
+#  define SIMPLEADMITTANCECONTROLLER_EXPORT
 #endif
 
 
@@ -48,7 +48,7 @@ namespace dynamicgraph {
       /* --- CLASS ----------------------------------------------------------- */
       /* --------------------------------------------------------------------- */
 
-      class ADMITTANCECONTROLLER_EXPORT SimpleAdmittanceController
+      class SIMPLEADMITTANCECONTROLLER_EXPORT SimpleAdmittanceController
 	: public ::dynamicgraph::Entity
       {
 	DYNAMIC_GRAPH_ENTITY_DECL();
