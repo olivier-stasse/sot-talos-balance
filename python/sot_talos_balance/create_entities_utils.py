@@ -1,11 +1,10 @@
-from sot_talos_balance.control_manager import ControlManager
+from sot_talos_balance.talos_control_manager import TalosControlManager
 from sot_talos_balance.example import Example
-from sot_talos_balance.parameter_server import ParameterServer
+from dynamic_graph.sot.core.parameter_server import ParameterServer
 from dynamic_graph.tracer_real_time import TracerRealTime
 from time import sleep
-from sot_talos_balance.base_estimator import BaseEstimator
-from sot_talos_balance.madgwickahrs import MadgwickAHRS
-from sot_talos_balance.imu_offset_compensation import ImuOffsetCompensation
+from sot_talos_balance.talos_base_estimator import TalosBaseEstimator
+from dynamic_graph.sot.core.madgwickahrs import MadgwickAHRS
 from sot_talos_balance.dcm_estimator import DcmEstimator
 from sot_talos_balance.ft_calibration import FtCalibration
 from sot_talos_balance.ft_wrist_calibration import FtWristCalibration
@@ -23,7 +22,7 @@ from dynamic_graph.sot.core.operator import MatrixHomoToPoseRollPitchYaw
 from sot_talos_balance.boolean_identity import BooleanIdentity
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.joint_position_controller import JointPositionController
-from sot_talos_balance.admittance_controller import AdmittanceController
+from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController
 from sot_talos_balance.admittance_controller_end_effector import AdmittanceControllerEndEffector
 from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
 from sot_talos_balance.com_admittance_controller import ComAdmittanceController
@@ -197,12 +196,6 @@ def create_joint_admittance_controller(joint, Kp, dt, robot, filter=False):
     return controller
 
 
-def create_imu_offset_compensation(robot, dt):
-    imu_offset_compensation = ImuOffsetCompensation('imu_offset_comp')
-    imu_offset_compensation.init(dt)
-    plug(robot.device.accelerometer, imu_offset_compensation.accelerometer_in)
-    plug(robot.device.gyrometer,   imu_offset_compensation.gyrometer_in)
-    return imu_offset_compensation
 
 
 def create_device_filters(robot, dt):
@@ -229,10 +222,7 @@ def create_device_filters(robot, dt):
     plug(robot.device.ptorque,                            filters.torque_filter.x)
     plug(robot.vselec.sout,                               filters.vel_filter.x)
 
-    # switch following lines if willing to use imu offset compensation
-    #~ plug(robot.imu_offset_compensation.accelerometer_out, filters.acc_filter.x);
     plug(robot.device.accelerometer, filters.acc_filter.x)
-    #~ plug(robot.imu_offset_compensation.gyrometer_out,     filters.gyro_filter.x);
     plug(robot.device.gyrometer,     filters.gyro_filter.x)
 
     return filters
@@ -246,7 +236,7 @@ def create_be_filters(robot, dt):
 
 
 def create_ctrl_manager(conf, dt, robot_name='robot'):
-    ctrl_manager = ControlManager("ctrl_man")
+    ctrl_manager = TalosControlManager("ctrl_man")
     ctrl_manager.init(dt, robot_name)
     ctrl_manager.u_max.value = conf.NJ*(conf.CTRL_MAX,)
     # Init should be called before addCtrlMode
@@ -255,7 +245,7 @@ def create_ctrl_manager(conf, dt, robot_name='robot'):
 
 
 def create_base_estimator(robot, dt, conf, robot_name="robot"):
-    base_estimator = BaseEstimator('base_estimator')
+    base_estimator = TalosBaseEstimator('base_estimator')
     base_estimator.init(dt, robot_name)
     # device.state, device.joint_angles or device.motor_angles ?
     plug(robot.device.joint_angles,                      base_estimator.joint_positions)
