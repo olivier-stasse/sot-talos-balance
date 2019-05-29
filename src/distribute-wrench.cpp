@@ -20,10 +20,9 @@
 
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
-#include <dynamic-graph/command-bind.h>
+#include <dynamic-graph/all-commands.h>
 
-#include "sot/talos_balance/utils/commands-helper.hh"
-#include "sot/core/stop-watch.hh"
+#include <sot/core/stop-watch.hh>
 
 #include <pinocchio/parsers/urdf.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
