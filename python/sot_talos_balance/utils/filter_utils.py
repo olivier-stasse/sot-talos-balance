@@ -1,4 +1,4 @@
-from sot_talos_balance.filter_differentiator import FilterDifferentiator
+from dynamic_graph.sot.core.filter_differentiator import FilterDifferentiator
 import numpy as np
 
 def create_chebi1_checby2_series_filter(name, dt, size):

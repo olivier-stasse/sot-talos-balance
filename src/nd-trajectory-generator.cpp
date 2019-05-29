@@ -21,7 +21,7 @@
 #include <dynamic-graph/factory.h>
 
 #include <sot/talos_balance/utils/commands-helper.hh>
-#include <sot/talos_balance/utils/stop-watch.hh>
+#include <sot/core/stop-watch.hh>
 
 namespace dynamicgraph
 {

@@ -11,7 +11,7 @@
 #include <sot/core/debug.hh>
 #include <dynamic-graph/all-commands.h>
 #include <dynamic-graph/factory.h>
-#include <sot/talos_balance/utils/stop-watch.hh>
+#include <sot/core/stop-watch.hh>
 #include "pinocchio/algorithm/frames.hpp"
 #include "pinocchio/algorithm/center-of-mass.hpp"
 

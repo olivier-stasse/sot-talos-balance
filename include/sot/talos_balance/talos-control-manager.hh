@@ -14,21 +14,21 @@
  * with sot-torque-control.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __sot_torque_control_parameter_server_H__
-#define __sot_torque_control_parameter_server_H__
+#ifndef __sot_torque_control_control_manager_H__
+#define __sot_torque_control_control_manager_H__
 
 /* --------------------------------------------------------------------- */
 /* --- API ------------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
 #if defined (WIN32)
-#  if defined (__sot_torque_parameter_server_H__)
-#    define SOTParameterServer_EXPORT __declspec(dllexport)
+#  if defined (__sot_torque_control_control_manager_H__)
+#    define TALOS_CONTROL_MANAGER_EXPORT __declspec(dllexport)
 #  else
-#    define SOTParameterServer_EXPORT __declspec(dllimport)
+#    define TALOS_CONTROL_MANAGER_EXPORT __declspec(dllimport)
 #  endif
 #else
-#  define SOTParameterServer_EXPORT
+#  define TALOS_CONTROL_MANAGER_EXPORT
 #endif
 
 
@@ -42,11 +42,6 @@
 #include <map>
 #include "boost/assign.hpp"
 
-
-#include <pinocchio/multibody/model.hpp>
-#include <pinocchio/parsers/urdf.hpp>
-#include <sot/talos_balance/robot/robot-wrapper.hh>
-
 namespace dynamicgraph {
   namespace sot {
     namespace talos_balance {
@@ -58,52 +53,78 @@ namespace dynamicgraph {
 /// Number of time step to transition from one ctrl mode to another
 #define CTRL_MODE_TRANSITION_TIME_STEP 1000.0
 
+      class CtrlMode
+      {
+      public:
+        int         id;
+        std::string name;
 
-      class SOTParameterServer_EXPORT ParameterServer
+        CtrlMode(): id(-1), name("None"){}
+        CtrlMode(int id, const std::string& name):
+          id(id), name(name) {}
+      };
+
+      std::ostream& operator<<( std::ostream& os, const CtrlMode& s )
+      {
+        os<<s.id<<"_"<<s.name;
+        return os;
+      }
+
+      class TALOS_CONTROL_MANAGER_EXPORT TalosControlManager
         :public::dynamicgraph::Entity
       {
-        typedef ParameterServer EntityClassName;
+        typedef Eigen::VectorXd::Index Index;
+        typedef TalosControlManager EntityClassName;
         DYNAMIC_GRAPH_ENTITY_DECL();
 
       public:
         /* --- CONSTRUCTOR ---- */
-        ParameterServer( const std::string & name);
+        TalosControlManager( const std::string & name);
 
         /// Initialize
         /// @param dt: control interval
         /// @param urdfFile: path to the URDF model of the robot
         void init(const double & dt,
-                  const std::string & urdfFile,
                   const std::string & robotRef);
 
         /* --- SIGNALS --- */
+        std::vector<dynamicgraph::SignalPtr<dynamicgraph::Vector,int>*> m_ctrlInputsSIN;
+        std::vector< dynamicgraph::SignalPtr<bool,int>* >               m_emergencyStopVector; /// emergency stop inputs. If one is true, control is set to zero forever
+        std::vector<dynamicgraph::Signal<dynamicgraph::Vector,int>*>    m_jointsCtrlModesSOUT;
 
+        DECLARE_SIGNAL_IN(u_max,                       dynamicgraph::Vector);  /// max motor control
+        DECLARE_SIGNAL_OUT(u,                          dynamicgraph::Vector);  /// raw motor control
+        DECLARE_SIGNAL_OUT(u_safe,                     dynamicgraph::Vector);  /// safe motor control
 
         /* --- COMMANDS --- */
 
+        /// Commands related to the control mode.
+        void addCtrlMode(const std::string& name);
+        void ctrlModes();
+        void getCtrlMode(const std::string& jointName);
+        void setCtrlMode(const std::string& jointName, const std::string& ctrlMode);
+        void setCtrlMode(const int jid, const CtrlMode& cm);
+
+        void resetProfiler();
+
         /// Commands related to joint name and joint id
-        void setNameToId(const std::string& jointName, const unsigned int & jointId);
-        void setJointLimitsFromId(const unsigned int &jointId, const double &lq, const double &uq);
+        // void setNameToId(const std::string& jointName, const double & jointId);
+        // void setJointLimitsFromId(const double &jointId, const double &lq, const double &uq);
 
-        /// Command related to ForceUtil
-        void setForceLimitsFromId(const unsigned int & jointId, const dynamicgraph::Vector &lq, const dynamicgraph::Vector &uq);
-        void setForceNameToForceId(const std::string& forceName, const unsigned int & forceId);
-
-        /// Commands related to FootUtil
-        void setRightFootSoleXYZ(const dynamicgraph::Vector &);
-        void setRightFootForceSensorXYZ(const dynamicgraph::Vector &);
-        void setFootFrameName(const std::string &, const std::string &);
-        void setImuJointName(const std::string &);
-        void displayRobotUtil();
         /// Set the mapping between urdf and sot.
-        void setJoints(const dynamicgraph::Vector &);
+        // void setJoints(const dynamicgraph::Vector &);
+
+        // void setStreamPrintPeriod(const double & s);
+
+        void setSleepTime(const double &seconds);
+        void addEmergencyStopSIN(const std::string& name);
 
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
 
       protected:
         RobotUtilShrPtr                   m_robot_util;
-        dynamicgraph::sot::talos_balance::robots::RobotWrapper *  m_robot;
+        size_t  m_numDofs;
         bool    m_initSucceeded;    /// true if the entity has been successfully initialized
         double  m_dt;               /// control loop time period
         bool    m_emergency_stop_triggered;  /// true if an emergency condition as been triggered either by an other entity, or by control limit violation
@@ -111,11 +132,17 @@ namespace dynamicgraph {
         int     m_iter;
         double  m_sleep_time;       /// time to sleep at every iteration (to slow down simulation)
 
+        std::vector<std::string>  m_ctrlModes;                /// existing control modes
+        std::vector<CtrlMode>     m_jointCtrlModes_current;   /// control mode of the joints
+        std::vector<CtrlMode>     m_jointCtrlModes_previous;  /// previous control mode of the joints
+        std::vector<int>          m_jointCtrlModesCountDown;  /// counters used for the transition between two ctrl modes
+
+        bool convertStringToCtrlMode(const std::string& name, CtrlMode& cm);
         bool convertJointNameToJointId(const std::string& name, unsigned int& id);
-        bool isJointInRange(unsigned int id, double q);
+        //bool isJointInRange(unsigned int id, double q);
         void updateJointCtrlModesOutputSignal();
 
-      }; // class ParameterServer
+      }; // class TalosControlManager
 
     }    // namespace talos_balance
   }      // namespace sot

@@ -14,11 +14,11 @@
  * with sot-torque-control.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sot/talos_balance/base-estimator.hh>
+#include <sot/talos_balance/talos-base-estimator.hh>
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
 #include <dynamic-graph/all-commands.h>
-#include <sot/talos_balance/utils/stop-watch.hh>
+#include <sot/core/stop-watch.hh>
 #include "pinocchio/algorithm/frames.hpp"
 
 namespace dynamicgraph
@@ -34,7 +34,10 @@ namespace dynamicgraph
       using namespace pinocchio;
       using boost::math::normal; // typedef provides default type is double.
 
-      void se3Interp(const pinocchio::SE3 & s1, const pinocchio::SE3 & s2, const double alpha, pinocchio::SE3 & s12)
+      void se3Interp(const pinocchio::SE3 & s1,
+		     const pinocchio::SE3 & s2,
+		     const double alpha,
+		     pinocchio::SE3 & s12)
       {
         const Eigen::Vector3d t_( s1.translation() * alpha+
                                   s2.translation() * (1-alpha));
@@ -45,7 +48,8 @@ namespace dynamicgraph
         s12 =  pinocchio::SE3(pinocchio::exp3(w),t_);
       }
 
-      void rpyToMatrix(double roll, double pitch, double yaw, Eigen::Matrix3d & R)
+      void rpyToMatrix(double roll,
+		       double pitch, double yaw, Eigen::Matrix3d & R)
       {
         Eigen::AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
         Eigen::AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
@@ -75,7 +79,9 @@ namespace dynamicgraph
         }
       }
 
-      void quanternionMult(const Eigen::Vector4d & q1, const Eigen::Vector4d & q2,  Eigen::Vector4d & q12)
+      void quanternionMult(const Eigen::Vector4d & q1,
+			   const Eigen::Vector4d & q2,
+			   Eigen::Vector4d & q12)
       {
         q12(0) = q2(0)*q1(0)-q2(1)*q1(1)-q2(2)*q1(2)-q2(3)*q1(3);
         q12(1) = q2(0)*q1(1)+q2(1)*q1(0)-q2(2)*q1(3)+q2(3)*q1(2);
@@ -83,7 +89,10 @@ namespace dynamicgraph
         q12(3) = q2(0)*q1(3)-q2(1)*q1(2)+q2(2)*q1(1)+q2(3)*q1(0);
       }
 
-      void pointRotationByQuaternion(const Eigen::Vector3d & point,const Eigen::Vector4d & quat, Eigen::Vector3d & rotatedPoint)
+      void pointRotationByQuaternion
+      (const Eigen::Vector3d & point,
+       const Eigen::Vector4d & quat,
+       Eigen::Vector3d & rotatedPoint)
       {
         const Eigen::Vector4d p4(0.0, point(0),point(1),point(2));
         const Eigen::Vector4d quat_conj(quat(0),-quat(1),-quat(2),-quat(3));
@@ -111,9 +120,14 @@ namespace dynamicgraph
       {
         double wMean = (a1*w1+ a2*w2)/(w1+w2);
         if ( a1-a2 >= EIGEN_PI )
-            return (EIGEN_PI*(w1-w2)/(w2+w1) - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*(w1-w2)/(w2+w1) : EIGEN_PI + wMean - EIGEN_PI*(w1-w2)/(w2+w1); 
+	  return (EIGEN_PI*(w1-w2)/(w2+w1) - wMean)
+	    < 0 ? -EIGEN_PI +
+	      wMean - EIGEN_PI*(w1-w2)/(w2+w1) : EIGEN_PI +
+	      wMean - EIGEN_PI*(w1-w2)/(w2+w1); 
         else if ( a1-a2 < -EIGEN_PI )
-            return (EIGEN_PI*(w2-w1)/(w1+w2) - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2) : EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2); 
+	  return (EIGEN_PI*(w2-w1)/(w1+w2) - wMean)
+	    < 0 ? -EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2) :
+	      EIGEN_PI + wMean - EIGEN_PI*(w2-w1)/(w1+w2); 
         return wMean;
       }
 
@@ -129,7 +143,8 @@ namespace dynamicgraph
       //     pa  = a1; //positive angle
       //     paw = w1; //positive angle weight 
       //     double piFac = (paw-naw)/(naw+paw);
-      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac;        
+      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI +
+      //       wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac;
       //   }
       //   else if ( a1-a2 < -EIGEN_PI )
       //   {
@@ -138,7 +153,8 @@ namespace dynamicgraph
       //     pa  = a2; //positive angle
       //     paw = w2; //positive angle weight
       //     double piFac = (paw-naw)/(naw+paw);
-      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean - EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac; 
+      //     return (EIGEN_PI*piFac - wMean) < 0 ? -EIGEN_PI + wMean -
+      //    EIGEN_PI*piFac : EIGEN_PI + wMean - EIGEN_PI*piFac; 
       //   }
       //   return wMean;
       // }
@@ -157,17 +173,17 @@ namespace dynamicgraph
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
-      typedef BaseEstimator EntityClassName;
+      typedef TalosBaseEstimator EntityClassName;
 
       /* --- DG FACTORY ---------------------------------------------------- */
-      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(BaseEstimator,
-                                         "BaseEstimator");
+      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(TalosBaseEstimator,
+                                         "TalosBaseEstimator");
 
       /* ------------------------------------------------------------------- */
       /* --- CONSTRUCTION -------------------------------------------------- */
       /* ------------------------------------------------------------------- */
-      BaseEstimator::
-      BaseEstimator(const std::string& name)
+      TalosBaseEstimator::
+      TalosBaseEstimator(const std::string& name)
         : Entity(name)
         ,CONSTRUCT_SIGNAL_IN( joint_positions,            dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_IN( joint_velocities,           dynamicgraph::Vector)
@@ -238,90 +254,90 @@ namespace dynamicgraph
 
         /* Commands. */
         addCommand("init",
-                   makeCommandVoid2(*this, &BaseEstimator::init,
+                   makeCommandVoid2(*this, &TalosBaseEstimator::init,
                                     docCommandVoid2("Initialize the entity.",
                                                     "time step (double)",
                                                     "URDF file path (string)")));
 
 
         addCommand("set_fz_stable_windows_size",
-                           makeCommandVoid1(*this, &BaseEstimator::set_fz_stable_windows_size,
+                           makeCommandVoid1(*this, &TalosBaseEstimator::set_fz_stable_windows_size,
                                             docCommandVoid1("Set the windows size used to detect that feet is stable",
                                                             "int")));
         addCommand("set_alpha_w_filter",
-                   makeCommandVoid1(*this, &BaseEstimator::set_alpha_w_filter,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_alpha_w_filter,
                                     docCommandVoid1("Set the filter parameter to filter weights",
                                                     "double")));
         addCommand("set_alpha_DC_acc",
-                   makeCommandVoid1(*this, &BaseEstimator::set_alpha_DC_acc,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_alpha_DC_acc,
                                     docCommandVoid1("Set the filter parameter for removing DC from accelerometer data",
                                                     "double")));
         addCommand("set_alpha_DC_vel",
-                   makeCommandVoid1(*this, &BaseEstimator::set_alpha_DC_vel,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_alpha_DC_vel,
                                     docCommandVoid1("Set the filter parameter for removing DC from velocity integrated from acceleration",
                                                     "double")));
         addCommand("reset_foot_positions",
-                   makeCommandVoid0(*this, &BaseEstimator::reset_foot_positions,
+                   makeCommandVoid0(*this, &TalosBaseEstimator::reset_foot_positions,
                                     docCommandVoid0("Reset the position of the feet.")));
         addCommand("get_imu_weight",
                    makeDirectGetter(*this,&m_w_imu,
                                     docDirectGetter("Weight of imu-based orientation in sensor fusion",
                                                     "double")));
         addCommand("set_imu_weight",
-                   makeCommandVoid1(*this, &BaseEstimator::set_imu_weight,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_imu_weight,
                                     docCommandVoid1("Set the weight of imu-based orientation in sensor fusion",
                                                     "double")));
         addCommand("set_zmp_std_dev_right_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_zmp_std_dev_right_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_zmp_std_dev_right_foot,
                                     docCommandVoid1("Set the standard deviation of the ZMP measurement errors for the right foot",
                                                     "double")));
         addCommand("set_zmp_std_dev_left_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_zmp_std_dev_left_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_zmp_std_dev_left_foot,
                                     docCommandVoid1("Set the standard deviation of the ZMP measurement errors for the left foot",
                                                     "double")));
         addCommand("set_normal_force_std_dev_right_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_normal_force_std_dev_right_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_normal_force_std_dev_right_foot,
                                     docCommandVoid1("Set the standard deviation of the normal force measurement errors for the right foot",
                                                     "double")));
         addCommand("set_normal_force_std_dev_left_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_normal_force_std_dev_left_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_normal_force_std_dev_left_foot,
                                     docCommandVoid1("Set the standard deviation of the normal force measurement errors for the left foot",
                                                     "double")));
         addCommand("set_stiffness_right_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_stiffness_right_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_stiffness_right_foot,
                                     docCommandVoid1("Set the 6d stiffness of the spring at the right foot",
                                                     "vector")));
         addCommand("set_stiffness_left_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_stiffness_left_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_stiffness_left_foot,
                                     docCommandVoid1("Set the 6d stiffness of the spring at the left foot",
                                                     "vector")));
         addCommand("set_right_foot_sizes",
-                   makeCommandVoid1(*this, &BaseEstimator::set_right_foot_sizes,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_right_foot_sizes,
                                     docCommandVoid1("Set the size of the right foot (pos x, neg x, pos y, neg y)",
                                                     "4d vector")));
         addCommand("set_left_foot_sizes",
-                   makeCommandVoid1(*this, &BaseEstimator::set_left_foot_sizes,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_left_foot_sizes,
                                     docCommandVoid1("Set the size of the left foot (pos x, neg x, pos y, neg y)",
                                                     "4d vector")));
         addCommand("set_zmp_margin_right_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_zmp_margin_right_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_zmp_margin_right_foot,
                                     docCommandVoid1("Set the ZMP margin for the right foot",
                                                     "double")));
         addCommand("set_zmp_margin_left_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_zmp_margin_left_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_zmp_margin_left_foot,
                                     docCommandVoid1("Set the ZMP margin for the left foot",
                                                     "double")));
         addCommand("set_normal_force_margin_right_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_normal_force_margin_right_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_normal_force_margin_right_foot,
                                     docCommandVoid1("Set the normal force margin for the right foot",
                                                     "double")));
         addCommand("set_normal_force_margin_left_foot",
-                   makeCommandVoid1(*this, &BaseEstimator::set_normal_force_margin_left_foot,
+                   makeCommandVoid1(*this, &TalosBaseEstimator::set_normal_force_margin_left_foot,
                                     docCommandVoid1("Set the normal force margin for the left foot",
                                                     "double")));
       }
 
-      void BaseEstimator::init(const double & dt, const std::string& robotRef)
+      void TalosBaseEstimator::init(const double & dt, const std::string& robotRef)
       {
         m_dt = dt;
         try
@@ -388,14 +404,14 @@ namespace dynamicgraph
         m_initSucceeded = true;
       }
 
-      void BaseEstimator::set_fz_stable_windows_size(const int& ws)
+      void TalosBaseEstimator::set_fz_stable_windows_size(const int& ws)
       {
         if(ws<0.0)
           return SEND_MSG("windows_size should be a positive integer", MSG_TYPE_ERROR);
         m_fz_stable_windows_size = ws;
       }
 
-      void BaseEstimator::set_alpha_w_filter(const double& a)
+      void TalosBaseEstimator::set_alpha_w_filter(const double& a)
       {
         if(a<0.0 || a>1.0)
           return SEND_MSG("alpha should be in [0..1]", MSG_TYPE_ERROR);
@@ -403,14 +419,14 @@ namespace dynamicgraph
       }
 
 
-      void BaseEstimator::set_alpha_DC_acc(const double& a)
+      void TalosBaseEstimator::set_alpha_DC_acc(const double& a)
       {
         if(a<0.0 || a>1.0)
           return SEND_MSG("alpha should be in [0..1]", MSG_TYPE_ERROR);
         m_alpha_DC_acc = a;
       }
 
-      void BaseEstimator::set_alpha_DC_vel(const double& a)
+      void TalosBaseEstimator::set_alpha_DC_vel(const double& a)
       {
         if(a<0.0 || a>1.0)
           return SEND_MSG("alpha should be in [0..1]", MSG_TYPE_ERROR);
@@ -418,95 +434,95 @@ namespace dynamicgraph
       }
 
 
-      void BaseEstimator::reset_foot_positions()
+      void TalosBaseEstimator::reset_foot_positions()
       {
         m_reset_foot_pos = true;
       }
 
-      void BaseEstimator::set_imu_weight(const double& w)
+      void TalosBaseEstimator::set_imu_weight(const double& w)
       {
         if(w<0.0)
           return SEND_MSG("Imu weight must be nonnegative", MSG_TYPE_ERROR);
         m_w_imu = w;
       }
 
-      void BaseEstimator::set_stiffness_right_foot(const dynamicgraph::Vector & k)
+      void TalosBaseEstimator::set_stiffness_right_foot(const dynamicgraph::Vector & k)
       {
         if(k.size()!=6)
           return SEND_MSG("Stiffness vector should have size 6, not "+toString(k.size()), MSG_TYPE_ERROR);
         m_K_rf = k;
       }
 
-      void BaseEstimator::set_stiffness_left_foot(const dynamicgraph::Vector & k)
+      void TalosBaseEstimator::set_stiffness_left_foot(const dynamicgraph::Vector & k)
       {
         if(k.size()!=6)
           return SEND_MSG("Stiffness vector should have size 6, not "+toString(k.size()), MSG_TYPE_ERROR);
         m_K_lf = k;
       }
 
-      void BaseEstimator::set_zmp_std_dev_right_foot(const double & std_dev)
+      void TalosBaseEstimator::set_zmp_std_dev_right_foot(const double & std_dev)
       {
         if(std_dev<=0.0)
           return SEND_MSG("Standard deviation must be a positive number", MSG_TYPE_ERROR);
         m_zmp_std_dev_rf = std_dev;
       }
 
-      void BaseEstimator::set_zmp_std_dev_left_foot(const double & std_dev)
+      void TalosBaseEstimator::set_zmp_std_dev_left_foot(const double & std_dev)
       {
         if(std_dev<=0.0)
           return SEND_MSG("Standard deviation must be a positive number", MSG_TYPE_ERROR);
         m_zmp_std_dev_lf = std_dev;
       }
 
-      void BaseEstimator::set_normal_force_std_dev_right_foot(const double & std_dev)
+      void TalosBaseEstimator::set_normal_force_std_dev_right_foot(const double & std_dev)
       {
         if(std_dev<=0.0)
           return SEND_MSG("Standard deviation must be a positive number", MSG_TYPE_ERROR);
         m_fz_std_dev_rf = std_dev;
       }
 
-      void BaseEstimator::set_normal_force_std_dev_left_foot(const double & std_dev)
+      void TalosBaseEstimator::set_normal_force_std_dev_left_foot(const double & std_dev)
       {
         if(std_dev<=0.0)
           return SEND_MSG("Standard deviation must be a positive number", MSG_TYPE_ERROR);
         m_fz_std_dev_lf = std_dev;
       }
 
-      void BaseEstimator::set_right_foot_sizes(const dynamicgraph::Vector & s)
+      void TalosBaseEstimator::set_right_foot_sizes(const dynamicgraph::Vector & s)
       {
         if(s.size()!=4)
           return SEND_MSG("Foot size vector should have size 4, not "+toString(s.size()), MSG_TYPE_ERROR);
         m_right_foot_sizes = s;
       }
 
-      void BaseEstimator::set_left_foot_sizes(const dynamicgraph::Vector & s)
+      void TalosBaseEstimator::set_left_foot_sizes(const dynamicgraph::Vector & s)
       {
         if(s.size()!=4)
           return SEND_MSG("Foot size vector should have size 4, not "+toString(s.size()), MSG_TYPE_ERROR);
         m_left_foot_sizes = s;
       }
 
-      void BaseEstimator::set_zmp_margin_right_foot(const double & margin)
+      void TalosBaseEstimator::set_zmp_margin_right_foot(const double & margin)
       {
         m_zmp_margin_rf = margin;
       }
 
-      void BaseEstimator::set_zmp_margin_left_foot(const double & margin)
+      void TalosBaseEstimator::set_zmp_margin_left_foot(const double & margin)
       {
         m_zmp_margin_lf = margin;
       }
 
-      void BaseEstimator::set_normal_force_margin_right_foot(const double & margin)
+      void TalosBaseEstimator::set_normal_force_margin_right_foot(const double & margin)
       {
         m_fz_margin_rf = margin;
       }
 
-      void BaseEstimator::set_normal_force_margin_left_foot(const double & margin)
+      void TalosBaseEstimator::set_normal_force_margin_left_foot(const double & margin)
       {
         m_fz_margin_lf = margin;
       }
 
-      void BaseEstimator::compute_zmp(const Vector6 & w, Vector2 & zmp)
+      void TalosBaseEstimator::compute_zmp(const Vector6 & w, Vector2 & zmp)
       {
         pinocchio::Force f(w);
         f = m_sole_M_ftSens.act(f);
@@ -516,7 +532,7 @@ namespace dynamicgraph
         zmp[1] =  f.angular()[0] / f.linear()[2];
       }
 
-      double BaseEstimator::compute_zmp_weight(const Vector2 & zmp, const Vector4 & foot_sizes,
+      double TalosBaseEstimator::compute_zmp_weight(const Vector2 & zmp, const Vector4 & foot_sizes,
                                                double std_dev, double margin)
       {
         double fs0=foot_sizes[0] - margin;
@@ -534,14 +550,14 @@ namespace dynamicgraph
         return cdx*cdy;
       }
 
-      double BaseEstimator::compute_force_weight(double fz, double std_dev, double margin)
+      double TalosBaseEstimator::compute_force_weight(double fz, double std_dev, double margin)
       {
         if (fz<margin)
           return 0.0;
         return (cdf(m_normal, (fz-margin)/std_dev)-0.5)*2.0;
       }
 
-      void BaseEstimator::reset_foot_positions_impl(const Vector6 & ftlf, const Vector6 & ftrf)
+      void TalosBaseEstimator::reset_foot_positions_impl(const Vector6 & ftlf, const Vector6 & ftrf)
       {
         // compute the base position wrt each foot
         SE3 dummy, dummy1, lfMff, rfMff;
@@ -595,7 +611,7 @@ namespace dynamicgraph
         m_reset_foot_pos = false;
       }
 
-      void BaseEstimator::kinematics_estimation(const Vector6 & ft, const Vector6 & K,
+      void TalosBaseEstimator::kinematics_estimation(const Vector6 & ft, const Vector6 & K,
                                                 const SE3 & oMfs, const pinocchio::FrameIndex foot_id,
                                                 SE3 & oMff, SE3 & oMfa, SE3 & fsMff)
       {
@@ -1293,9 +1309,9 @@ namespace dynamicgraph
       /* --- ENTITY -------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      void BaseEstimator::display(std::ostream& os) const
+      void TalosBaseEstimator::display(std::ostream& os) const
       {
-        os << "BaseEstimator "<<getName();
+        os << "TalosBaseEstimator "<<getName();
         try
         {
           getProfiler().report_all(3, os);

@@ -58,6 +58,7 @@ SET(BOOST_COMPONENTS thread filesystem program_options unit_test_framework syste
 
 OPTION (BUILD_ROS_PACKAGES "Build ros packages" ON)
 OPTION (BUILD_PYTHON_INTERFACE "Build the python bindings" ON)
+OPTION (INSTALL_PYTHON_INTERFACE_ONLY "Install *ONLY* the python binding" OFF)
 OPTION (BUILD_TEST "Build tests" ON)
 
 # name of the python module
@@ -89,8 +90,6 @@ SET(LIBRARY_NAME ${SOTTALOSBALANCE_LIB_NAME})
 
 SET(${LIBRARY_NAME}_HEADERS
   include/sot/talos_balance/utils/commands-helper.hh
-  include/sot/talos_balance/utils/stop-watch.hh
-  include/sot/talos_balance/utils/causal-filter.hh
   include/sot/talos_balance/utils/statistics.hh
   include/sot/talos_balance/math/fwd.hh
   include/sot/talos_balance/robot/fwd.hh
@@ -106,9 +105,7 @@ SET(${LIBRARY_NAME}_HEADERS
 #  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_WRITE)
 
 SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
-    src/utils/causal-filter.cpp
     src/utils/statistics.cpp
-    src/utils/stop-watch.cpp
     src/robot/robot-wrapper.cpp
     src/sdk_qualisys/Network.cpp
     src/sdk_qualisys/RTPacket.cpp
@@ -146,7 +143,9 @@ ENDIF(UNIX AND NOT APPLE)
 
 TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${Boost_LIBRARIES})
 
-INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+IF (NOT INSTALL_PYTHON_INTERFACE_ONLY)
+  INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
 
 IF(BUILD_PYTHON_INTERFACE)
   INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/__init__.py
@@ -178,6 +177,8 @@ IF(BUILD_PYTHON_INTERFACE)
                   python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcmComZmpControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmZmpControl.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcmZmpControl.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmZmpControl_file.py
+                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcmZmpControl_file.py		  
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_comAdmittance.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_single_joint.py
                   python/${SOTTALOSBALANCE_PYNAME}/test/appli_admittance_single_joint.py
@@ -245,8 +246,10 @@ MACRO(DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE MODULENAME SUBMODULENAME LIBRARYNAME TA
    )
   CMAKE_POLICY(POP)
 
-  TARGET_LINK_LIBRARIES(${PYTHON_MODULE} ${PUBLIC_KEYWORD} "-Wl,--no-as-needed")
-  TARGET_LINK_LIBRARIES(${PYTHON_MODULE} ${PUBLIC_KEYWORD} ${LIBRARYNAME} ${PYTHON_LIBRARY})
+  TARGET_LINK_LIBRARIES(${PYTHON_MODULE} ${PUBLIC_KEYWORD}
+    "-Wl,--no-as-needed")
+  TARGET_LINK_LIBRARIES(${PYTHON_MODULE} ${PUBLIC_KEYWORD}
+    ${LIBRARYNAME} ${PYTHON_LIBRARY})
 
   INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
@@ -282,7 +285,8 @@ MACRO(DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE MODULENAME SUBMODULENAME LIBRARYNAME TA
 ENDMACRO(DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE)
 
 MACRO(SOT_TALOS_BALANCE_PYTHON_MODULE SUBMODULENAME LIBRARYNAME TARGETNAME)
-  DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE("${SOTTALOSBALANCE_PYNAME}" "${SUBMODULENAME}" "${LIBRARYNAME}" "${TARGETNAME}")
+  DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE("${SOTTALOSBALANCE_PYNAME}"
+    "${SUBMODULENAME}" "${LIBRARYNAME}" "${TARGETNAME}")
 ENDMACRO(SOT_TALOS_BALANCE_PYTHON_MODULE)
 
 ADD_SUBDIRECTORY(src)

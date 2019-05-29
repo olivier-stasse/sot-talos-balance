@@ -52,16 +52,12 @@ SET(plugins
     dcm-controller
     dummy-dcm-estimator
     com-admittance-controller
-    admittance-controller
+    simple-admittance-controller
     admittance-controller-end-effector
     joint-position-controller
     nd-trajectory-generator
-    base-estimator
-    filter-differentiator
-    madgwickahrs
-    control-manager
-    imu_offset_compensation
-    parameter-server
+    talos-base-estimator
+    talos-control-manager
     dcm-estimator
     qualisys-client
     ft-calibration
@@ -98,7 +94,7 @@ FOREACH(plugin ${plugins})
 
   ADD_DEPENDENCIES(${LIBRARY_NAME} ${SOTTALOSBALANCE_LIB_NAME})
 
-  
+
   IF(ADDITIONAL_${LIBRARY_NAME}_LIBS)
     ADD_DEPENDENCIES(${LIBRARY_NAME} ${ADDITIONAL_${LIBRARY_NAME}_LIBS})
     TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${ADDITIONAL_${LIBRARY_NAME}_LIBS})
@@ -128,8 +124,10 @@ FOREACH(plugin ${plugins})
       )
   ENDIF(BUILD_PYTHON_INTERFACE)
   # Install plugins
-  INSTALL(TARGETS ${LIBRARY_NAME}
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/plugin)
+  IF (NOT INSTALL_PYTHON_INTERFACE_ONLY)
+    INSTALL(TARGETS ${LIBRARY_NAME}
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}/plugin)
+  ENDIF (NOT INSTALL_PYTHON_INTERFACE_ONLY)
 ENDFOREACH(plugin)
 
 # Bindings Python
