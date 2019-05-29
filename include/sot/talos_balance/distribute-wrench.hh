@@ -91,6 +91,9 @@ namespace dynamicgraph {
 
         dynamicgraph::Vector computeCoP(const dynamicgraph::Vector & wrench, const pinocchio::SE3 & pose) const;
 
+        void set_right_foot_sizes(const dynamicgraph::Vector & s);
+        void set_left_foot_sizes(const dynamicgraph::Vector & s);
+
       protected:
         bool  m_initSucceeded;    /// true if the entity has been successfully initialized
         pinocchio::Model m_model;       /// Pinocchio robot model
@@ -105,6 +108,9 @@ namespace dynamicgraph {
 
         dynamicgraph::Vector m_wrenchLeft;
         dynamicgraph::Vector m_wrenchRight;
+
+        Eigen::Vector4d m_left_foot_sizes;  /// sizes of the left foot (pos x, neg x, pos y, neg y)
+        Eigen::Vector4d m_right_foot_sizes; /// sizes of the left foot (pos x, neg x, pos y, neg y)
 
 //      Eigen::QuadProgDense m_qp1; // TODO: saturate wrench
         Eigen::QuadProgDense m_qp2; // distribute wrench

@@ -81,6 +81,15 @@ namespace dynamicgraph
 
         /* Commands. */
         addCommand("init", makeCommandVoid1(*this, &DistributeWrench::init, docCommandVoid1("Initialize the entity.","Robot name")));
+
+        addCommand("set_right_foot_sizes",
+                   makeCommandVoid1(*this, &DistributeWrench::set_right_foot_sizes,
+                                    docCommandVoid1("Set the size of the right foot (pos x, neg x, pos y, neg y)",
+                                                    "4d vector")));
+        addCommand("set_left_foot_sizes",
+                   makeCommandVoid1(*this, &DistributeWrench::set_left_foot_sizes,
+                                    docCommandVoid1("Set the size of the left foot (pos x, neg x, pos y, neg y)",
+                                                    "4d vector")));
       }
 
       void DistributeWrench::init(const std::string& robotName)
@@ -129,6 +138,20 @@ namespace dynamicgraph
         m_qp2.problem(12,0,0);
 
         m_initSucceeded = true;
+      }
+
+      void DistributeWrench::set_right_foot_sizes(const dynamicgraph::Vector & s)
+      {
+        if(s.size()!=4)
+          return SEND_MSG("Foot size vector should have size 4, not "+toString(s.size()), MSG_TYPE_ERROR);
+        m_right_foot_sizes = s;
+      }
+
+      void DistributeWrench::set_left_foot_sizes(const dynamicgraph::Vector & s)
+      {
+        if(s.size()!=4)
+          return SEND_MSG("Foot size vector should have size 4, not "+toString(s.size()), MSG_TYPE_ERROR);
+        m_left_foot_sizes = s;
       }
 
       dynamicgraph::Vector

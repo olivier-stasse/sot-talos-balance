@@ -99,6 +99,8 @@ distribute.wrenchDes.value = wrench
 distribute.rho.value = 0.5
 
 distribute.init(robot_name)
+distribute.set_right_foot_sizes(base_estimator_conf.RIGHT_FOOT_SIZES)
+distribute.set_left_foot_sizes(base_estimator_conf.LEFT_FOOT_SIZES)
 
 distribute.zmpRef.recompute(0)
 
