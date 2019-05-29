@@ -96,6 +96,7 @@ distribute = DistributeWrench('distribute')
 
 distribute.q.value = halfSitting
 distribute.wrenchDes.value = wrench
+distribute.rho.value = 0.5
 
 distribute.init(robot_name)
 

@@ -71,6 +71,7 @@ namespace dynamicgraph {
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(wrenchDes,  dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(q,  dynamicgraph::Vector);
+        DECLARE_SIGNAL_IN(rho, double);
 
         DECLARE_SIGNAL_INNER(kinematics_computations, int);
         DECLARE_SIGNAL_INNER(qp_computations,  int);

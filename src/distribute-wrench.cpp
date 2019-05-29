@@ -42,7 +42,7 @@ namespace dynamicgraph
 #define PROFILE_DISTRIBUTE_WRENCH_KINEMATICS_COMPUTATIONS "DistributeWrench: kinematics computations              "
 #define PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS         "DistributeWrench: QP problem computations              "
 
-#define INPUT_SIGNALS     m_wrenchDesSIN << m_qSIN
+#define INPUT_SIGNALS     m_wrenchDesSIN << m_qSIN << m_rhoSIN
 
 #define INNER_SIGNALS m_kinematics_computations << m_qp_computations
 
@@ -63,8 +63,9 @@ namespace dynamicgraph
                       : Entity(name)
                       , CONSTRUCT_SIGNAL_IN(wrenchDes, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(q, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_IN(rho, double)
                       , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN)
-                      , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_kinematics_computationsSINNER)
+                      , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_rhoSIN << m_kinematics_computationsSINNER)
                       , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_qp_computationsSINNER)
                       , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector, m_qp_computationsSINNER)
@@ -207,6 +208,7 @@ namespace dynamicgraph
         }
 
         const Eigen::VectorXd & wrenchDes = m_wrenchDesSIN(iter);
+        const double & rho = m_rhoSIN(iter);
         const int & dummy = m_kinematics_computationsSINNER(iter);
         (void) dummy;
 
@@ -216,8 +218,9 @@ namespace dynamicgraph
 
         // --- COSTS
 
-        const double wSum = 1000.0; // TODO: signal/conf
-        const double wNorm = 1.0; // TODO: signal/conf
+        const double wSum = 10000.0; // TODO: signal/conf
+        const double wNorm = 10.0; // TODO: signal/conf
+        const double wRatio = 1.0; // TODO: signal/conf
         Eigen::VectorXd wAnkle(6);
         wAnkle << 1., 1., 1e-4, 1., 1., 1e-4; // TODO: signal/conf
 
@@ -236,7 +239,7 @@ namespace dynamicgraph
         C.tail<6>() = -wrenchDes;
         C *= wSum;
 
-        // min |wrenchLeft|^2 + |wrenchRight|^2
+        // min |wrenchLeft_a|^2 + |wrenchRight_a|^2
         Eigen::MatrixXd tmp = wAnkle.asDiagonal() * m_data.oMf[m_left_foot_id].inverse().toDualActionMatrix();
         tmp = tmp.transpose() * tmp * wNorm;
         Q.topLeftCorner<6,6>() += tmp;
@@ -244,6 +247,16 @@ namespace dynamicgraph
         tmp = wAnkle.asDiagonal() * m_data.oMf[m_right_foot_id].inverse().toDualActionMatrix();
         tmp = tmp.transpose() * tmp * wNorm;
         Q.bottomRightCorner<6,6>() += tmp;
+
+        // min |(1-rho)e_z^T*wrenchLeft_c - rho*e_z^T*wrenchLeft_c|
+        const pinocchio::SE3 leftPos  = m_data.oMf[m_left_foot_id]  * m_ankle_M_ftSens;
+        const pinocchio::SE3 rightPos = m_data.oMf[m_right_foot_id] * m_ankle_M_ftSens;
+
+        Eigen::MatrixXd tmp2(1,12);
+        tmp2 << (1-rho) * (  leftPos.inverse().toDualActionMatrix().row(2) ),
+                 (-rho) * ( rightPos.inverse().toDualActionMatrix().row(2) );
+
+        Q += wRatio * tmp2.transpose()*tmp2;
 
         // --- Equality constraints
 
