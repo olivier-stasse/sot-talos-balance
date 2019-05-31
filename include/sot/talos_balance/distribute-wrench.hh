@@ -120,6 +120,8 @@ namespace dynamicgraph {
 
         double m_eps;
 
+        bool distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho);
+
         bool m_emergency_stop_triggered;
       }; // class DistributeWrench
 

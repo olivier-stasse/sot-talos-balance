@@ -258,22 +258,7 @@ namespace dynamicgraph
         return s;
       }
 
-      DEFINE_SIGNAL_INNER_FUNCTION(qp_computations, int)
-      {
-        if(!m_initSucceeded)
-        {
-          SEND_WARNING_STREAM_MSG("Cannot compute signal qp_computations before initialization!");
-          return s;
-        }
-
-        const Eigen::VectorXd & wrenchDes = m_wrenchDesSIN(iter);
-        const double & rho = m_rhoSIN(iter);
-        const int & dummy = m_kinematics_computationsSINNER(iter);
-        (void) dummy;
-
-        assert(wrenchDes.size()==6     && "Unexpected size of signal q");
-
-        getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
+      bool DistributeWrench::distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho) {
 
         // --- COSTS
 
@@ -345,18 +330,40 @@ namespace dynamicgraph
 
         m_emergency_stop_triggered = !success;
 
-        if(!success)
-        {
-          SEND_WARNING_STREAM_MSG("No solution to the QP problem!");
-          return s;
-        }
-
         Eigen::VectorXd result = m_qp2.result();
 
         m_wrenchLeft  = result.head<6>();
         m_wrenchRight = result.tail<6>();
 
+        return success;
+      }
+
+      DEFINE_SIGNAL_INNER_FUNCTION(qp_computations, int)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal qp_computations before initialization!");
+          return s;
+        }
+
+        const Eigen::VectorXd & wrenchDes = m_wrenchDesSIN(iter);
+        const double & rho = m_rhoSIN(iter);
+        const int & dummy = m_kinematics_computationsSINNER(iter);
+        (void) dummy;
+
+        assert(wrenchDes.size()==6     && "Unexpected size of signal q");
+
+        getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
+
+        bool success = distributeWrench(wrenchDes,rho);
+
         getProfiler().stop(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
+
+        if(!success)
+        {
+          SEND_WARNING_STREAM_MSG("No solution to the QP problem!");
+          return s;
+        }
 
         return s;
       }
