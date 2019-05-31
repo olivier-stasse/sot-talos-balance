@@ -145,7 +145,7 @@ namespace dynamicgraph
 
         computeWrenchFaceMatrix();
 
-        m_qp1.problem(6,0,0);
+        m_qp1.problem(6,0,16);
         m_qp2.problem(12,0,34);
 
         m_initSucceeded = true;
@@ -357,21 +357,18 @@ namespace dynamicgraph
 
         // --- Inequality constraints
 
-        Eigen::MatrixXd Aineq(0,6);
+        Eigen::MatrixXd Aineq(16,6);
+        if(phase>0) {
+          const pinocchio::SE3 leftPos  = m_data.oMf[m_left_foot_id]  * m_ankle_M_ftSens;
+          Aineq = m_wrenchFaceMatrix * leftPos.inverse().toDualActionMatrix();
+        }
+        else {
+          const pinocchio::SE3 rightPos = m_data.oMf[m_right_foot_id] * m_ankle_M_ftSens;
+          Aineq = m_wrenchFaceMatrix * rightPos.inverse().toDualActionMatrix();
+        }
 
-//        Aineq.topLeftCorner<16,6>() = m_wrenchFaceMatrix * leftPos.inverse().toDualActionMatrix();
-//        Aineq.topRightCorner<16,6>().setZero();
-//        Aineq.block<16,6>(16,0).setZero();
-//        Aineq.block<16,6>(16,6) = m_wrenchFaceMatrix * rightPos.inverse().toDualActionMatrix();
-
-//        Aineq.block<1,6>(32,0) = - leftPos.inverse().toDualActionMatrix().row(2);
-//        Aineq.block<1,6>(33,6) = - rightPos.inverse().toDualActionMatrix().row(2);
-
-        Eigen::VectorXd Bineq(0);
-
-//        Bineq.setZero();
-//        Bineq(32) = - m_eps;
-//        Bineq(33) = - m_eps;
+        Eigen::VectorXd Bineq(16);
+        Bineq.setZero();
 
         bool success = m_qp1.solve(Q, C, Aeq, Beq, Aineq, Bineq);
 
