@@ -72,6 +72,7 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(wrenchDes,  dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(q,  dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(rho, double);
+        DECLARE_SIGNAL_IN(phase, int);
 
         DECLARE_SIGNAL_INNER(kinematics_computations, int);
         DECLARE_SIGNAL_INNER(qp_computations,  int);
@@ -121,6 +122,7 @@ namespace dynamicgraph {
         double m_eps;
 
         bool distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho);
+        bool saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase);
 
         bool m_emergency_stop_triggered;
       }; // class DistributeWrench

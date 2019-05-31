@@ -42,7 +42,7 @@ namespace dynamicgraph
 #define PROFILE_DISTRIBUTE_WRENCH_KINEMATICS_COMPUTATIONS "DistributeWrench: kinematics computations              "
 #define PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS         "DistributeWrench: QP problem computations              "
 
-#define INPUT_SIGNALS     m_wrenchDesSIN << m_qSIN << m_rhoSIN
+#define INPUT_SIGNALS     m_wrenchDesSIN << m_qSIN << m_rhoSIN << m_phaseSIN
 
 #define INNER_SIGNALS m_kinematics_computations << m_qp_computations
 
@@ -64,8 +64,9 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(wrenchDes, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(q, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(rho, double)
+                      , CONSTRUCT_SIGNAL_IN(phase, int)
                       , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN)
-                      , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_rhoSIN << m_kinematics_computationsSINNER)
+                      , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_rhoSIN << m_kinematics_computationsSINNER << m_phaseSIN)
                       , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_qp_computationsSINNER)
                       , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector, m_qp_computationsSINNER)
@@ -338,6 +339,18 @@ namespace dynamicgraph
         return success;
       }
 
+      bool DistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase) {
+        if(phase>0) {
+          m_wrenchLeft  = wrenchDes;
+          m_wrenchRight.setZero(6);
+        }
+        else if(phase<0) {
+          m_wrenchRight  = wrenchDes;
+          m_wrenchLeft.setZero(6);
+        }
+        return true;
+      }
+
       DEFINE_SIGNAL_INNER_FUNCTION(qp_computations, int)
       {
         if(!m_initSucceeded)
@@ -350,12 +363,18 @@ namespace dynamicgraph
         const double & rho = m_rhoSIN(iter);
         const int & dummy = m_kinematics_computationsSINNER(iter);
         (void) dummy;
+        const int & phase = m_phaseSIN(iter);
 
         assert(wrenchDes.size()==6     && "Unexpected size of signal q");
 
         getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
 
-        bool success = distributeWrench(wrenchDes,rho);
+        bool success;
+
+        if(phase==0)
+          success = distributeWrench(wrenchDes,rho);
+        else
+          success = saturateWrench(wrenchDes,phase);
 
         getProfiler().stop(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
 
