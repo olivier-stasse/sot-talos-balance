@@ -112,8 +112,13 @@ namespace dynamicgraph {
         Eigen::Vector4d m_left_foot_sizes;  /// sizes of the left foot (pos x, neg x, pos y, neg y)
         Eigen::Vector4d m_right_foot_sizes; /// sizes of the left foot (pos x, neg x, pos y, neg y)
 
+        void computeWrenchFaceMatrix();
+        Eigen::MatrixXd m_wrenchFaceMatrix; // for modelling contact
+
 //      Eigen::QuadProgDense m_qp1; // TODO: saturate wrench
         Eigen::QuadProgDense m_qp2; // distribute wrench
+
+        double m_eps;
 
         bool m_emergency_stop_triggered;
       }; // class DistributeWrench

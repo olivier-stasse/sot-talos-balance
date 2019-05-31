@@ -90,6 +90,8 @@ namespace dynamicgraph
                    makeCommandVoid1(*this, &DistributeWrench::set_left_foot_sizes,
                                     docCommandVoid1("Set the size of the left foot (pos x, neg x, pos y, neg y)",
                                                     "4d vector")));
+
+        m_eps = 15.; // TODO: signal/conf
       }
 
       void DistributeWrench::init(const std::string& robotName)
@@ -98,6 +100,11 @@ namespace dynamicgraph
           return SEND_MSG("Init failed: signal wrenchDes is not plugged", MSG_TYPE_ERROR);
         if(!m_qSIN.isPlugged())
           return SEND_MSG("Init failed: signal q is not plugged", MSG_TYPE_ERROR);
+
+        if(m_left_foot_sizes.size()==0)
+          return SEND_ERROR_STREAM_MSG("Init failed: left foot size is not initialized");
+        if(m_right_foot_sizes.size()==0)
+          return SEND_ERROR_STREAM_MSG("Init failed: right foot size is not initialized");
 
         try
         {
@@ -135,7 +142,9 @@ namespace dynamicgraph
 
         // TODO: initialize m_qp1
 
-        m_qp2.problem(12,0,0);
+        computeWrenchFaceMatrix();
+
+        m_qp2.problem(12,0,34);
 
         m_initSucceeded = true;
       }
@@ -152,6 +161,33 @@ namespace dynamicgraph
         if(s.size()!=4)
           return SEND_MSG("Foot size vector should have size 4, not "+toString(s.size()), MSG_TYPE_ERROR);
         m_left_foot_sizes = s;
+      }
+
+      // WARNING: we are assuming wrench = right = symmetrical
+      void DistributeWrench::computeWrenchFaceMatrix()
+      {
+        const double X = m_right_foot_sizes[0];
+        const double Y = m_right_foot_sizes[2];
+        const double mu = 0.7; // TODO: config
+        m_wrenchFaceMatrix.resize(16,6);
+        m_wrenchFaceMatrix <<
+        // fx,  fy,            fz,  mx,  my,  mz,
+           -1,   0,           -mu,   0,   0,   0,
+           +1,   0,           -mu,   0,   0,   0,
+            0,  -1,           -mu,   0,   0,   0,
+            0,  +1,           -mu,   0,   0,   0,
+            0,   0,            -Y,  -1,   0,   0,
+            0,   0,            -Y,  +1,   0,   0,
+            0,   0,            -X,   0,  -1,   0,
+            0,   0,            -X,   0,  +1,   0,
+           -Y,  -X, -(X + Y) * mu, +mu, +mu,  -1,
+           -Y,  +X, -(X + Y) * mu, +mu, -mu,  -1,
+           +Y,  -X, -(X + Y) * mu, -mu, +mu,  -1,
+           +Y,  +X, -(X + Y) * mu, -mu, -mu,  -1,
+           +Y,  +X, -(X + Y) * mu, +mu, +mu,  +1,
+           +Y,  -X, -(X + Y) * mu, +mu, -mu,  +1,
+           -Y,  +X, -(X + Y) * mu, -mu, +mu,  +1,
+           -Y,  -X, -(X + Y) * mu, -mu, -mu,  +1;
       }
 
       dynamicgraph::Vector
@@ -289,10 +325,21 @@ namespace dynamicgraph
 
         // --- Inequality constraints
 
-        Eigen::MatrixXd Aineq(0,12);
+        Eigen::MatrixXd Aineq(34,12);
 
-        Eigen::VectorXd Bineq(0);
+        Aineq.topLeftCorner<16,6>() = m_wrenchFaceMatrix * leftPos.inverse().toDualActionMatrix();
+        Aineq.topRightCorner<16,6>().setZero();
+        Aineq.block<16,6>(16,0).setZero();
+        Aineq.block<16,6>(16,6) = m_wrenchFaceMatrix * rightPos.inverse().toDualActionMatrix();
 
+        Aineq.block<1,6>(32,0) = - leftPos.inverse().toDualActionMatrix().row(2);
+        Aineq.block<1,6>(33,6) = - rightPos.inverse().toDualActionMatrix().row(2);
+
+        Eigen::VectorXd Bineq(34);
+
+        Bineq.setZero();
+        Bineq(32) = - m_eps;
+        Bineq(33) = - m_eps;
 
         bool success = m_qp2.solve(Q, C, Aeq, Beq, Aineq, Bineq);
 
