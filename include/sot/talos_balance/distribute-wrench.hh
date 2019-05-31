@@ -116,7 +116,7 @@ namespace dynamicgraph {
         void computeWrenchFaceMatrix();
         Eigen::MatrixXd m_wrenchFaceMatrix; // for modelling contact
 
-//      Eigen::QuadProgDense m_qp1; // TODO: saturate wrench
+        Eigen::QuadProgDense m_qp1; // TODO: saturate wrench
         Eigen::QuadProgDense m_qp2; // distribute wrench
 
         double m_eps;

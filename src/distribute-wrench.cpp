@@ -145,6 +145,7 @@ namespace dynamicgraph
 
         computeWrenchFaceMatrix();
 
+        m_qp1.problem(6,0,0);
         m_qp2.problem(12,0,34);
 
         m_initSucceeded = true;
@@ -340,15 +341,54 @@ namespace dynamicgraph
       }
 
       bool DistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase) {
+        // Initialize cost matrices
+        Eigen::MatrixXd Q(6,6);
+        Eigen::VectorXd C(6);
+
+        // min |wrench - wrenchDes|^2
+        Q.setIdentity();
+        C = -wrenchDes;
+
+        // --- Equality constraints
+
+        Eigen::MatrixXd Aeq(0,6);
+
+        Eigen::VectorXd Beq(0);
+
+        // --- Inequality constraints
+
+        Eigen::MatrixXd Aineq(0,6);
+
+//        Aineq.topLeftCorner<16,6>() = m_wrenchFaceMatrix * leftPos.inverse().toDualActionMatrix();
+//        Aineq.topRightCorner<16,6>().setZero();
+//        Aineq.block<16,6>(16,0).setZero();
+//        Aineq.block<16,6>(16,6) = m_wrenchFaceMatrix * rightPos.inverse().toDualActionMatrix();
+
+//        Aineq.block<1,6>(32,0) = - leftPos.inverse().toDualActionMatrix().row(2);
+//        Aineq.block<1,6>(33,6) = - rightPos.inverse().toDualActionMatrix().row(2);
+
+        Eigen::VectorXd Bineq(0);
+
+//        Bineq.setZero();
+//        Bineq(32) = - m_eps;
+//        Bineq(33) = - m_eps;
+
+        bool success = m_qp1.solve(Q, C, Aeq, Beq, Aineq, Bineq);
+
+        m_emergency_stop_triggered = !success;
+
+        Eigen::VectorXd result = m_qp1.result();
+
         if(phase>0) {
-          m_wrenchLeft  = wrenchDes;
+          m_wrenchLeft  = result;
           m_wrenchRight.setZero(6);
         }
         else if(phase<0) {
-          m_wrenchRight  = wrenchDes;
+          m_wrenchRight  = result;
           m_wrenchLeft.setZero(6);
         }
-        return true;
+
+        return success;
       }
 
       DEFINE_SIGNAL_INNER_FUNCTION(qp_computations, int)
