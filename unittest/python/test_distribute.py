@@ -80,6 +80,12 @@ distribute.wrenchDes.value = wrench
 distribute.rho.value = 0.5
 distribute.phase.value = 0
 
+distribute.frictionCoefficient.value = 0.7
+distribute.wSum.value = 10000.0
+distribute.wNorm.value = 10.0
+distribute.wRatio.value = 1.0
+distribute.wAnkle.value = [1., 1., 1e-4, 1., 1., 1e-4]
+
 distribute.set_right_foot_sizes(base_estimator_conf.RIGHT_FOOT_SIZES)
 distribute.set_left_foot_sizes(base_estimator_conf.LEFT_FOOT_SIZES)
 distribute.init(robot_name)

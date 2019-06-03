@@ -73,6 +73,12 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(q,  dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(rho, double);
         DECLARE_SIGNAL_IN(phase, int);
+        DECLARE_SIGNAL_IN(frictionCoefficient, double);
+
+        DECLARE_SIGNAL_IN(wSum, double);
+        DECLARE_SIGNAL_IN(wNorm, double);
+        DECLARE_SIGNAL_IN(wRatio, double);
+        DECLARE_SIGNAL_IN(wAnkle, dynamicgraph::Vector);
 
         DECLARE_SIGNAL_INNER(kinematics_computations, int);
         DECLARE_SIGNAL_INNER(qp_computations,  int);
@@ -95,6 +101,8 @@ namespace dynamicgraph {
         void set_right_foot_sizes(const dynamicgraph::Vector & s);
         void set_left_foot_sizes(const dynamicgraph::Vector & s);
 
+        double m_eps;
+
       protected:
         bool  m_initSucceeded;    /// true if the entity has been successfully initialized
         pinocchio::Model m_model;       /// Pinocchio robot model
@@ -113,16 +121,19 @@ namespace dynamicgraph {
         Eigen::Vector4d m_left_foot_sizes;  /// sizes of the left foot (pos x, neg x, pos y, neg y)
         Eigen::Vector4d m_right_foot_sizes; /// sizes of the left foot (pos x, neg x, pos y, neg y)
 
-        void computeWrenchFaceMatrix();
-        Eigen::MatrixXd m_wrenchFaceMatrix; // for modelling contact
+        void computeWrenchFaceMatrix(const double mu);
+        Eigen::Matrix<double, 16, 6> m_wrenchFaceMatrix; // for modelling contact
 
         Eigen::QuadProgDense m_qp1; // TODO: saturate wrench
         Eigen::QuadProgDense m_qp2; // distribute wrench
 
-        double m_eps;
+        double m_wSum;
+        double m_wNorm;
+        double m_wRatio;
+        Eigen::VectorXd m_wAnkle;
 
-        bool distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho);
-        bool saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase);
+        bool distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho, const double mu);
+        bool saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase, const double mu);
 
         bool m_emergency_stop_triggered;
       }; // class DistributeWrench

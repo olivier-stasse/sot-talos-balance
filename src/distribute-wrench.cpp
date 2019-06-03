@@ -42,7 +42,9 @@ namespace dynamicgraph
 #define PROFILE_DISTRIBUTE_WRENCH_KINEMATICS_COMPUTATIONS "DistributeWrench: kinematics computations              "
 #define PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS         "DistributeWrench: QP problem computations              "
 
-#define INPUT_SIGNALS     m_wrenchDesSIN << m_qSIN << m_rhoSIN << m_phaseSIN
+#define WEIGHT_SIGNALS    m_wSumSIN << m_wNormSIN << m_wRatioSIN << m_wAnkleSIN
+
+#define INPUT_SIGNALS     m_wrenchDesSIN << m_qSIN << m_rhoSIN << m_phaseSIN << m_frictionCoefficientSIN << WEIGHT_SIGNALS
 
 #define INNER_SIGNALS m_kinematics_computations << m_qp_computations
 
@@ -65,7 +67,12 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(q, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(rho, double)
                       , CONSTRUCT_SIGNAL_IN(phase, int)
-                      , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN)
+                      , CONSTRUCT_SIGNAL_IN(frictionCoefficient, double)
+                      , CONSTRUCT_SIGNAL_IN(wSum, double)
+                      , CONSTRUCT_SIGNAL_IN(wNorm, double)
+                      , CONSTRUCT_SIGNAL_IN(wRatio, double)
+                      , CONSTRUCT_SIGNAL_IN(wAnkle, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN << WEIGHT_SIGNALS)
                       , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_rhoSIN << m_kinematics_computationsSINNER << m_phaseSIN)
                       , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_qp_computationsSINNER)
                       , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
@@ -91,6 +98,9 @@ namespace dynamicgraph
                    makeCommandVoid1(*this, &DistributeWrench::set_left_foot_sizes,
                                     docCommandVoid1("Set the size of the left foot (pos x, neg x, pos y, neg y)",
                                                     "4d vector")));
+
+        addCommand("getMinPressure", makeDirectGetter(*this,&m_eps, docDirectGetter("Get minimum pressure","double")));
+        addCommand("setMinPressure", makeDirectSetter(*this,&m_eps, docDirectSetter("Set minimum pressure","double")));
 
         m_eps = 15.; // TODO: signal/conf
       }
@@ -141,10 +151,6 @@ namespace dynamicgraph
         m_ankle_M_ftSens = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Force_Sensor_XYZ.head<3>());
 //        m_ankle_M_sole   = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Sole_XYZ.head<3>());
 
-        // TODO: initialize m_qp1
-
-        computeWrenchFaceMatrix();
-
         m_qp1.problem(6,0,16);
         m_qp2.problem(12,0,34);
 
@@ -166,11 +172,10 @@ namespace dynamicgraph
       }
 
       // WARNING: we are assuming wrench = right = symmetrical
-      void DistributeWrench::computeWrenchFaceMatrix()
+      void DistributeWrench::computeWrenchFaceMatrix(const double mu)
       {
         const double X = m_right_foot_sizes[0];
         const double Y = m_right_foot_sizes[2];
-        const double mu = 0.7; // TODO: config
         m_wrenchFaceMatrix.resize(16,6);
         m_wrenchFaceMatrix <<
         // fx,  fy,            fz,  mx,  my,  mz,
@@ -260,15 +265,10 @@ namespace dynamicgraph
         return s;
       }
 
-      bool DistributeWrench::distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho) {
+      bool DistributeWrench::distributeWrench(const Eigen::VectorXd & wrenchDes,  const double rho, const double mu)
+      {
 
         // --- COSTS
-
-        const double wSum = 10000.0; // TODO: signal/conf
-        const double wNorm = 10.0; // TODO: signal/conf
-        const double wRatio = 1.0; // TODO: signal/conf
-        Eigen::VectorXd wAnkle(6);
-        wAnkle << 1., 1., 1e-4, 1., 1., 1e-4; // TODO: signal/conf
 
         // Initialize cost matrices
         Eigen::MatrixXd Q(12,12);
@@ -279,19 +279,19 @@ namespace dynamicgraph
         Q.topRightCorner<6,6>().setIdentity();
         Q.bottomLeftCorner<6,6>().setIdentity();
         Q.bottomRightCorner<6,6>().setIdentity();
-        Q *= wSum;
+        Q *= m_wSum;
 
         C.head<6>() = -wrenchDes;
         C.tail<6>() = -wrenchDes;
-        C *= wSum;
+        C *= m_wSum;
 
         // min |wrenchLeft_a|^2 + |wrenchRight_a|^2
-        Eigen::MatrixXd tmp = wAnkle.asDiagonal() * m_data.oMf[m_left_foot_id].inverse().toDualActionMatrix();
-        tmp = tmp.transpose() * tmp * wNorm;
+        Eigen::MatrixXd tmp = m_wAnkle.asDiagonal() * m_data.oMf[m_left_foot_id].inverse().toDualActionMatrix();
+        tmp = tmp.transpose() * tmp * m_wNorm;
         Q.topLeftCorner<6,6>() += tmp;
 
-        tmp = wAnkle.asDiagonal() * m_data.oMf[m_right_foot_id].inverse().toDualActionMatrix();
-        tmp = tmp.transpose() * tmp * wNorm;
+        tmp = m_wAnkle.asDiagonal() * m_data.oMf[m_right_foot_id].inverse().toDualActionMatrix();
+        tmp = tmp.transpose() * tmp * m_wNorm;
         Q.bottomRightCorner<6,6>() += tmp;
 
         // min |(1-rho)e_z^T*wrenchLeft_c - rho*e_z^T*wrenchLeft_c|
@@ -302,7 +302,7 @@ namespace dynamicgraph
         tmp2 << (1-rho) * (  leftPos.inverse().toDualActionMatrix().row(2) ),
                  (-rho) * ( rightPos.inverse().toDualActionMatrix().row(2) );
 
-        Q += wRatio * tmp2.transpose()*tmp2;
+        Q += m_wRatio * tmp2.transpose()*tmp2;
 
         // --- Equality constraints
 
@@ -311,6 +311,8 @@ namespace dynamicgraph
         Eigen::VectorXd Beq(0);
 
         // --- Inequality constraints
+
+        computeWrenchFaceMatrix(mu);
 
         Eigen::MatrixXd Aineq(34,12);
 
@@ -340,7 +342,7 @@ namespace dynamicgraph
         return success;
       }
 
-      bool DistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase) {
+      bool DistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase, const double mu) {
         // Initialize cost matrices
         Eigen::MatrixXd Q(6,6);
         Eigen::VectorXd C(6);
@@ -356,6 +358,8 @@ namespace dynamicgraph
         Eigen::VectorXd Beq(0);
 
         // --- Inequality constraints
+
+        computeWrenchFaceMatrix(mu);
 
         Eigen::MatrixXd Aineq(16,6);
         if(phase>0) {
@@ -397,10 +401,11 @@ namespace dynamicgraph
         }
 
         const Eigen::VectorXd & wrenchDes = m_wrenchDesSIN(iter);
-        const double & rho = m_rhoSIN(iter);
         const int & dummy = m_kinematics_computationsSINNER(iter);
         (void) dummy;
         const int & phase = m_phaseSIN(iter);
+
+        const double & mu = m_frictionCoefficientSIN(iter);  // 0.7
 
         assert(wrenchDes.size()==6     && "Unexpected size of signal q");
 
@@ -409,9 +414,20 @@ namespace dynamicgraph
         bool success;
 
         if(phase==0)
-          success = distributeWrench(wrenchDes,rho);
+        {
+          const double & rho = m_rhoSIN(iter);
+
+          m_wSum   = m_wSumSIN(iter);    // 10000.0
+          m_wNorm  = m_wNormSIN(iter);   // 10.0
+          m_wRatio = m_wRatioSIN(iter);  // 1.0
+          m_wAnkle = m_wAnkleSIN(iter);  // 1., 1., 1e-4, 1., 1., 1e-4
+
+          success = distributeWrench(wrenchDes, rho, mu);
+        }
         else
-          success = saturateWrench(wrenchDes,phase);
+        {
+          success = saturateWrench(wrenchDes, phase, mu);
+        }
 
         getProfiler().stop(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
 
