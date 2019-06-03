@@ -40,6 +40,8 @@ print( "dcmDes:   %s" % (controller.dcmDes.value,) )
 print( "zmpDes:   %s" % (controller.dcmDes.value,) )
 print( "decayFactor: %s" % (controller.decayFactor.value,) )
 
+print("\n--------------------")
+
 dt = 1
 
 controller.init(dt)
@@ -55,13 +57,17 @@ assert controller.zmpRef.value == zmpRef
 print( "wrenchRef: %s" % (controller.wrenchRef.value,) )
 assert controller.wrenchRef.value == wrenchRef
 
+print("\n--------------------")
+
 dcmDes = [1.0,0.0,0.0]
 controller.dcmDes.value = dcmDes
+
+print( "dcmDes:   %s" % (controller.dcmDes.value,) )
 
 controller.wrenchRef.recompute(1)
 
 zmpRef = tuple([-11.0, 0.0, 0.0])
-wrenchRef = tuple([11.0, 0.0, 9.81, 0.0, 0.0, 0.0])
+wrenchRef = tuple([11.0, 0.0, 9.81, 0.0, float(com[2]*11), 0.0])
 
 print()
 print( "zmpRef:  %s" % (controller.zmpRef.value,) )
@@ -69,13 +75,15 @@ assert controller.zmpRef.value == zmpRef
 print( "wrenchRef: %s" % (controller.wrenchRef.value,) )
 assert controller.wrenchRef.value == wrenchRef
 
+print("\n--------------------")
+
 controller.dcmDes.time += 1
 
 controller.zmpRef.recompute(2)
 controller.wrenchRef.recompute(2)
 
 zmpRef = tuple([-12.0, 0.0, 0.0])
-wrenchRef = tuple([12.0, 0.0, 9.81, 0.0, 0.0, 0.0])
+wrenchRef = tuple([12.0, 0.0, 9.81, 0.0, float(com[2]*12), 0.0])
 
 print()
 print( "zmpRef:  %s" % (controller.zmpRef.value,) )

@@ -1,7 +1,7 @@
 from __future__ import print_function
-from sot_talos_balance.joint_admittance_controller import JointAdmittanceController
+from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController
 
-controller = JointAdmittanceController("ciao")
+controller = SimpleAdmittanceController("ciao")
 
 print("Commands:")
 print(controller.commands())

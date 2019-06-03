@@ -78,7 +78,7 @@ param_server = create_parameter_server(param_server_conf,dt)
 print("--- Base estimator ---")
 
 conf = base_estimator_conf
-base_estimator = BaseEstimator('base_estimator')
+base_estimator = TalosBaseEstimator('base_estimator')
 base_estimator.init(dt, robot_name)
 
 base_estimator.joint_positions.value = halfSitting[7:]

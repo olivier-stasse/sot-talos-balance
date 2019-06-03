@@ -2,8 +2,6 @@ from __future__ import print_function
 
 from sot_talos_balance.create_entities_utils                  import *
 from IPython                                                  import embed
-from sot_talos_balance.control_manager                        import ControlManager
-from sot_talos_balance.parameter_server                       import ParameterServer
 from sot_talos_balance.utils.sot_utils                        import Bunch
 import sot_talos_balance.talos.parameter_server_conf           as param_server_conf
 import sot_talos_balance.talos.control_manager_conf            as control_manager_conf
@@ -20,12 +18,13 @@ conf.control_manager = control_manager_conf
 
 param_server = ParameterServer("param_server")     
 param_server.init(dt, conf.param_server.urdfFileName, robot_name)
+param_server.setJointsUrdfToSot(conf.param_server.urdftosot)
 param_server.setRightFootForceSensorXYZ(conf.param_server.rightFootSensorXYZ)
 param_server.setRightFootSoleXYZ(conf.param_server.rightFootSoleXYZ)
 for key in conf.param_server.mapJointNameToID:
     param_server.setNameToId(key,conf.param_server.mapJointNameToID[key])
 
-cm = ControlManager("ControlManager")
+cm = TalosControlManager("TalosControlManager")
 cm.init(dt, robot_name)
 print("***Control manager initialized***")
 cm.u_max.value = N_JOINTS*(u_max,)  
@@ -56,7 +55,7 @@ print("Safe control = zero")
 print("Control set to 0 forever")
 print("*****************")
 
-cm2 = ControlManager("ControlManager")
+cm2 = TalosControlManager("TalosControlManager")
 cm2.init(dt, robot_name)
 print("***New Control manager initialized***")
 cm.u_max.value = N_JOINTS*(u_max,)  

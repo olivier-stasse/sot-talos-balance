@@ -1,35 +1,47 @@
+from __future__ import print_function
 from sot_talos_balance.create_entities_utils import *
-from dynamic_graph import plug
-import dynamic_graph as dg
-from dynamic_graph.sot.core import SOT
 import numpy as np
-from time import sleep
-import os
-from IPython import embed
-from sot_talos_balance.parameter_server             import ParameterServer
-from sot_talos_balance.utils.sot_utils              import Bunch
-from sot_talos_balance.dcm_estimator                import DcmEstimator
-from sot_talos_balance.utils.sot_utils              import Bunch
-import sot_talos_balance.talos.control_manager_conf as control_manager_conf
-
+import sot_talos_balance.talos.parameter_server_conf as parameter_server_conf
+from numpy.testing import assert_almost_equal as assertApprox
+import pinocchio as pin
 
 dt = 0.001
 conf = Bunch()
 robot_name = 'robot'
 
-conf.param_server = control_manager_conf
+from rospkg import RosPack
+rospack = RosPack()
+urdfPath = rospack.get_path('talos_data')+"/urdf/talos_reduced.urdf"
+urdfDir = [rospack.get_path('talos_data')+"/../"]
+
+model = pin.buildModelFromUrdf(urdfPath, pin.JointModelFreeFlyer())
+model.lowerPositionLimit = np.vstack( (np.matrix([-1.]*7).T, model.lowerPositionLimit[7:]) )
+model.upperPositionLimit = np.vstack( (np.matrix([-1.]*7).T, model.upperPositionLimit[7:]) )
+data = model.createData()
+q = pin.randomConfiguration(model)
+v = pin.utils.rand(model.nv)
+
+pin.centerOfMass(model,data,q, v)
+print("Expected:")
+print("CoM position value: {0}".format(tuple(data.com[0].flat)) )
+print("CoM velocity value: {0}".format(tuple(data.vcom[0].flat)) )
+
+conf.param_server = parameter_server_conf
 param_server = ParameterServer("param_server")     
 param_server.init(dt, conf.param_server.urdfFileName, robot_name)
+param_server.setJointsUrdfToSot(conf.param_server.urdftosot)
 param_server.setRightFootForceSensorXYZ(conf.param_server.rightFootSensorXYZ)
 param_server.setRightFootSoleXYZ(conf.param_server.rightFootSoleXYZ)
 
 dcm_estimator = DcmEstimator('dcm_estimator')
-dcm_estimator.q.value = np.random.randn(38)
-dcm_estimator.v.value = np.random.randn(38)
+dcm_estimator.q.value = list(q.flat)
+dcm_estimator.v.value = list(v.flat)
 dcm_estimator.init(dt, robot_name)
 dcm_estimator.c.recompute(1)
 dcm_estimator.dc.recompute(1)
-print "CoM position value: {0}".format(dcm_estimator.c.value)
-print "CoM velocity value: {0}".format(dcm_estimator.dc.value)
+print("Computed:")
+print("CoM position value: {0}".format(dcm_estimator.c.value) )
+assertApprox(data.com[0], np.matrix(dcm_estimator.c.value).T)
+print("CoM velocity value: {0}".format(dcm_estimator.dc.value) )
+assertApprox(data.vcom[0], np.matrix(dcm_estimator.dc.value).T, 6)
 
-embed()
