@@ -143,7 +143,7 @@ robot.dcm_control = dcm_controller
 Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 
 # --- Distribute wrench
-distribute = DistributeWrench('distribute')
+distribute = create_distribute_wrench(base_estimator_conf)
 plug(robot.e2q.quaternion, distribute.q)
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
 distribute.init(robot_name)

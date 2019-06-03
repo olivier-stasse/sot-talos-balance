@@ -33,6 +33,7 @@ urdfDir = [rospack.get_path('talos_data')+"/../"]
 model = pin.buildModelFromUrdf(urdfPath, pin.JointModelFreeFlyer())
 data = model.createData()
 com = pin.centerOfMass(model,data,q)
+com[1] = 0. # correction to allow accurate prediction of results
 pin.updateFramePlacements(model,data)
 m = data.mass[0]
 h = float(com[2])
@@ -47,25 +48,27 @@ rightName = param_server_conf.footFrameNames['Right']
 rightId = model.getFrameId(rightName)
 rightPos = data.oMf[rightId]
 
-centerTranslation = ( data.oMf[rightId].translation + data.oMf[leftId].translation )/2 + np.matrix(param_server_conf.rightFootSoleXYZ).T
-centerPos = pin.SE3(rightPos.rotation,centerTranslation)
-comRel = centerPos.actInv(com)
+#centerTranslation = ( data.oMf[rightId].translation + data.oMf[leftId].translation )/2 + np.matrix(param_server_conf.rightFootSoleXYZ).T
+#centerPos = pin.SE3(rightPos.rotation,centerTranslation)
+#comRel = centerPos.actInv(com)
 
 fz = m*g
 force      = [0.0, 0.0, fz]
 forceLeft  = [0.0, 0.0, fz/2]
 forceRight = [0.0, 0.0, fz/2]
-tau        = np.cross(comRel,np.matrix(force).T,axis=0)
+tau        = np.cross(com,np.matrix(force).T,axis=0)
 wrench      = force      + tau.flatten().tolist()
-wrenchLeft  = forceLeft  + (tau/2).flatten().tolist()
-wrenchRight = forceRight + (tau/2).flatten().tolist()
+ly = float(leftPos.translation[1])
+taux = fz*ly/2
+wrenchLeft  = forceLeft  + [ taux, float(tau[1])/2, 0.0]
+wrenchRight = forceRight + [-taux, float(tau[1])/2, 0.0]
 
 print( "desired wrench: %s" % str(wrench) )
 print( "expected left wrench: %s"  % str(wrenchLeft) )
 print( "expected right wrench: %s" % str(wrenchRight) )
 
 # --- Desired CoM, DCM and ZMP
-comDes = tuple(comRel.flatten().tolist()[0])
+comDes = tuple(com.flatten().tolist()[0])
 dcmDes = comDes
 zmpDes = comDes[:2] + (0.0,)
 
@@ -98,7 +101,7 @@ dcm_controller.init(dt)
 # --- Wrench distribution ---
 print("--- Wrench distribution ---")
 
-distribute = DistributeWrench('distribute')
+distribute = create_distribute_wrench(base_estimator_conf)
 
 distribute.q.value = halfSitting
 plug(dcm_controller.wrenchRef,distribute.wrenchDes)
@@ -110,7 +113,7 @@ distribute.zmpRef.recompute(0)
 print( "reference wrench: %s" % str(dcm_controller.wrenchRef.value) )
 assertApprox(wrench,dcm_controller.wrenchRef.value,3)
 print( "resulting wrench: %s" % str(distribute.wrenchRef.value) )
-assertApprox(wrench,distribute.wrenchRef.value,3)
+assertApprox(wrench,distribute.wrenchRef.value,2)
 print( "resulting left wrench: %s"  % str(distribute.wrenchLeft.value) )
 assertApprox(wrenchLeft,distribute.wrenchLeft.value,3)
 print( "resulting right wrench: %s" % str(distribute.wrenchRight.value) )

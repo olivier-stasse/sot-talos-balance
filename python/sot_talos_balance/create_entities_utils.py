@@ -511,6 +511,23 @@ def create_dcm_estimator(robot, dt, robot_name='robot'):
     plug(robot.base_estimator.v, dcm_estimator.v)
     return dcm_estimator
 
+def create_distribute_wrench(conf):
+    distribute = DistributeWrench('distribute')
+
+    distribute.phase.value = 0
+    distribute.rho.value = 0.5
+
+    distribute.setMinPressure(15.)
+    distribute.frictionCoefficient.value = 0.7
+    distribute.wSum.value = 10000.0
+    distribute.wNorm.value = 10.0
+    distribute.wRatio.value = 1.0
+    distribute.wAnkle.value = [1., 1., 1e-4, 1., 1., 1e-4]
+
+    distribute.set_right_foot_sizes(conf.RIGHT_FOOT_SIZES)
+    distribute.set_left_foot_sizes(conf.LEFT_FOOT_SIZES)
+
+    return distribute
 
 def create_zmp_estimator(robot, filter=False):
     estimator = SimpleZmpEstimator("zmpEst")
