@@ -115,6 +115,9 @@ namespace dynamicgraph {
         pinocchio::FrameIndex m_left_foot_id;
         pinocchio::FrameIndex m_right_foot_id;
 
+        pinocchio::SE3 m_contactLeft;
+        pinocchio::SE3 m_contactRight;
+
         dynamicgraph::Vector m_wrenchLeft;
         dynamicgraph::Vector m_wrenchRight;
 
