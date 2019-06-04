@@ -84,8 +84,10 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_INNER(qp_computations,  int);
 
         DECLARE_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(ankleWrenchLeft, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(copLeft, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(ankleWrenchRight, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(copRight, dynamicgraph::Vector);
 
         DECLARE_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector);

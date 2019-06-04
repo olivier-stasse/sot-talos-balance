@@ -48,7 +48,7 @@ namespace dynamicgraph
 
 #define INNER_SIGNALS m_kinematics_computations << m_qp_computations
 
-#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_copLeftSOUT << m_wrenchRightSOUT << m_copRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
+#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_ankleWrenchLeftSOUT << m_copLeftSOUT << m_wrenchRightSOUT << m_ankleWrenchRightSOUT << m_copRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -75,8 +75,10 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN << WEIGHT_SIGNALS)
                       , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_rhoSIN << m_kinematics_computationsSINNER << m_phaseSIN)
                       , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_qp_computationsSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(ankleWrenchLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
                       , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector, m_qp_computationsSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(ankleWrenchRight, dynamicgraph::Vector, m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(copRight, dynamicgraph::Vector, m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector, m_wrenchLeftSOUT << m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(zmpRef, dynamicgraph::Vector, m_wrenchRefSOUT)
@@ -458,6 +460,36 @@ namespace dynamicgraph
 
         m_qp_computationsSINNER(iter);
         s = m_wrenchRight;
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(ankleWrenchLeft, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal ankleWrenchLeft before initialization!");
+          return s;
+        }
+
+        const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
+
+        s = m_data.oMf[m_left_foot_id].actInv(pinocchio::Force(wrenchLeft)).toVector();
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(ankleWrenchRight, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal ankleWrenchRight before initialization!");
+          return s;
+        }
+
+        const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
+
+        s = m_data.oMf[m_right_foot_id].actInv(pinocchio::Force(wrenchRight)).toVector();
+
         return s;
       }
 

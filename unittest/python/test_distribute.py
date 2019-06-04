@@ -85,43 +85,51 @@ print()
 print("--- Wrench distribution ---")
 distribute.phase.value = 0
 
-print( "Expected wrenches in GLOBAL frame:" )
-
 forceLeft  = [0.0, 0.0, fz/2]
 forceRight = [0.0, 0.0, fz/2]
 ly = float(leftPos.translation[1])
 taux = fz*ly/2
 wrenchLeft  = forceLeft  + [ taux, tauy/2, 0.0]
 wrenchRight = forceRight + [-taux, tauy/2, 0.0]
+ankleWrenchLeft  = list(leftPos.actInv(pin.Force(np.matrix(wrenchLeft).T)).vector.flat)
+ankleWrenchRight = list(rightPos.actInv(pin.Force(np.matrix(wrenchRight).T)).vector.flat)
 
-print( "expected wrench: %s" % str(wrench) )
-print( "expected left wrench: %s"  % str(wrenchLeft) )
-print( "expected right wrench: %s" % str(wrenchRight) )
-
-print( "CoP in LOCAL sole frame:" )
+print( "expected global wrench: %s" % str(wrench) )
+print( "expected global left wrench: %s"  % str(wrenchLeft) )
+print( "expected global right wrench: %s" % str(wrenchRight) )
+print( "expected ankle left wrench: %s"  % str(ankleWrenchLeft) )
+print( "expected ankle right wrench: %s" % str(ankleWrenchRight) )
 
 copLeft  = [float(com[0] - leftPos.translation[0]),  0., 0.]
 copRight = [float(com[0] - rightPos.translation[0]), 0., 0.]
 
-print( "expected left CoP: %s"  % str(copLeft) )
-print( "expected right CoP: %s" % str(copRight) )
+print( "expected sole left CoP: %s"  % str(copLeft) )
+print( "expected sole right CoP: %s" % str(copRight) )
 print()
 
 distribute.zmpRef.recompute(0)
 
-print( "resulting wrench: %s" % str(distribute.wrenchRef.value) )
+print( "resulting global wrench: %s" % str(distribute.wrenchRef.value) )
 assertApprox(wrench,distribute.wrenchRef.value,2)
-print( "resulting left wrench: %s"  % str(distribute.wrenchLeft.value) )
+print( "resulting global left wrench: %s"  % str(distribute.wrenchLeft.value) )
 assertApprox(wrenchLeft,distribute.wrenchLeft.value,3)
-print( "resulting right wrench: %s" % str(distribute.wrenchRight.value) )
+print( "resulting global right wrench: %s" % str(distribute.wrenchRight.value) )
 assertApprox(wrenchRight,distribute.wrenchRight.value,3)
+
+distribute.ankleWrenchLeft.recompute(0)
+distribute.ankleWrenchRight.recompute(0)
+
+print( "resulting ankle left wrench: %s"  % str(distribute.ankleWrenchLeft.value) )
+assertApprox(ankleWrenchLeft,distribute.ankleWrenchLeft.value,3)
+print( "resulting ankle right wrench: %s" % str(distribute.ankleWrenchRight.value) )
+assertApprox(ankleWrenchRight,distribute.ankleWrenchRight.value,3)
 
 distribute.copLeft.recompute(0)
 distribute.copRight.recompute(0)
 
-print( "resulting left CoP: %s"  % str(distribute.copLeft.value) )
+print( "resulting sole left CoP: %s"  % str(distribute.copLeft.value) )
 assertApprox(copLeft,distribute.copLeft.value,3)
-print( "resulting right CoP: %s" % str(distribute.copRight.value) )
+print( "resulting sole right CoP: %s" % str(distribute.copRight.value) )
 assertApprox(copRight,distribute.copRight.value,3)
 
 distribute.emergencyStop.recompute(0)
@@ -140,33 +148,34 @@ print("--- Wrench saturation (left) ---")
 distribute.phase.value = 1
 distribute.phase.time = 1
 
-print( "Expected wrenches in GLOBAL frame:" )
-
 wrenchLeft  = wrench
-wrenchRight = [0.0]*6
+ankleWrenchLeft  = list(leftPos.actInv(pin.Force(np.matrix(wrenchLeft).T)).vector.flat)
 
-print( "expected wrench: %s" % str(wrench) )
-print( "expected left wrench: %s"  % str(wrenchLeft) )
-
-print( "CoP in LOCAL sole frame:" )
+print( "expected global wrench: %s" % str(wrench) )
+print( "expected global left wrench: %s"  % str(wrenchLeft) )
+print( "expected ankle left wrench: %s"  % str(ankleWrenchLeft) )
 
 copLeft  = [float(com[0] - leftPos.translation[0]),  base_estimator_conf.RIGHT_FOOT_SIZES[3], 0.]
-copRight = [0.]*3
 
-print( "expected left CoP: %s"  % str(copLeft) )
+print( "expected sole left CoP: %s"  % str(copLeft) )
 print()
 
 distribute.zmpRef.recompute(1)
 
-print( "resulting wrench: %s" % str(distribute.wrenchRef.value) )
+print( "resulting global wrench: %s" % str(distribute.wrenchRef.value) )
 #assertApprox(wrench,distribute.wrenchRef.value,2)
-print( "resulting left wrench: %s"  % str(distribute.wrenchLeft.value) )
+print( "resulting global left wrench: %s"  % str(distribute.wrenchLeft.value) )
 #assertApprox(wrenchLeft,distribute.wrenchLeft.value,3)
+
+distribute.ankleWrenchLeft.recompute(1)
+
+print( "resulting ankle left wrench: %s"  % str(distribute.ankleWrenchLeft.value) )
+#assertApprox(ankleWrenchLeft,distribute.ankleWrenchLeft.value,3)
 
 distribute.copLeft.recompute(1)
 distribute.copRight.recompute(1)
 
-print( "resulting left CoP: %s"  % str(distribute.copLeft.value) )
+print( "resulting sole left CoP: %s"  % str(distribute.copLeft.value) )
 assertApprox(copLeft,distribute.copLeft.value,3)
 
 distribute.emergencyStop.recompute(0)
@@ -179,33 +188,34 @@ print("--- Wrench saturation (right) ---")
 distribute.phase.value = -1
 distribute.phase.time = 2
 
-print( "Expected wrenches in GLOBAL frame:" )
-
-wrenchLeft  = [0.0]*6
 wrenchRight = wrench
+ankleWrenchRight = list(rightPos.actInv(pin.Force(np.matrix(wrenchRight).T)).vector.flat)
 
-print( "expected wrench: %s" % str(wrench) )
-print( "expected right wrench: %s" % str(wrenchRight) )
+print( "expected global wrench: %s" % str(wrench) )
+print( "expected global right wrench: %s" % str(wrenchRight) )
+print( "expected ankle right wrench: %s" % str(ankleWrenchRight) )
 
-print( "CoP in LOCAL sole frame:" )
-
-copLeft  = [0.]*3
 copRight = [float(com[0] - rightPos.translation[0]),  base_estimator_conf.RIGHT_FOOT_SIZES[2], 0.]
 
-print( "expected right CoP: %s" % str(copRight) )
+print( "expected sole right CoP: %s" % str(copRight) )
 print()
 
 distribute.zmpRef.recompute(2)
 
-print( "resulting wrench: %s" % str(distribute.wrenchRef.value) )
+print( "resulting global wrench: %s" % str(distribute.wrenchRef.value) )
 #assertApprox(wrench,distribute.wrenchRef.value,2)
-print( "resulting right wrench: %s" % str(distribute.wrenchRight.value) )
+print( "resulting global right wrench: %s" % str(distribute.wrenchRight.value) )
 #assertApprox(wrenchRight,distribute.wrenchRight.value,3)
+
+distribute.ankleWrenchRight.recompute(2)
+
+print( "resulting ankle right wrench: %s" % str(distribute.ankleWrenchRight.value) )
+#assertApprox(ankleWrenchRight,distribute.ankleWrenchRight.value,3)
 
 distribute.copLeft.recompute(2)
 distribute.copRight.recompute(2)
 
-print( "resulting right CoP: %s" % str(distribute.copRight.value) )
+print( "resulting sole right CoP: %s" % str(distribute.copRight.value) )
 assertApprox(copRight,distribute.copRight.value,3)
 
 distribute.emergencyStop.recompute(0)
