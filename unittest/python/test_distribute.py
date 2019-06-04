@@ -14,8 +14,8 @@ dt = 0.001
 robot_name = 'robot'
 
 halfSitting = [0.0, 0.0,  1.018213,  0.00  ,  0.0, 0.0, 1.0,                         #Free flyer
-               0.0,  0.0, -0.411354,  0.859395, -0.448041, -0.001708, #Left Leg
-               0.0,  0.0, -0.411354,  0.859395, -0.448041, -0.001708, #Right Leg
+               0.0,  0.0, -0.411354,  0.859395, -0.448041, -0.0, #Left Leg
+               0.0,  0.0, -0.411354,  0.859395, -0.448041, -0.0, #Right Leg
                0.0 ,  0.006761,                                                 #Chest
                0.25847 ,  0.173046, -0.0002, -0.525366, 0.0, -0.0,  0.1, -0.005,        #Left Arm
               -0.25847 , -0.173046, 0.0002  , -0.525366, 0.0,  0.0,  0.1,-0.005,      #Right Arm
@@ -42,14 +42,12 @@ print("com: %s\n" % str(com.flatten().tolist()[0]))
 leftName = param_server_conf.footFrameNames['Left']
 leftId = model.getFrameId(leftName)
 leftPos  = data.oMf[leftId]
-#leftPos.rotation = pin.utils.eye(3) # ensure perfect alignment
 print( "%s: %d" % (leftName,leftId) )
 print(leftPos)
 
 rightName = param_server_conf.footFrameNames['Right']
 rightId = model.getFrameId(rightName)
 rightPos = data.oMf[rightId]
-#rightPos.rotation = pin.utils.eye(3) # ensure perfect alignment
 #pR = leftPos.translation # ensure perfect symmetry
 #pR[1] = -pR[1]
 #rightPos.translation = pR
@@ -91,8 +89,11 @@ ly = float(leftPos.translation[1])
 taux = fz*ly/2
 wrenchLeft  = forceLeft  + [ taux, tauy/2, 0.0]
 wrenchRight = forceRight + [-taux, tauy/2, 0.0]
-ankleWrenchLeft  = list(leftPos.actInv(pin.Force(np.matrix(wrenchLeft).T)).vector.flat)
-ankleWrenchRight = list(rightPos.actInv(pin.Force(np.matrix(wrenchRight).T)).vector.flat)
+
+lx = float(com[0]-leftPos.translation[0])
+tauy = -fz*lx/2
+ankleWrenchLeft  = forceLeft  + [0.0, tauy, 0.0]
+ankleWrenchRight = forceRight + [0.0, tauy, 0.0]
 
 print( "expected global wrench: %s" % str(wrench) )
 print( "expected global left wrench: %s"  % str(wrenchLeft) )
