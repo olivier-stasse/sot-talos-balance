@@ -148,8 +148,8 @@ namespace dynamicgraph
         m_left_foot_id       = m_model.getFrameId(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name);
         m_right_foot_id      = m_model.getFrameId(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name);
 
-        m_ankle_M_ftSens = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Force_Sensor_XYZ.head<3>());
-//        m_ankle_M_sole   = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Sole_XYZ.head<3>());
+        //m_ankle_M_ftSens = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Force_Sensor_XYZ.head<3>());
+        m_ankle_M_sole   = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Sole_XYZ.head<3>());
 
         m_qp1.problem(6,0,16);
         m_qp2.problem(12,0,34);
@@ -295,8 +295,8 @@ namespace dynamicgraph
         Q.bottomRightCorner<6,6>() += tmp;
 
         // min |(1-rho)e_z^T*wrenchLeft_c - rho*e_z^T*wrenchLeft_c|
-        const pinocchio::SE3 leftPos  = m_data.oMf[m_left_foot_id]  * m_ankle_M_ftSens;
-        const pinocchio::SE3 rightPos = m_data.oMf[m_right_foot_id] * m_ankle_M_ftSens;
+        const pinocchio::SE3 leftPos  = m_data.oMf[m_left_foot_id]  * m_ankle_M_sole;
+        const pinocchio::SE3 rightPos = m_data.oMf[m_right_foot_id] * m_ankle_M_sole;
 
         Eigen::MatrixXd tmp2(1,12);
         tmp2 << (1-rho) * (  leftPos.inverse().toDualActionMatrix().row(2) ),
@@ -363,11 +363,11 @@ namespace dynamicgraph
 
         Eigen::MatrixXd Aineq(16,6);
         if(phase>0) {
-          const pinocchio::SE3 leftPos  = m_data.oMf[m_left_foot_id]  * m_ankle_M_ftSens;
+          const pinocchio::SE3 leftPos  = m_data.oMf[m_left_foot_id]  * m_ankle_M_sole;
           Aineq = m_wrenchFaceMatrix * leftPos.inverse().toDualActionMatrix();
         }
         else {
-          const pinocchio::SE3 rightPos = m_data.oMf[m_right_foot_id] * m_ankle_M_ftSens;
+          const pinocchio::SE3 rightPos = m_data.oMf[m_right_foot_id] * m_ankle_M_sole;
           Aineq = m_wrenchFaceMatrix * rightPos.inverse().toDualActionMatrix();
         }
 
@@ -477,7 +477,7 @@ namespace dynamicgraph
         const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
 
         // stub
-        const pinocchio::SE3 pose = m_data.oMf[m_left_foot_id] * m_ankle_M_ftSens;
+        const pinocchio::SE3 pose = m_data.oMf[m_left_foot_id] * m_ankle_M_sole;
 
         s = computeCoP(wrenchLeft,pose);
 
@@ -494,7 +494,7 @@ namespace dynamicgraph
 
         const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
 
-        const pinocchio::SE3 pose = m_data.oMf[m_right_foot_id] * m_ankle_M_ftSens;
+        const pinocchio::SE3 pose = m_data.oMf[m_right_foot_id] * m_ankle_M_sole;
 
         s = computeCoP(wrenchRight,pose);
 
