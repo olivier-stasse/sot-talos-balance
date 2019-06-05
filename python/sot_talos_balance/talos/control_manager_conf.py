@@ -6,4 +6,4 @@ Created on Mon Feb  9 13:55:16 2015
 import numpy as np
 
 NJ = 38
-CTRL_MAX = 0.3  # max desired control (security check of ControlManager)
+CTRL_MAX = 10.  # max desired control (security check of ControlManager)

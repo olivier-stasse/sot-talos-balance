@@ -367,7 +367,7 @@ robot.sot.push(robot.keepWaist.task.name)
 # robot.device.control.recompute(0) # this crashes as it employs joint sensors which are not ready yet
 
 # --- Fix robot.dynamic inputs
-plug(robot.device.velocity,robot.dynamic.velocity)
+plug(robot.device.velocity, robot.dynamic.velocity)
 from dynamic_graph.sot.core import Derivator_of_Vector
 robot.dvdt = Derivator_of_Vector("dv_dt")
 robot.dvdt.dt.value = dt

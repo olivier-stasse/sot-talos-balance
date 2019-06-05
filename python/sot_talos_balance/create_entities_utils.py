@@ -177,16 +177,16 @@ def create_end_effector_admittance_controller(robot, endEffector, name):
     return controller
 
 
-def create_joint_admittance_controller(joint, Kp, dt, robot, filter=False):
-    controller = AdmittanceController("jadmctrl")
+def create_joint_admittance_controller(joint, Kp, dt, robot, filter=False, name='jadmctrl'):
+    controller = SimpleAdmittanceController(name)
     controller.Kp.value = Kp
 
-    robot.stateselec = Selec_of_vector("state_selec")
+    robot.stateselec = Selec_of_vector("state_selec_"+name)
     robot.stateselec.selec(joint+6, joint+7)
     plug(robot.device.state, robot.stateselec.sin)
     plug(robot.stateselec.sout, controller.state)
 
-    robot.tauselec = Selec_of_vector("tau_selec")
+    robot.tauselec = Selec_of_vector("tau_selec_"+name)
     robot.tauselec.selec(joint, joint+1)
     if filter and hasattr(robot, 'device_filters'):
         plug(robot.device_filters.torque_filter.x_filtered, robot.tauselec.sin)

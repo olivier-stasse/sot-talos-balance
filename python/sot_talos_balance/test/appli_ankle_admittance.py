@@ -18,7 +18,7 @@ from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 
 robot.timeStep = robot.device.getTimeStep()
-dt = robot.timeStep
+timeStep = robot.timeStep
 
 # --- Pendulum parameters
 robotName='robot'
@@ -30,7 +30,7 @@ g = 9.81
 omega = sqrt(g/h)
 
 # --- Parameter server
-robot.param_server = create_parameter_server(paramServerConfig, robot.timeStep)
+robot.param_server = create_parameter_server(paramServerConfig, timeStep)
 
 # --- Initial feet and waist
 robot.dynamic.createOpPoint('LF',robot.OperationalPointsMap['left-ankle'])
@@ -43,13 +43,13 @@ robot.dynamic.WT.recompute(0)
 # -------------------------- DESIRED TRAJECTORY --------------------------
 
 # --- Trajectory generators
-robot.comTrajGen = create_com_trajectory_generator(dt,robot)
+robot.comTrajGen = create_com_trajectory_generator(timeStep,robot)
 
-robot.lfTrajGen  = create_pose_rpy_trajectory_generator(dt, robot, 'LF')
+robot.lfTrajGen  = create_pose_rpy_trajectory_generator(timeStep, robot, 'LF')
 robot.lfToMatrix = PoseRollPitchYawToMatrixHomo('lf2m')
 plug(robot.lfTrajGen.x, robot.lfToMatrix.sin)
 
-robot.rfTrajGen  = create_pose_rpy_trajectory_generator(dt, robot, 'RF')
+robot.rfTrajGen  = create_pose_rpy_trajectory_generator(timeStep, robot, 'RF')
 robot.rfToMatrix = PoseRollPitchYawToMatrixHomo('rf2m')
 plug(robot.rfTrajGen.x, robot.rfToMatrix.sin)
 
@@ -73,9 +73,9 @@ robot.wp.zmpDes.recompute(0)
 # -------------------------- ESTIMATION --------------------------
 
 # --- Base Estimation
-robot.device_filters = create_device_filters(robot, dt)
-robot.imu_filters    = create_imu_filters(robot, dt)
-robot.baseEstimator  = create_base_estimator(robot, dt, baseEstimatorConf)
+robot.device_filters = create_device_filters(robot, timeStep)
+robot.imu_filters    = create_imu_filters(robot, timeStep)
+robot.baseEstimator  = create_base_estimator(robot, timeStep, baseEstimatorConf)
 
 # --- Reference frame
 rf = SimpleReferenceFrame('rf')
@@ -107,7 +107,7 @@ robot.rdynamic.acceleration.value = [0.0]*robotDim
 
 # --- CoM Estimation
 cdc_estimator = DcmEstimator('cdc_estimator')
-cdc_estimator.init(dt, robotName)
+cdc_estimator.init(timeStep, robotName)
 plug(robot.e2q.quaternion, cdc_estimator.q)
 plug(robot.stf.v, cdc_estimator.v)
 robot.cdc_estimator = cdc_estimator
@@ -171,20 +171,17 @@ plug(robot.wrenchControl.sout, distribute.wrenchDes)
 distribute.init(robotName)
 robot.wrenchDistributor = distribute
 
-# --- Left foot
+# --- Ankle admittance foot
 robot.leftAnkleController = create_ankle_admittance_controller([0,0], robot, "left", "leftController")
-
-# --- Right foot
 robot.rightAnkleController = create_ankle_admittance_controller([0,0], robot, "right", "rightController")
 
 # --- Control Manager
-robot.controlManager = create_ctrl_manager(controlManagerConf, dt, robot_name='robot')
+robot.controlManager = create_ctrl_manager(controlManagerConf, timeStep, robot_name='robot')
 robot.controlManager.addCtrlMode('sot_input')
 robot.controlManager.setCtrlMode('all','sot_input')
 robot.controlManager.addEmergencyStopSIN('zmp')
 
 # -------------------------- SOT CONTROL --------------------------
-
 # --- Upper body
 robot.taskUpperBody = Task ('task_upper_body')
 robot.taskUpperBody.feature = FeaturePosture('feature_upper_body')
@@ -193,7 +190,6 @@ q = list(robot.dynamic.position.value)
 robot.taskUpperBody.feature.state.value = q
 robot.taskUpperBody.feature.posture.value = q
 
-# robotDim = robot.dynamic.getDimension() # 38
 robot.taskUpperBody.feature.selectDof(18,True)
 robot.taskUpperBody.feature.selectDof(19,True)
 robot.taskUpperBody.feature.selectDof(20,True)
@@ -245,8 +241,6 @@ robot.rightAnkleRollTask.task.controlGain.value = 0
 robot.rightAnkleRollTask.task.setWithDerivative(True)
 plug(rightRollSelec.sout, robot.rightAnkleRollTask.featureDes.errordotIN)
 
-
-
 # --- LEFT ANKLE PITCH
 LeftPitchJoint = 10
 
@@ -273,20 +267,6 @@ robot.leftAnkleRollTask.task.controlGain.value = 0
 robot.leftAnkleRollTask.task.setWithDerivative(True)
 plug(leftRollSelec.sout, robot.leftAnkleRollTask.featureDes.errordotIN)
 
-# --- CONTACTS
-#define contactLF and contactRF
-robot.contactLF = MetaTaskKine6d('contactLF',robot.dynamic,'LF',robot.OperationalPointsMap['left-ankle'])
-robot.contactLF.feature.frame('desired')
-robot.contactLF.gain.setConstant(100)
-robot.contactLF.keep()
-locals()['contactLF'] = robot.contactLF
-
-robot.contactRF = MetaTaskKine6d('contactRF',robot.dynamic,'RF',robot.OperationalPointsMap['right-ankle'])
-robot.contactRF.feature.frame('desired')
-robot.contactRF.gain.setConstant(100)
-robot.contactRF.keep()
-locals()['contactRF'] = robot.contactRF
-
 # --- COM
 robot.taskCom = MetaTaskKineCom(robot.dynamic)
 plug(robot.wp.comDes,robot.taskCom.featureDes.errorIN)
@@ -310,18 +290,18 @@ plug(robot.sot.control,robot.controlManager.ctrl_sot_input)
 plug(robot.controlManager.u_safe,robot.device.control)
 
 robot.sot.push(robot.taskUpperBody.name)
-robot.sot.push(robot.contactRF.task.name)
-robot.sot.push(robot.contactLF.task.name)
 robot.sot.push(robot.taskCom.task.name)
+robot.sot.push(robot.leftAnkleRollTask.task.name)
+robot.sot.push(robot.leftAnklePitchTask.task.name)
+robot.sot.push(robot.rightAnkleRollTask.task.name)
+robot.sot.push(robot.rightAnklePitchTask.task.name)
 robot.sot.push(robot.keepWaist.task.name)
-# robot.sot.push(robot.taskPos.name)
-# robot.device.control.recompute(0) # this crashes as it employs joint sensors which are not ready yet
 
 # --- Fix robot.dynamic inputs
 plug(robot.device.velocity,robot.dynamic.velocity)
 from dynamic_graph.sot.core import Derivator_of_Vector
 robot.dvdt = Derivator_of_Vector("dv_dt")
-robot.dvdt.dt.value = dt
+robot.dvdt.dt.value = timeStep
 plug(robot.device.velocity,robot.dvdt.sin)
 plug(robot.dvdt.sout,robot.dynamic.acceleration)
 

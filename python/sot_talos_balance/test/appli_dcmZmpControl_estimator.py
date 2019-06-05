@@ -83,7 +83,6 @@ plug(robot.rfToMatrix.sout, wp.footRight)
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)
-
 robot.wp = wp
 
 # --- Compute the values to use them in initialization
@@ -117,7 +116,7 @@ robot.stf = stf
 
 # --- Conversion
 e2q = EulerToQuat('e2q')
-plug(robot.stf.q,e2q.euler)
+plug(robot.stf.q, e2q.euler)
 robot.e2q = e2q
 
 # --- Kinematic computations
