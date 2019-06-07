@@ -41,8 +41,56 @@ cd python/sot_talos_balance/test
 Then, you can just run the chosen test. For instance:
 
 ```
-python test_dcmZmpControl_file.py
+python test_dcmZmpControl_estimator.py
 ```
+
+## Run the test with your own recorded movements
+
+The test that needs to be run in order o execute your own prerecorded movement is
+
+```
+python test_dcmZmpControl_file.py [testfolder]
+```
+
+where `[testfolder]` contains the following files:
+```
+CoM.dat
+LeftFoot.dat
+RightFoot.dat
+WaistOrientation.dat
+optionally, ZMP.dat (if not given, it is computed from the CoM)
+```
+where the CoM and the ZMP are in the following format:
+```
+[position3D velocity3D acceleration3D]
+```
+the feet are
+```
+[position6D velocity6D acceleration6D]
+```
+and the waist
+```
+[orientation3D angular_velocity3D angular_acceleration3D]
+```
+
+Pay attention that the lines of each file should *not* have trailing whitespace.
+Actually, the velocity and acceleration information are only really needed for the CoM. For all other quantities, these values are not really employed, but they are needed due to how nd-trajectory-generator is implemented. You can set this quantities arbitrarily to zero.
+
+
+Folder `[testfolder]` needs to be installed in
+```
+/opt/openrobots/share/sot_talos_balance/data
+```
+If you want to add a new motion, you either put it there or in
+```
+[sot-talos-balance-repo]/ros/sot_talos_balance/data
+```
+This way, when executing (see <a href="md_doc_installation.html">the installation page</a>)
+```
+make install
+```
+it will automatically be copied to the install location.
+
 
 ## Interacting with the dynamic graph
 
