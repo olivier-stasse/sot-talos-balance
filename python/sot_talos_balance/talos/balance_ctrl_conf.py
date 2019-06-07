@@ -31,10 +31,9 @@ w_base_orientation  = 0.0;
 w_torques           = 0.0;
 
 # CONTACT PARAMETERS
-RIGHT_FOOT_SIZES  = (0.130,  -0.100,  0.056,  -0.075); # pos x, neg x, pos y, neg y size 
-LEFT_FOOT_SIZES = (0.130, -0.100,  0.075, -0.056); # pos x, neg x, pos y, neg y size 
+RIGHT_FOOT_SIZES = (0.100, -0.100,  0.060, -0.060); # pos x, neg x, pos y, neg y size 
+LEFT_FOOT_SIZES  = (0.100, -0.100,  0.060, -0.060); # pos x, neg x, pos y, neg y size 
 
-RIGHT_FOOT_SIZES  = (0.130,  -0.100,  0.056,  -0.056); # pos x, neg x, pos y, neg y size 
 RIGHT_FOOT_CONTACT_POINTS  = ((RIGHT_FOOT_SIZES[0], RIGHT_FOOT_SIZES[0], RIGHT_FOOT_SIZES[1], RIGHT_FOOT_SIZES[1]),
                               (RIGHT_FOOT_SIZES[3], RIGHT_FOOT_SIZES[2], RIGHT_FOOT_SIZES[3], RIGHT_FOOT_SIZES[2]),
                               (-0.105, -0.105, -0.105, -0.105));    # contact points in local reference frame
