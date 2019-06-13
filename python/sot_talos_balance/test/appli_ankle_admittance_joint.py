@@ -181,11 +181,12 @@ robot.dcmControl = dcmController
 distribute = create_distribute_wrench(baseEstimatorConf)
 plug(robot.e2q.quaternion, distribute.q)
 plug(robot.dcmControl.wrenchRef, distribute.wrenchDes)
+# distribute.wrenchDes.value = [0.1]*6 # should be plugged to robot.dcmControl.wrenchRef
 distribute.init(robotName)
 robot.wrenchDistributor = distribute
 
 # --- Ankle admittance
-Kp = [0.0001]
+Kp = [0.0005]
 LeftPitchJoint = 10
 LeftRollJoint = 11
 RightPitchJoint = 16
@@ -389,12 +390,12 @@ locals()['contactRF'] = robot.contactRF
 
 # --- COM
 robot.taskCom = MetaTaskKineCom(robot.dynamic)
-plug(robot.comAdmittanceController.comRef, robot.taskCom.featureDes.errorIN)
-plug(robot.comAdmittanceController.dcomRef, robot.taskCom.featureDes.errordotIN)
-robot.taskCom.task.controlGain.value = 0
-robot.taskCom.task.setWithDerivative(True)
-# plug(robot.PG.comDes,robot.taskCom.featureDes.errorIN)
-# robot.taskCom.task.controlGain.value = 10
+# plug(robot.comAdmittanceController.comRef, robot.taskCom.featureDes.errorIN)
+# plug(robot.comAdmittanceController.dcomRef, robot.taskCom.featureDes.errordotIN)
+# robot.taskCom.task.controlGain.value = 0
+# robot.taskCom.task.setWithDerivative(True)
+plug(robot.PG.comDes,robot.taskCom.featureDes.errorIN)
+robot.taskCom.task.controlGain.value = 10
 robot.taskCom.feature.selec.value = '100'
 
 # --- Waist
@@ -410,8 +411,9 @@ robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 
 # --- Plug SOT control to device through control manager
-plug(robot.sot.control, robot.controlManager.ctrl_sot_input)
-plug(robot.controlManager.u_safe, robot.device.control)
+# plug(robot.sot.control, robot.controlManager.ctrl_sot_input)
+# plug(robot.controlManager.u_safe, robot.device.control)
+plug(robot.sot.control, robot.device.control)
 
 robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
