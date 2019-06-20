@@ -17,7 +17,7 @@ RightRollJoint = 11
 LeftPitchJoint = 4
 LeftRollJoint = 5
 
-Kp = [0.00005]
+Kp = [0.0001]
 
 # --- Ankle admittance foot
 # --- RIGHT ANKLE PITCH
@@ -39,7 +39,7 @@ controller.init(timeStep, 1)
 controller.setPosition([robot.device.state.value[RightPitchJoint+6]])
 robot.rightPitchAnkleController = controller
 
-robot.rightAnklePitchTask = MetaTaskKineJoint(robot.dynamic, RightPitchJoint)
+robot.rightAnklePitchTask = MetaTaskKineJoint(robot.dynamic, RightPitchJoint+6)
 robot.rightAnklePitchTask.task.controlGain.value = 0
 robot.rightAnklePitchTask.task.setWithDerivative(True)
 plug(robot.rightPitchAnkleController.qRef, robot.rightAnklePitchTask.featureDes.errorIN)
@@ -65,7 +65,7 @@ controller.init(timeStep, 1)
 controller.setPosition([robot.device.state.value[RightRollJoint+6]])
 robot.rightRollAnkleController = controller
 
-robot.rightAnkleRollTask = MetaTaskKineJoint(robot.dynamic, RightRollJoint)
+robot.rightAnkleRollTask = MetaTaskKineJoint(robot.dynamic, RightRollJoint+6)
 robot.rightAnkleRollTask.task.controlGain.value = 0
 robot.rightAnkleRollTask.task.setWithDerivative(True)
 plug(robot.rightRollAnkleController.qRef, robot.rightAnkleRollTask.featureDes.errorIN)
@@ -90,7 +90,7 @@ controller.init(timeStep, 1)
 controller.setPosition([robot.device.state.value[LeftPitchJoint+6]])
 robot.leftPitchAnkleController = controller
 
-robot.leftAnklePitchTask = MetaTaskKineJoint(robot.dynamic, LeftPitchJoint)
+robot.leftAnklePitchTask = MetaTaskKineJoint(robot.dynamic, LeftPitchJoint+6)
 robot.leftAnklePitchTask.task.controlGain.value = 0
 robot.leftAnklePitchTask.task.setWithDerivative(True)
 plug(robot.leftPitchAnkleController.qRef,robot.leftAnklePitchTask.featureDes.errorIN)
@@ -115,7 +115,7 @@ controller.init(timeStep, 1)
 controller.setPosition([robot.device.state.value[LeftRollJoint+6]])
 robot.leftRollAnkleController = controller
 
-robot.leftAnkleRollTask = MetaTaskKineJoint(robot.dynamic, LeftRollJoint)
+robot.leftAnkleRollTask = MetaTaskKineJoint(robot.dynamic, LeftRollJoint+6)
 robot.leftAnkleRollTask.task.controlGain.value = 0
 robot.leftAnkleRollTask.task.setWithDerivative(True)
 plug(robot.leftRollAnkleController.qRef, robot.leftAnkleRollTask.featureDes.errorIN)
@@ -130,26 +130,12 @@ q = list(robot.dynamic.position.value)
 robot.taskPosture.feature.state.value = q
 robot.taskPosture.feature.posture.value = q
 
-for i in range(18, 38):
+for i in range(6, 38):
   robot.taskPosture.feature.selectDof(i, True)
 
 robot.taskPosture.controlGain.value = 100.0
 robot.taskPosture.add(robot.taskPosture.feature.name)
 plug(robot.dynamic.position, robot.taskPosture.feature.state)
-
-# --- CONTACTS
-# define contactLF and contactRF
-robot.contactLF = MetaTaskKine6d('contactLF',robot.dynamic,'LF',robot.OperationalPointsMap['left-ankle'])
-robot.contactLF.feature.frame('desired')
-robot.contactLF.gain.setConstant(100)
-robot.contactLF.keep()
-locals()['contactLF'] = robot.contactLF
-
-robot.contactRF = MetaTaskKine6d('contactRF',robot.dynamic,'RF',robot.OperationalPointsMap['right-ankle'])
-robot.contactRF.feature.frame('desired')
-robot.contactRF.gain.setConstant(100)
-robot.contactRF.keep()
-locals()['contactRF'] = robot.contactRF
 
 # --- SOT
 
@@ -157,9 +143,11 @@ robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 plug(robot.sot.control,robot.device.control)
 
+robot.sot.push(robot.rightAnklePitchTask.task.name)
+robot.sot.push(robot.rightAnkleRollTask.task.name)
+robot.sot.push(robot.leftAnklePitchTask.task.name)
+robot.sot.push(robot.leftAnkleRollTask.task.name)
 robot.sot.push(robot.taskPosture.name)
-robot.sot.push(robot.contactRF.task.name)
-robot.sot.push(robot.contactLF.task.name)
 robot.device.control.recompute(0)
 
 

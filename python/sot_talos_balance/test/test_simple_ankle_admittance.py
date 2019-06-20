@@ -35,14 +35,6 @@ else:
 
         print("Setting desired torques with implemented values")
 
-
-print("Pushing the ankle tasks...")
-
-runCommandClient('robot.sot.push(robot.rightAnklePitchTask.task.name)')
-runCommandClient('robot.sot.push(robot.leftAnklePitchTask.task.name)')
-runCommandClient('robot.sot.push(robot.rightAnkleRollTask.task.name)')
-runCommandClient('robot.sot.push(robot.leftAnkleRollTask.task.name)')
-
 sleep(5.0)
 tauRP = evalCommandClient('robot.device.ptorque.value[RightPitchJoint]')
 tauLP = evalCommandClient('robot.device.ptorque.value[LeftPitchJoint]')
