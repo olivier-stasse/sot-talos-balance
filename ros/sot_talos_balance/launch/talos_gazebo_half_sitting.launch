@@ -7,8 +7,8 @@
   <arg name="recording" default="false"/>
   <arg name="extra_gazebo_args" default=""/>
 
-  <arg name="left_leg_pose" default="-J leg_left_1_joint 0.0 -J leg_left_2_joint 0.0 -J leg_left_3_joint -0.411354 -J leg_left_4_joint 0.859395 -J leg_left_5_joint -0.448041 -J leg_left_6_joint -0.001708"/>
-  <arg name="right_leg_pose" default="-J leg_right_1_joint 0.0 -J leg_right_2_joint 0.0 -J leg_right_3_joint -0.411354 -J leg_right_4_joint 0.859395 -J leg_right_5_joint -0.448041 -J leg_right_6_joint -0.001708"/>
+  <arg name="left_leg_pose" default="-J leg_left_1_joint 0.0 -J leg_left_2_joint 0.0 -J leg_left_3_joint -0.411354 -J leg_left_4_joint 0.859395 -J leg_left_5_joint -0.448041 -J leg_left_6_joint -0.0"/>
+  <arg name="right_leg_pose" default="-J leg_right_1_joint 0.0 -J leg_right_2_joint 0.0 -J leg_right_3_joint -0.411354 -J leg_right_4_joint 0.859395 -J leg_right_5_joint -0.448041 -J leg_right_6_joint -0.0"/>
   <arg name="left_arm_pose" default="-J arm_left_1_joint 0.25847 -J arm_left_2_joint 0.173046 -J arm_left_3_joint -0.0002 -J arm_left_4_joint -0.525366 -J arm_left_5_joint 0.0 -J arm_left_6_joint 0.0 -J arm_left_7_joint 0.1"/>
   <arg name="right_arm_pose" default="-J arm_right_1_joint -0.25847 -J arm_right_2_joint -0.173046 -J arm_left_3_joint 0.0002 -J arm_right_4_joint -0.525366 -J arm_right_5_joint 0.0 -J arm_right_6_joint 0.0 -J arm_right_7_joint 0.1"/>
   <arg name="torso_pose" default="-J torso_1_joint 0.0 -J torso_2_joint 0.006761"/>
