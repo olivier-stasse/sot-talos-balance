@@ -18,6 +18,8 @@ SET(${PROJECT_NAME}_SIMULATION_FILES
   appli_admittance_single_joint.py
   test_admittance_end_effector.py
   appli_admittance_end_effector.py
+  test_simple_ankle_admittance.py
+  appli_simple_ankle_admittance.py
   test_admittance_single_joint_velocity_based.py
   appli_admittance_single_joint_velocity_based.py
   test_singleTraj.py
