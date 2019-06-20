@@ -17,11 +17,10 @@
 #include "sot/talos_balance/ankle-admittance-controller.hh"
 
 #include <sot/core/debug.hh>
+#include <sot/core/stop-watch.hh>
 #include <dynamic-graph/factory.h>
 #include <dynamic-graph/command-bind.h>
-
 #include <dynamic-graph/all-commands.h>
-#include "sot/talos_balance/utils/stop-watch.hh"
 
 namespace dynamicgraph
 {
