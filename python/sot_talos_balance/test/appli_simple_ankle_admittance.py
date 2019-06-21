@@ -138,7 +138,6 @@ robot.taskPosture.add(robot.taskPosture.feature.name)
 plug(robot.dynamic.position, robot.taskPosture.feature.state)
 
 # --- SOT
-
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 plug(robot.sot.control,robot.device.control)
