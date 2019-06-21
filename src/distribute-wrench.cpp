@@ -86,8 +86,18 @@ namespace dynamicgraph
                       , m_initSucceeded(false)
                       , m_model()
                       , m_data(pinocchio::Model())
+                      , m_Q(12,12)
+                      , m_C(12)
+                      , m_Aeq(0,12)
+                      , m_Beq(0)
+                      , m_Aineq(34,12)
+                      , m_Bineq(34)
+                      , m_wAnkle(6)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
+
+        m_qp1.problem(6,0,16);
+        m_qp2.problem(12,0,34);
 
         /* Commands. */
         addCommand("init", makeCommandVoid1(*this, &DistributeWrench::init, docCommandVoid1("Initialize the entity.","Robot name")));
@@ -153,9 +163,6 @@ namespace dynamicgraph
         //m_ankle_M_ftSens = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Force_Sensor_XYZ.head<3>());
         m_ankle_M_sole   = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Sole_XYZ.head<3>());
 
-        m_qp1.problem(6,0,16);
-        m_qp2.problem(12,0,34);
-
         m_initSucceeded = true;
       }
 
@@ -178,7 +185,6 @@ namespace dynamicgraph
       {
         const double X = m_right_foot_sizes[0];
         const double Y = m_right_foot_sizes[2];
-        m_wrenchFaceMatrix.resize(16,6);
         m_wrenchFaceMatrix <<
         // fx,  fy,            fz,  mx,  my,  mz,
            -1,   0,           -mu,   0,   0,   0,
@@ -273,8 +279,8 @@ namespace dynamicgraph
         // --- COSTS
 
         // Initialize cost matrices
-        Eigen::MatrixXd Q(12,12);
-        Eigen::VectorXd C(12);
+        Eigen::MatrixXd & Q = m_Q;
+        Eigen::VectorXd & C = m_C;
 
         // min |wrenchLeft + wrenchRight - wrenchDes|^2
         Q.topLeftCorner<6,6>().setIdentity();
@@ -288,32 +294,30 @@ namespace dynamicgraph
         C *= m_wSum;
 
         // min |wrenchLeft_a|^2 + |wrenchRight_a|^2
-        Eigen::MatrixXd tmp = m_wAnkle.asDiagonal() * m_data.oMf[m_left_foot_id].inverse().toDualActionMatrix();
-        tmp = tmp.transpose() * tmp * m_wNorm;
-        Q.topLeftCorner<6,6>() += tmp;
+        Eigen::Matrix<double,6,6> tmp = m_wAnkle.asDiagonal() * m_data.oMf[m_left_foot_id].inverse().toDualActionMatrix();
+        Q.topLeftCorner<6,6>().noalias() += tmp.transpose() * tmp * m_wNorm;
 
         tmp = m_wAnkle.asDiagonal() * m_data.oMf[m_right_foot_id].inverse().toDualActionMatrix();
-        tmp = tmp.transpose() * tmp * m_wNorm;
-        Q.bottomRightCorner<6,6>() += tmp;
+        Q.bottomRightCorner<6,6>().noalias() += tmp.transpose() * tmp * m_wNorm;
 
         // min |(1-rho)e_z^T*wrenchLeft_c - rho*e_z^T*wrenchLeft_c|
-        Eigen::MatrixXd tmp2(1,12);
+        Eigen::Matrix<double,1,12> tmp2;
         tmp2 << (1-rho) * (  m_contactLeft.inverse().toDualActionMatrix().row(2) ),
                  (-rho) * ( m_contactRight.inverse().toDualActionMatrix().row(2) );
 
-        Q += m_wRatio * tmp2.transpose()*tmp2;
+        Q.noalias() += tmp2.transpose() * tmp2 * m_wRatio;
 
         // --- Equality constraints
 
-        Eigen::MatrixXd Aeq(0,12);
+        Eigen::MatrixXd & Aeq = m_Aeq;
 
-        Eigen::VectorXd Beq(0);
+        Eigen::VectorXd & Beq = m_Beq;
 
         // --- Inequality constraints
 
         computeWrenchFaceMatrix(mu);
 
-        Eigen::MatrixXd Aineq(34,12);
+        Eigen::MatrixXd & Aineq = m_Aineq;
 
         Aineq.topLeftCorner<16,6>() = m_wrenchFaceMatrix * m_contactLeft.inverse().toDualActionMatrix();
         Aineq.topRightCorner<16,6>().setZero();
@@ -323,7 +327,7 @@ namespace dynamicgraph
         Aineq.block<1,6>(32,0) = - m_contactLeft.inverse().toDualActionMatrix().row(2);
         Aineq.block<1,6>(33,6) = - m_contactRight.inverse().toDualActionMatrix().row(2);
 
-        Eigen::VectorXd Bineq(34);
+        Eigen::VectorXd & Bineq = m_Bineq;
 
         Bineq.setZero();
         Bineq(32) = - m_eps;

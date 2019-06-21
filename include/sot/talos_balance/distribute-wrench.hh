@@ -132,6 +132,16 @@ namespace dynamicgraph {
         Eigen::QuadProgDense m_qp1; // TODO: saturate wrench
         Eigen::QuadProgDense m_qp2; // distribute wrench
 
+        // QP problem matrices
+        Eigen::MatrixXd m_Q;
+        Eigen::VectorXd m_C;
+
+        Eigen::MatrixXd m_Aeq;
+        Eigen::VectorXd m_Beq;
+
+        Eigen::MatrixXd m_Aineq;
+        Eigen::VectorXd m_Bineq;
+
         double m_wSum;
         double m_wNorm;
         double m_wRatio;
