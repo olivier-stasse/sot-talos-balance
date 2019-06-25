@@ -46,12 +46,12 @@ print("Current torques: %f, %f, %f, %f" % (tauRP, tauLP, tauRR, tauLR))
 
 c = ask_for_confirmation("Do you want to change the ankle admittance gains?")
 if c:
-    runCommandClient('robot.rightPitchAnkleController.Kp.value = [0.05]')
-    runCommandClient('robot.leftPitchAnkleController.Kp.value = [0.05]')
-    runCommandClient('robot.rightRollAnkleController.Kp.value = [0.05]')
-    runCommandClient('robot.leftRollAnkleController.Kp.value = [0.05]')
+    runCommandClient('robot.rightPitchAnkleController.Kp.value = [0.002]')
+    runCommandClient('robot.leftPitchAnkleController.Kp.value = [0.002]')
+    runCommandClient('robot.rightRollAnkleController.Kp.value = [0.002]')
+    runCommandClient('robot.leftRollAnkleController.Kp.value = [0.002]')
         
-    print("Gains changed to 0.05")
+    print("Gains changed to 0.002")
 
 tauRP = evalCommandClient('robot.device.ptorque.value[RightPitchJoint]')
 tauLP = evalCommandClient('robot.device.ptorque.value[LeftPitchJoint]')

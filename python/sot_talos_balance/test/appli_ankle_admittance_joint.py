@@ -23,7 +23,7 @@ timeStep = robot.timeStep
 # --- Pendulum parameters
 robotName='robot'
 robot.dynamic.com.recompute(0)
-robotDim = robot.dynamic.getDimension()
+dimension = robot.dynamic.getDimension()
 mass = robot.dynamic.data.mass[0]
 h = robot.dynamic.com.value[2]
 g = 9.81
@@ -119,8 +119,8 @@ robot.rdynamic = DynamicPinocchio("real_dynamics")
 robot.rdynamic.setModel(robot.dynamic.model)
 robot.rdynamic.setData(robot.rdynamic.model.createData())
 plug(robot.stateTransform.q,robot.rdynamic.position)
-robot.rdynamic.velocity.value = [0.0]*robotDim
-robot.rdynamic.acceleration.value = [0.0]*robotDim
+robot.rdynamic.velocity.value = [0.0]*dimension
+robot.rdynamic.acceleration.value = [0.0]*dimension
 
 # --- CoM Estimation
 dcmEstimator = DcmEstimator('dcmEstimator')
