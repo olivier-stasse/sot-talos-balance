@@ -86,12 +86,18 @@ namespace dynamicgraph
                       , m_initSucceeded(false)
                       , m_model()
                       , m_data(pinocchio::Model())
-                      , m_Q(12,12)
-                      , m_C(12)
-                      , m_Aeq(0,12)
-                      , m_Beq(0)
-                      , m_Aineq(34,12)
-                      , m_Bineq(34)
+                      , m_Q1(6,6)
+                      , m_C1(6)
+                      , m_Aeq1(0,6)
+                      , m_Beq1(0)
+                      , m_Aineq1(16,6)
+                      , m_Bineq1(16)
+                      , m_Q2(12,12)
+                      , m_C2(12)
+                      , m_Aeq2(0,12)
+                      , m_Beq2(0)
+                      , m_Aineq2(34,12)
+                      , m_Bineq2(34)
                       , m_wAnkle(6)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -210,7 +216,7 @@ namespace dynamicgraph
       {
 //        std::cout << "++++++++++++" << std::endl;
 //        std::cout << wrenchGlobal.transpose() << std::endl;
-        dg::Vector wrench = pose.actInv(pinocchio::Force(wrenchGlobal)).toVector();
+        const pinocchio::Force::Vector6 & wrench = pose.actInv(pinocchio::Force(wrenchGlobal)).toVector();
 //        std::cout << wrench.transpose() << std::endl;
 //        std::cout << "------------" << std::endl;
 
@@ -263,7 +269,9 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_KINEMATICS_COMPUTATIONS);
 
-        pinocchio::framesForwardKinematics(m_model, m_data, q);
+        pinocchio::forwardKinematics(m_model, m_data, q);
+        pinocchio::updateFramePlacement(m_model, m_data, m_left_foot_id);
+        pinocchio::updateFramePlacement(m_model, m_data, m_right_foot_id);
 
         m_contactLeft  = m_data.oMf[m_left_foot_id]  * m_ankle_M_sole;
         m_contactRight = m_data.oMf[m_right_foot_id] * m_ankle_M_sole;
@@ -279,8 +287,8 @@ namespace dynamicgraph
         // --- COSTS
 
         // Initialize cost matrices
-        Eigen::MatrixXd & Q = m_Q;
-        Eigen::VectorXd & C = m_C;
+        Eigen::MatrixXd & Q = m_Q2;
+        Eigen::VectorXd & C = m_C2;
 
         // min |wrenchLeft + wrenchRight - wrenchDes|^2
         Q.topLeftCorner<6,6>().setIdentity();
@@ -309,15 +317,15 @@ namespace dynamicgraph
 
         // --- Equality constraints
 
-        Eigen::MatrixXd & Aeq = m_Aeq;
+        Eigen::MatrixXd & Aeq = m_Aeq2;
 
-        Eigen::VectorXd & Beq = m_Beq;
+        Eigen::VectorXd & Beq = m_Beq2;
 
         // --- Inequality constraints
 
         computeWrenchFaceMatrix(mu);
 
-        Eigen::MatrixXd & Aineq = m_Aineq;
+        Eigen::MatrixXd & Aineq = m_Aineq2;
 
         Aineq.topLeftCorner<16,6>() = m_wrenchFaceMatrix * m_contactLeft.inverse().toDualActionMatrix();
         Aineq.topRightCorner<16,6>().setZero();
@@ -327,7 +335,7 @@ namespace dynamicgraph
         Aineq.block<1,6>(32,0) = - m_contactLeft.inverse().toDualActionMatrix().row(2);
         Aineq.block<1,6>(33,6) = - m_contactRight.inverse().toDualActionMatrix().row(2);
 
-        Eigen::VectorXd & Bineq = m_Bineq;
+        Eigen::VectorXd & Bineq = m_Bineq2;
 
         Bineq.setZero();
         Bineq(32) = - m_eps;
@@ -337,7 +345,7 @@ namespace dynamicgraph
 
         m_emergency_stop_triggered = !success;
 
-        Eigen::VectorXd result = m_qp2.result();
+        const Eigen::VectorXd & result = m_qp2.result();
 
         m_wrenchLeft  = result.head<6>();
         m_wrenchRight = result.tail<6>();
@@ -347,8 +355,8 @@ namespace dynamicgraph
 
       bool DistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase, const double mu) {
         // Initialize cost matrices
-        Eigen::MatrixXd Q(6,6);
-        Eigen::VectorXd C(6);
+        Eigen::MatrixXd & Q = m_Q1;
+        Eigen::VectorXd & C = m_C1;
 
         // min |wrench - wrenchDes|^2
         Q.setIdentity();
@@ -356,15 +364,15 @@ namespace dynamicgraph
 
         // --- Equality constraints
 
-        Eigen::MatrixXd Aeq(0,6);
+        Eigen::MatrixXd & Aeq = m_Aeq1;
 
-        Eigen::VectorXd Beq(0);
+        Eigen::VectorXd & Beq = m_Beq1;
 
         // --- Inequality constraints
 
         computeWrenchFaceMatrix(mu);
 
-        Eigen::MatrixXd Aineq(16,6);
+        Eigen::MatrixXd & Aineq = m_Aineq1;
         if(phase>0) {
           Aineq = m_wrenchFaceMatrix * m_contactLeft.inverse().toDualActionMatrix();
         }
@@ -372,14 +380,14 @@ namespace dynamicgraph
           Aineq = m_wrenchFaceMatrix * m_contactRight.inverse().toDualActionMatrix();
         }
 
-        Eigen::VectorXd Bineq(16);
+        Eigen::VectorXd & Bineq = m_Bineq1;
         Bineq.setZero();
 
         bool success = m_qp1.solve(Q, C, Aeq, Beq, Aineq, Bineq);
 
         m_emergency_stop_triggered = !success;
 
-        Eigen::VectorXd result = m_qp1.result();
+        const Eigen::VectorXd & result = m_qp1.result();
 
         if(phase>0) {
           m_wrenchLeft  = result;
@@ -574,7 +582,7 @@ namespace dynamicgraph
         }
         const double pz = 0.0;
 
-        dg::Vector zmp(3);
+        Eigen::Vector3d zmp(3);
         zmp[0] = px;
         zmp[1] = py;
         zmp[2] = pz;

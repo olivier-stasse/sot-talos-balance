@@ -9,6 +9,10 @@ run_test('appli_dcmZmpControl_distribute.py')
 
 run_ft_calibration('robot.ftc')
 use_force_distribution = ask_for_confirmation("Use output of force distribution?")
+if use_force_distribution:
+    print("Using output of force distribution")
+else:
+    print("Not using output of force distribution")
 raw_input("Wait before running the test")
 
 # Connect ZMP reference and reset controllers

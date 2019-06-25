@@ -120,8 +120,8 @@ namespace dynamicgraph {
         pinocchio::SE3 m_contactLeft;
         pinocchio::SE3 m_contactRight;
 
-        dynamicgraph::Vector m_wrenchLeft;
-        dynamicgraph::Vector m_wrenchRight;
+        Eigen::Matrix<double,6,1> m_wrenchLeft;
+        Eigen::Matrix<double,6,1> m_wrenchRight;
 
         Eigen::Vector4d m_left_foot_sizes;  /// sizes of the left foot (pos x, neg x, pos y, neg y)
         Eigen::Vector4d m_right_foot_sizes; /// sizes of the left foot (pos x, neg x, pos y, neg y)
@@ -129,18 +129,28 @@ namespace dynamicgraph {
         void computeWrenchFaceMatrix(const double mu);
         Eigen::Matrix<double, 16, 6> m_wrenchFaceMatrix; // for modelling contact
 
-        Eigen::QuadProgDense m_qp1; // TODO: saturate wrench
+        Eigen::QuadProgDense m_qp1; // saturate wrench
         Eigen::QuadProgDense m_qp2; // distribute wrench
 
-        // QP problem matrices
-        Eigen::MatrixXd m_Q;
-        Eigen::VectorXd m_C;
+        // QP problem matrices -- SSP
+        Eigen::MatrixXd m_Q1;
+        Eigen::VectorXd m_C1;
 
-        Eigen::MatrixXd m_Aeq;
-        Eigen::VectorXd m_Beq;
+        Eigen::MatrixXd m_Aeq1;
+        Eigen::VectorXd m_Beq1;
 
-        Eigen::MatrixXd m_Aineq;
-        Eigen::VectorXd m_Bineq;
+        Eigen::MatrixXd m_Aineq1;
+        Eigen::VectorXd m_Bineq1;
+
+        // QP problem matrices -- DSP
+        Eigen::MatrixXd m_Q2;
+        Eigen::VectorXd m_C2;
+
+        Eigen::MatrixXd m_Aeq2;
+        Eigen::VectorXd m_Beq2;
+
+        Eigen::MatrixXd m_Aineq2;
+        Eigen::VectorXd m_Bineq2;
 
         double m_wSum;
         double m_wNorm;
