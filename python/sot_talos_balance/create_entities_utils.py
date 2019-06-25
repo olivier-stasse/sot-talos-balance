@@ -36,6 +36,7 @@ from sot_talos_balance.distribute_wrench import DistributeWrench
 from sot_talos_balance.simple_reference_frame import SimpleReferenceFrame
 from sot_talos_balance.state_transformation import StateTransformation
 from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator
+from sot_talos_balance.qualisys_client import QualisysClient
 
 # python
 from sot_talos_balance.utils.filter_utils import *
@@ -47,6 +48,12 @@ from dynamic_graph.ros import RosPublish
 import numpy as np
 
 N_JOINTS = 32
+
+def create_qualisys_client(address):
+    mocap=QualisysClient('mocap')
+    mocap.setMocapIPAdress(address)
+    mocap.init()
+    return mocap
 
 # helper function. May need to move somewhere else
 def rotation_matrix_to_rpy(R):
