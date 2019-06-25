@@ -4,6 +4,7 @@ import sot_talos_balance.talos.control_manager_conf    as controlManagerConf
 import sot_talos_balance.talos.base_estimator_conf     as baseEstimatorConf
 import sot_talos_balance.talos.ft_calibration_conf     as forceConf
 from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController
+from sot_talos_balance.saturation import Saturation
 from sot_talos_balance.meta_task_joint import MetaTaskKineJoint
 from sot_talos_balance.create_entities_utils import *
 
@@ -17,14 +18,14 @@ from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 
 # Other
-from math import sqrt
+from math import sqrt, pi
 import numpy as np
 
 robot.timeStep = robot.device.getTimeStep()
 timeStep = robot.timeStep
 
 # -------------------------- PARAMETERS ----------------------------------------
-# --- Pendulum parameters
+# --- Parameters
 robotName='robot'
 robot.dynamic.com.recompute(0)
 dimension = robot.dynamic.getDimension()
@@ -32,6 +33,10 @@ mass = robot.dynamic.data.mass[0]
 h = robot.dynamic.com.value[2]
 g = 9.81
 omega = sqrt(g/h)
+
+kSat = 10.0
+qLimSat = [pi/6]
+dqLimSat = [0.1]
 
 # --- Parameter server
 robot.paramServer = create_parameter_server(paramServerConfig, timeStep)
@@ -205,16 +210,23 @@ controller.init(timeStep, 1)
 controller.setPosition([robot.device.state.value[RightPitchJoint+6]])
 robot.rightPitchAnkleController = controller
 
-rightPitchSelec = Selec_of_vector("rightPitchSelec")
-rightPitchSelec.selec(4, 5)
-plug(robot.wrenchDistributor.ankleWrenchRight, rightPitchSelec.sin)
-plug(rightPitchSelec.sout, robot.rightPitchAnkleController.tauDes)
+robot.rightPitchSelec = Selec_of_vector("rightPitchSelec")
+robot.rightPitchSelec.selec(4, 5)
+plug(robot.wrenchDistributor.ankleWrenchRight, robot.rightPitchSelec.sin)
+plug(robot.rightPitchSelec.sout, robot.rightPitchAnkleController.tauDes)
+
+robot.rightPitchSaturation = Saturation("rightPitchSaturation")
+plug(robot.stateselecRP.sout, robot.rightPitchSaturation.x)
+plug(robot.rightPitchAnkleController.dqRef, robot.rightPitchSaturation.y)
+robot.rightPitchSaturation.k.value = kSat
+robot.rightPitchSaturation.xLim.value = qLimSat
+robot.rightPitchSaturation.yLim.value = dqLimSat
 
 robot.rightAnklePitchTask = MetaTaskKineJoint(robot.dynamic, RightPitchJoint+6)
 robot.rightAnklePitchTask.task.controlGain.value = 0
 robot.rightAnklePitchTask.task.setWithDerivative(True)
 plug(robot.rightPitchAnkleController.qRef, robot.rightAnklePitchTask.featureDes.errorIN)
-plug(robot.rightPitchAnkleController.dqRef, robot.rightAnklePitchTask.featureDes.errordotIN)
+plug(robot.rightPitchSaturation.yOut, robot.rightAnklePitchTask.featureDes.errordotIN)
 
 # --- RIGHT ANKLE ROLL
 controller = SimpleAdmittanceController("rightRollAnkleController")
@@ -235,16 +247,23 @@ controller.init(timeStep, 1)
 controller.setPosition([robot.device.state.value[RightRollJoint+6]])
 robot.rightRollAnkleController = controller
 
-rightRollSelec = Selec_of_vector("rightRollSelec")
-rightRollSelec.selec(3, 4)
-plug(robot.wrenchDistributor.ankleWrenchRight, rightRollSelec.sin)
-plug(rightRollSelec.sout, robot.rightRollAnkleController.tauDes)
+robot.rightRollSelec = Selec_of_vector("rightRollSelec")
+robot.rightRollSelec.selec(3, 4)
+plug(robot.wrenchDistributor.ankleWrenchRight, robot.rightRollSelec.sin)
+plug(robot.rightRollSelec.sout, robot.rightRollAnkleController.tauDes)
+
+robot.rightRollSaturation = Saturation("rightRollSaturation")
+plug(robot.stateselecRR.sout, robot.rightRollSaturation.x)
+plug(robot.rightRollAnkleController.dqRef, robot.rightRollSaturation.y)
+robot.rightRollSaturation.k.value = kSat
+robot.rightRollSaturation.xLim.value = qLimSat
+robot.rightRollSaturation.yLim.value = dqLimSat
 
 robot.rightAnkleRollTask = MetaTaskKineJoint(robot.dynamic, RightRollJoint+6)
 robot.rightAnkleRollTask.task.controlGain.value = 0
 robot.rightAnkleRollTask.task.setWithDerivative(True)
 plug(robot.rightRollAnkleController.qRef, robot.rightAnkleRollTask.featureDes.errorIN)
-plug(robot.rightRollAnkleController.dqRef, robot.rightAnkleRollTask.featureDes.errordotIN)
+plug(robot.rightRollSaturation.yOut, robot.rightAnkleRollTask.featureDes.errordotIN)
 
 # --- LEFT ANKLE PITCH
 controller = SimpleAdmittanceController("leftPitchAnkleController")
@@ -265,16 +284,23 @@ controller.init(timeStep, 1)
 controller.setPosition([robot.device.state.value[LeftPitchJoint+6]])
 robot.leftPitchAnkleController = controller
 
-leftPitchSelec = Selec_of_vector("leftPitchSelec")
-leftPitchSelec.selec(4, 5)
-plug(robot.wrenchDistributor.ankleWrenchLeft, leftPitchSelec.sin)
-plug(leftPitchSelec.sout, robot.leftPitchAnkleController.tauDes)
+robot.leftPitchSelec = Selec_of_vector("leftPitchSelec")
+robot.leftPitchSelec.selec(4, 5)
+plug(robot.wrenchDistributor.ankleWrenchLeft, robot.leftPitchSelec.sin)
+plug(robot.leftPitchSelec.sout, robot.leftPitchAnkleController.tauDes)
+
+robot.leftPitchSaturation = Saturation("leftPitchSaturation")
+plug(robot.stateselecLP.sout, robot.leftPitchSaturation.x)
+plug(robot.leftPitchAnkleController.dqRef, robot.leftPitchSaturation.y)
+robot.leftPitchSaturation.k.value = kSat
+robot.leftPitchSaturation.xLim.value = qLimSat
+robot.leftPitchSaturation.yLim.value = dqLimSat
 
 robot.leftAnklePitchTask = MetaTaskKineJoint(robot.dynamic, LeftPitchJoint+6)
 robot.leftAnklePitchTask.task.controlGain.value = 0
 robot.leftAnklePitchTask.task.setWithDerivative(True)
-plug(robot.leftPitchAnkleController.qRef,robot.leftAnklePitchTask.featureDes.errorIN)
-plug(robot.leftPitchAnkleController.dqRef,robot.leftAnklePitchTask.featureDes.errordotIN)
+plug(robot.leftPitchAnkleController.qRef, robot.leftAnklePitchTask.featureDes.errorIN)
+plug(robot.leftPitchSaturation.yOut, robot.leftAnklePitchTask.featureDes.errordotIN)
 
 # --- LEFT ANKLE ROLL
 controller = SimpleAdmittanceController("leftRollAnkleController")
@@ -295,16 +321,23 @@ controller.init(timeStep, 1)
 controller.setPosition([robot.device.state.value[LeftRollJoint+6]])
 robot.leftRollAnkleController = controller
 
-leftRollSelec = Selec_of_vector("leftRollSelec")
-leftRollSelec.selec(3, 4)
-plug(robot.wrenchDistributor.ankleWrenchLeft, leftRollSelec.sin)
-plug(leftRollSelec.sout, robot.leftRollAnkleController.tauDes)
+robot.leftRollSelec = Selec_of_vector("leftRollSelec")
+robot.leftRollSelec.selec(3, 4)
+plug(robot.wrenchDistributor.ankleWrenchLeft, robot.leftRollSelec.sin)
+plug(robot.leftRollSelec.sout, robot.leftRollAnkleController.tauDes)
+
+robot.leftRollSaturation = Saturation("leftRollSaturation")
+plug(robot.stateselecLR.sout, robot.leftRollSaturation.x)
+plug(robot.leftRollAnkleController.dqRef, robot.leftRollSaturation.y)
+robot.leftRollSaturation.k.value = kSat
+robot.leftRollSaturation.xLim.value = qLimSat
+robot.leftRollSaturation.yLim.value = dqLimSat
 
 robot.leftAnkleRollTask = MetaTaskKineJoint(robot.dynamic, LeftRollJoint+6)
 robot.leftAnkleRollTask.task.controlGain.value = 0
 robot.leftAnkleRollTask.task.setWithDerivative(True)
 plug(robot.leftRollAnkleController.qRef, robot.leftAnkleRollTask.featureDes.errorIN)
-plug(robot.leftRollAnkleController.dqRef, robot.leftAnkleRollTask.featureDes.errordotIN)
+plug(robot.leftRollSaturation.yOut, robot.leftAnkleRollTask.featureDes.errordotIN)
 
 # -------------------------- CONTROL MANAGER -----------------------------------
 

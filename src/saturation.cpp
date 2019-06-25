@@ -25,99 +25,108 @@
 
 namespace dynamicgraph
 {
-  namespace sot
-  {
-    namespace talos_balance
-    {
-      namespace dg = ::dynamicgraph;
-      using namespace dg;
-      using namespace dg::command;
+namespace sot
+{
+namespace talos_balance
+{
+namespace dg = ::dynamicgraph;
+using namespace dg;
+using namespace dg::command;
 
 //Size to be aligned\
 "-------------------------------------------------------"
 
 #define PROFILE_SATURATION_SOUT_COMPUTATION "Saturation: sOut computation"
 
-#define INPUT_SIGNALS   m_xSIN << m_ySIN << m_kSIN << m_xLimSIN << m_yLimSIN
+#define INPUT_SIGNALS m_xSIN << m_ySIN << m_kSIN << m_xLimSIN << m_yLimSIN
 
 #define OUTPUT_SIGNALS m_yOutSOUT
 
-      /// Define EntityClassName here rather than in the header file
-      /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
-      typedef Saturation EntityClassName;
+/// Define EntityClassName here rather than in the header file
+/// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
+typedef Saturation EntityClassName;
 
-      /* --- DG FACTORY ---------------------------------------------------- */
-      DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(Saturation,
-                                         "Saturation");
+/* --- DG FACTORY ---------------------------------------------------- */
+DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(Saturation,
+                                   "Saturation");
 
-      /* ------------------------------------------------------------------- */
-      /* --- CONSTRUCTION -------------------------------------------------- */
-      /* ------------------------------------------------------------------- */
-      Saturation::Saturation(const std::string& name)
-          : Entity(name)
-          , CONSTRUCT_SIGNAL_IN(x, double)
-          , CONSTRUCT_SIGNAL_IN(y, double)
-          , CONSTRUCT_SIGNAL_IN(k, double)
-          , CONSTRUCT_SIGNAL_IN(xLim, double)
-          , CONSTRUCT_SIGNAL_IN(yLim, double)
-          , CONSTRUCT_SIGNAL_OUT(yOut, double, INPUT_SIGNALS)
-      {
-        Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
-      }
+/* ------------------------------------------------------------------- */
+/* --- CONSTRUCTION -------------------------------------------------- */
+/* ------------------------------------------------------------------- */
+Saturation::Saturation(const std::string &name)
+    : Entity(name)
+    , CONSTRUCT_SIGNAL_IN(x, dynamicgraph::Vector)
+    , CONSTRUCT_SIGNAL_IN(y, dynamicgraph::Vector)
+    , CONSTRUCT_SIGNAL_IN(k, double)
+    , CONSTRUCT_SIGNAL_IN(xLim, dynamicgraph::Vector)
+    , CONSTRUCT_SIGNAL_IN(yLim, dynamicgraph::Vector)
+    , CONSTRUCT_SIGNAL_OUT(yOut, dynamicgraph::Vector, INPUT_SIGNALS)
+{
+  Entity::signalRegistration(INPUT_SIGNALS << OUTPUT_SIGNALS);
+}
 
-      /* ------------------------------------------------------------------- */
-      /* --- SIGNALS ------------------------------------------------------- */
-      /* ------------------------------------------------------------------- */
+/* ------------------------------------------------------------------- */
+/* --- SIGNALS ------------------------------------------------------- */
+/* ------------------------------------------------------------------- */
 
-      DEFINE_SIGNAL_OUT_FUNCTION(yOut, double)
-      {
-        getProfiler().start(PROFILE_SATURATION_SOUT_COMPUTATION);
+DEFINE_SIGNAL_OUT_FUNCTION(yOut, dynamicgraph::Vector)
+{
+  getProfiler().start(PROFILE_SATURATION_SOUT_COMPUTATION);
 
-        const double & x = m_xSIN(iter);
-        const double & y = m_ySIN(iter);
-        const double & k = m_kSIN(iter);
-        const double & xLim = m_xLimSIN(iter);
-        const double & yLim = m_yLimSIN(iter);
+  const double &x = m_xSIN(iter)[0];
+  s = m_ySIN(iter);
+  const double &y = s[0];
+  const double &k = m_kSIN(iter);
+  const double &xLim = m_xLimSIN(iter)[0];
+  const double &yLim = m_yLimSIN(iter)[0];
 
-        s = y;
+  double r = y;
 
-        assert(k > 0   && "k must be strictly positive");
-        assert(xLim > 0   && "xLim must be strictly positive");
-        assert(yLim > 0   && "yLim must be strictly positive");
+  assert(k > 0 && "k must be strictly positive");
+  assert(xLim > 0 && "xLim must be strictly positive");
+  assert(yLim > 0 && "yLim must be strictly positive");
 
-        if((x <= -xLim) or (x > xLim)){
-          s = 0.0;
-        } 
-        else if( -xLim + yLim/k < x and x <= xLim - yLim/k ){
-          s = std::min(std::max(y, -yLim), yLim);
-        }
-        else if( -xLim < x and x <= -xLim + yLim/k ){
-          s = std::min(std::max(y, -k*(x + xLim)), k*(x + xLim));
-        }
-        else if( xLim - yLim/k < x and x <= xLim ){
-          s = std::min(std::max(y, -yLim + k*(x - xLim + yLim/k)), yLim - k*(x - xLim + yLim/k));
-        }
+  if ((x <= -xLim) or (x > xLim))
+  {
+    r = 0.0;
+  }
+  else if (-xLim + yLim / k < x and x <= xLim - yLim / k)
+  {
+    r = std::min(std::max(y, -yLim), yLim);
+  }
+  else if (-xLim < x and x <= -xLim + yLim / k)
+  {
+    r = std::min(std::max(y, -k * (x + xLim)), k * (x + xLim));
+  }
+  else if (xLim - yLim / k < x and x <= xLim)
+  {
+    r = std::min(std::max(y, -yLim + k * (x - xLim + yLim / k)), yLim - k * (x - xLim + yLim / k));
+  }
 
-        getProfiler().stop(PROFILE_SATURATION_SOUT_COMPUTATION);
+  s[0] = r;
 
-        return s;
-      }
+  getProfiler().stop(PROFILE_SATURATION_SOUT_COMPUTATION);
 
-      /* --- COMMANDS ---------------------------------------------------------- */
+  return s;
+}
 
-      /* ------------------------------------------------------------------- */
-      /* --- ENTITY -------------------------------------------------------- */
-      /* ------------------------------------------------------------------- */
+/* --- COMMANDS ---------------------------------------------------------- */
 
-      void Saturation::display(std::ostream& os) const
-      {
-        os << "Saturation " << getName();
-        try
-        {
-          getProfiler().report_all(3, os);
-        }
-        catch (ExceptionSignal e) {}
-      }
-    } // namespace talos_balance
-  } // namespace sot
+/* ------------------------------------------------------------------- */
+/* --- ENTITY -------------------------------------------------------- */
+/* ------------------------------------------------------------------- */
+
+void Saturation::display(std::ostream &os) const
+{
+  os << "Saturation " << getName();
+  try
+  {
+    getProfiler().report_all(3, os);
+  }
+  catch (ExceptionSignal e)
+  {
+  }
+}
+} // namespace talos_balance
+} // namespace sot
 } // namespace dynamicgraph
