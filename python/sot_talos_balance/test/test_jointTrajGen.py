@@ -9,7 +9,7 @@ def main(robot):
     robot.timeStep = robot.device.getTimeStep()
     dt = robot.timeStep;
 
-    robot.traj_gen = create_joint_trajectory_generator(dt);
+    robot.traj_gen = create_joint_trajectory_generator(dt, robot);
     robot.device.control.value = 32*[0.0];
     plug(robot.traj_gen.dx,    robot.device.control);
 
