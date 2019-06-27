@@ -36,25 +36,27 @@ def stop_sot():
 
 
 def smoothly_set_signal_to_zero(sig):
+  value_type = type(sig.value)
   v = np.array(sig.value)
   for i in range(40):
-    v = 0.95*v
-    sig.value = tuple(v)
+    v = np.array(0.95*v)
+    sig.value = value_type(v)
     sleep(1)
   print('Setting signal to zero')
   v[:] = 0.0
-  sig.value = tuple(v)
+  sig.value = value_type(v)
 
 
 def smoothly_set_signal(sig, final_value, duration=5.0, steps=500, prints=10):
+  value_type = type(sig.value)
   v = np.array(sig.value)
   vf = np.array(final_value)
   for i in range(steps+1):
     alpha = 1.0*i/steps
-    sig.value = tuple(vf*alpha+(1-alpha)*v)
+    sig.value = value_type(np.array(vf*alpha+(1-alpha)*v))
     sleep(1.0*duration/steps)
   print('Signal set')
-  sig.value = tuple(final_value)
+  sig.value = value_type(vf)
 
 
 def monitor_tracking_error(sig, sigRef, dt, time):

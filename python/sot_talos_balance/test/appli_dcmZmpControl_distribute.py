@@ -72,6 +72,12 @@ plug(robot.waistTrajGen.x, robot.waistMix.signal("sin2"))
 robot.waistToMatrix = PoseRollPitchYawToMatrixHomo('w2m')
 plug(robot.waistMix.sout, robot.waistToMatrix.sin)
 
+# --- Rho
+robot.rhoTrajGen = create_scalar_trajectory_generator(dt, 0.5, 'rhoTrajGen')
+robot.rhoScalar = Component_of_vector("rho_scalar")
+robot.rhoScalar.setIndex(0)
+plug(robot.rhoTrajGen.x, robot.rhoScalar.sin)
+
 # --- Interface with controller entities
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
@@ -189,6 +195,7 @@ Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 distribute = create_distribute_wrench(base_estimator_conf)
 plug(robot.e2q.quaternion, distribute.q)
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
+plug(robot.rhoScalar.sout, distribute.rho)
 distribute.init(robot_name)
 robot.distribute = distribute
 

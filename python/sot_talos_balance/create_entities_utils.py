@@ -79,13 +79,19 @@ def create_extend_mix(n_in, n_out):
 
     return mix_of_vector
 
+def create_scalar_trajectory_generator(dt, init_value, name):
+    trajGen = NdTrajectoryGenerator(name)
+    trajGen.initial_value.value = [init_value]
+    trajGen.trigger.value = 1.0
+    trajGen.init(dt, 1)
+    return trajGen
+
 def create_joint_trajectory_generator(dt, robot):
     jtg = NdTrajectoryGenerator("jtg")
     jtg.initial_value.value = robot.device.state.value[6:]
     jtg.trigger.value = 1.0
     jtg.init(dt, N_JOINTS)
     return jtg
-
 
 def create_config_trajectory_generator(dt, robot):
     N_CONFIG = N_JOINTS + 6
@@ -94,7 +100,6 @@ def create_config_trajectory_generator(dt, robot):
     jtg.trigger.value = 1.0
     jtg.init(dt, N_CONFIG)
     return jtg
-
 
 def create_com_trajectory_generator(dt, robot):
     comTrajGen = NdTrajectoryGenerator("comTrajGen")
