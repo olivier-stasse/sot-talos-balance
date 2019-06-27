@@ -15,6 +15,7 @@ from dynamic_graph.sot.core.operator import Selec_of_vector
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 from dynamic_graph.tracer_real_time import TracerRealTime
+from dynamic_graph.ros import RosSubscribe, RosPublish
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 
 # Other
@@ -36,7 +37,7 @@ omega = sqrt(g/h)
 
 kSat = 10.0
 qLimSat = [pi/6]
-dqLimSat = [0.1]
+dqLimSat = [0.004]
 
 # --- Parameter server
 robot.paramServer = create_parameter_server(paramServerConfig, timeStep)
@@ -189,11 +190,12 @@ RightRollJoint = 11
 LeftPitchJoint = 4
 LeftRollJoint = 5
 
-Kp = [0.0005]
+KpRoll = [0.0001]
+KpPitch = [0.0001]
 
 # --- RIGHT ANKLE PITCH
 controller = SimpleAdmittanceController("rightPitchAnkleController")
-controller.Kp.value = Kp
+controller.Kp.value = KpPitch
 
 robot.stateselecRP = Selec_of_vector("stateselecRP")
 robot.stateselecRP.selec(RightPitchJoint+6, RightPitchJoint+7)
@@ -230,7 +232,7 @@ plug(robot.rightPitchSaturation.yOut, robot.rightAnklePitchTask.featureDes.error
 
 # --- RIGHT ANKLE ROLL
 controller = SimpleAdmittanceController("rightRollAnkleController")
-controller.Kp.value = Kp
+controller.Kp.value = KpRoll
 
 robot.stateselecRR = Selec_of_vector("stateselecRR")
 robot.stateselecRR.selec(RightRollJoint+6, RightRollJoint+7)
@@ -267,7 +269,7 @@ plug(robot.rightRollSaturation.yOut, robot.rightAnkleRollTask.featureDes.errordo
 
 # --- LEFT ANKLE PITCH
 controller = SimpleAdmittanceController("leftPitchAnkleController")
-controller.Kp.value = Kp
+controller.Kp.value = KpPitch
 
 robot.stateselecLP = Selec_of_vector("stateselecLP")
 robot.stateselecLP.selec(LeftPitchJoint+6, LeftPitchJoint+7)
@@ -304,7 +306,7 @@ plug(robot.leftPitchSaturation.yOut, robot.leftAnklePitchTask.featureDes.errordo
 
 # --- LEFT ANKLE ROLL
 controller = SimpleAdmittanceController("leftRollAnkleController")
-controller.Kp.value = Kp
+controller.Kp.value = KpRoll
 
 robot.stateselecLR = Selec_of_vector("stateselecLP")
 robot.stateselecLR.selec(LeftRollJoint+6, LeftRollJoint+7)
@@ -371,15 +373,45 @@ robot.taskCom.feature.selec.value = '100'
 # --- SOT
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
-# plug(robot.sot.control, robot.controlManager.ctrl_sot_input)
-# plug(robot.controlManager.u_safe, robot.device.control)
-plug(robot.sot.control,robot.device.control)
-
-# robot.sot.push(robot.rightAnklePitchTask.task.name)
-# robot.sot.push(robot.rightAnkleRollTask.task.name)
-# robot.sot.push(robot.leftAnklePitchTask.task.name)
-# robot.sot.push(robot.leftAnkleRollTask.task.name)
-# robot.sot.push(robot.taskCom.task.name)
-# robot.sot.push(robot.taskPosture.name)
+plug(robot.sot.control, robot.controlManager.ctrl_sot_input)
+plug(robot.controlManager.u_safe, robot.device.control)
 
 robot.device.control.recompute(0)
+
+# -------------------------- PLOTS --------------------------
+# --- ROS PUBLISHER
+robot.publisher = create_rospublish(robot, 'robot_publisher')        
+
+create_topic(robot.publisher, robot.rightPitchSaturation, 'yOut', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.rightRollSaturation, 'yOut', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.leftPitchSaturation, 'yOut', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.leftRollSaturation, 'yOut', robot = robot, data_type='vector')
+
+create_topic(robot.publisher, robot.rightPitchAnkleController, 'tau', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.rightRollAnkleController, 'tau', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.leftPitchAnkleController, 'tau', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.leftRollAnkleController, 'tau', robot = robot, data_type='vector')
+
+create_topic(robot.publisher, robot.rightPitchAnkleController, 'tauDes', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.rightRollAnkleController, 'tauDes', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.leftPitchAnkleController, 'tauDes', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.leftRollAnkleController, 'tauDes', robot = robot, data_type='vector')
+
+
+# # --- ROS SUBSCRIBER
+robot.subscriber = RosSubscribe("ankle_joint_subscriber")
+
+robot.subscriber.add("vector", "dqRefRP", "/sot/rightPitchSaturation/yOut")
+robot.subscriber.add("vector", "dqRefRR", "/sot/rightRollSaturation/yOut")
+robot.subscriber.add("vector", "dqRefLP", "/sot/leftPitchSaturation/yOut")
+robot.subscriber.add("vector", "dqRefLR", "/sot/leftRollSaturation/yOut")
+
+robot.subscriber.add("vector", "tauRP", "/sot/rightPitchAnkleController/tau")
+robot.subscriber.add("vector", "tauRR", "/sot/rightRollAnkleController/tau")
+robot.subscriber.add("vector", "tauLP", "/sot/leftPitchAnkleController/tau")
+robot.subscriber.add("vector", "tauLR", "/sot/leftRollAnkleController/tau")
+
+robot.subscriber.add("vector", "tauDesRP", "/sot/rightPitchAnkleController/tauDes")
+robot.subscriber.add("vector", "tauDesRR", "/sot/rightRollAnkleController/tauDes")
+robot.subscriber.add("vector", "tauDesLP", "/sot/leftPitchAnkleController/tauDes")
+robot.subscriber.add("vector", "tauDesLR", "/sot/leftRollAnkleController/tauDes")
