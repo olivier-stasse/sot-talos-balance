@@ -11,7 +11,7 @@ from sot_talos_balance.create_entities_utils import *
 # From Dynamic Graph
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom
 from dynamic_graph.sot.core import Task, FeaturePosture
-from dynamic_graph.sot.core.operator import Selec_of_vector
+from dynamic_graph.sot.core.operator import Selec_of_vector, Multiply_double_vector
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 from dynamic_graph.tracer_real_time import TracerRealTime
@@ -36,8 +36,8 @@ g = 9.81
 omega = sqrt(g/h)
 
 kSat = 10.0
-qLimSat = [pi/6]
-dqLimSat = [0.004]
+qLimSat = [pi]
+dqLimSat = [10.]
 
 # --- Parameter server
 robot.paramServer = create_parameter_server(paramServerConfig, timeStep)
@@ -215,6 +215,11 @@ robot.rightPitchAnkleController = controller
 robot.rightPitchSelec = Selec_of_vector("rightPitchSelec")
 robot.rightPitchSelec.selec(4, 5)
 plug(robot.wrenchDistributor.ankleWrenchRight, robot.rightPitchSelec.sin)
+
+# robot.multRP = Multiply_double_vector("multRP")
+# robot.multRP.sin1.value = 1.0;
+# plug(robot.rightPitchSelec.sout, robot.multRP.sin2)
+# plug(robot.multRP.sout, robot.rightPitchAnkleController.tauDes)
 plug(robot.rightPitchSelec.sout, robot.rightPitchAnkleController.tauDes)
 
 robot.rightPitchSaturation = Saturation("rightPitchSaturation")
@@ -252,6 +257,11 @@ robot.rightRollAnkleController = controller
 robot.rightRollSelec = Selec_of_vector("rightRollSelec")
 robot.rightRollSelec.selec(3, 4)
 plug(robot.wrenchDistributor.ankleWrenchRight, robot.rightRollSelec.sin)
+
+# robot.multRR = Multiply_double_vector("multRR")
+# robot.multRR.sin1.value = 1.0;
+# plug(robot.rightRollSelec.sout, robot.multRR.sin2)
+# plug(robot.multRR.sout, robot.rightRollAnkleController.tauDes)
 plug(robot.rightRollSelec.sout, robot.rightRollAnkleController.tauDes)
 
 robot.rightRollSaturation = Saturation("rightRollSaturation")
@@ -289,7 +299,13 @@ robot.leftPitchAnkleController = controller
 robot.leftPitchSelec = Selec_of_vector("leftPitchSelec")
 robot.leftPitchSelec.selec(4, 5)
 plug(robot.wrenchDistributor.ankleWrenchLeft, robot.leftPitchSelec.sin)
+
+# robot.multLP = Multiply_double_vector("multLP")
+# robot.multLP.sin1.value = 1.0;
+# plug(robot.leftPitchSelec.sout, robot.multLP.sin2)
+# plug(robot.multLP.sout, robot.leftPitchAnkleController.tauDes)
 plug(robot.leftPitchSelec.sout, robot.leftPitchAnkleController.tauDes)
+
 
 robot.leftPitchSaturation = Saturation("leftPitchSaturation")
 plug(robot.stateselecLP.sout, robot.leftPitchSaturation.x)
@@ -326,6 +342,12 @@ robot.leftRollAnkleController = controller
 robot.leftRollSelec = Selec_of_vector("leftRollSelec")
 robot.leftRollSelec.selec(3, 4)
 plug(robot.wrenchDistributor.ankleWrenchLeft, robot.leftRollSelec.sin)
+plug(robot.leftRollSelec.sout, robot.leftRollAnkleController.tauDes)
+
+# robot.multLR = Multiply_double_vector("multLR")
+# robot.multLR.sin1.value = 1.0;
+# plug(robot.leftRollSelec.sout, robot.multLR.sin2)
+# plug(robot.multLR.sout, robot.leftRollAnkleController.tauDes)
 plug(robot.leftRollSelec.sout, robot.leftRollAnkleController.tauDes)
 
 robot.leftRollSaturation = Saturation("leftRollSaturation")
