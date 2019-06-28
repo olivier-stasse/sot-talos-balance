@@ -78,13 +78,16 @@ namespace dynamicgraph
 
       DEFINE_SIGNAL_OUT_FUNCTION(q, dynamicgraph::Vector)
       {
+        const dynamicgraph::Vector & input = m_q_inSIN(iter);
+        const size_t sz = input.size();
+        if((size_t)(s.size())!=sz)
+            s.resize(sz);
+
         getProfiler().start(PROFILE_STATETRANSFORMATION_Q_COMPUTATION);
 
         const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
 
         // convert q base to homogeneous matrix
-        const dynamicgraph::Vector & input = m_q_inSIN(iter);
-
         const Eigen::Vector3d & euler = input.segment<3>(3);
 
         const double roll  = euler[0];
@@ -104,9 +107,6 @@ namespace dynamicgraph
         MatrixHomogeneous res = referenceFrame*M;
 
         // Write the result
-        size_t sz = input.size();
-        s.resize(sz);
-
         s.head<3>() = res.translation();
 
         s.segment<3>(3) = res.linear().eulerAngles(2, 1, 0).reverse();
@@ -121,17 +121,16 @@ namespace dynamicgraph
 
       DEFINE_SIGNAL_OUT_FUNCTION(v, dynamicgraph::Vector)
       {
+        const dynamicgraph::Vector & input = m_v_inSIN(iter);
+        const size_t sz = input.size();
+        if((size_t)(s.size())!=sz)
+            s.resize(sz);
+
         getProfiler().start(PROFILE_STATETRANSFORMATION_V_COMPUTATION);
 
-        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
-
-        // Retrieve the input
-        const dynamicgraph::Vector & input = m_v_inSIN(iter);
+        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);        
 
         // Write the result
-        size_t sz = input.size();
-        s.resize(sz);
-
         s.head<3>() = referenceFrame.linear() * input.head<3>();
 
         s.segment<3>(3) = referenceFrame.linear() * input.segment<3>(3);
