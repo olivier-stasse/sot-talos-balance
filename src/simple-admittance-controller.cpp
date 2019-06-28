@@ -107,6 +107,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dqRef before initialization!");
           return s;
         }
+        if(s.size()!=m_n)
+          s.resize(m_n);
 
         getProfiler().start(PROFILE_SIMPLE_ADMITTANCECONTROLLER_DQREF_COMPUTATION);
 
@@ -118,9 +120,7 @@ namespace dynamicgraph
         assert(tauDes.size()==m_n && "Unexpected size of signal tauDes");
         assert(Kp.size()==m_n     && "Unexpected size of signal Kp");
 
-        const Vector & dqRef = Kp.cwiseProduct(tauDes-tau);
-
-        s = dqRef;
+        s = Kp.cwiseProduct(tauDes-tau);
 
         getProfiler().stop(PROFILE_SIMPLE_ADMITTANCECONTROLLER_DQREF_COMPUTATION);
 
@@ -134,6 +134,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal qRef before initialization!");
           return s;
         }
+        if(s.size()!=m_n)
+          s.resize(m_n);
 
         getProfiler().start(PROFILE_SIMPLE_ADMITTANCECONTROLLER_QREF_COMPUTATION);
 
