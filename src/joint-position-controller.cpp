@@ -94,6 +94,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dqRef before initialization!");
           return s;
         }
+        if(s.size()!=m_n)
+          s.resize(m_n);
 
         getProfiler().start(PROFILE_JOINTPOSITIONCONTROLLER_DQREF_COMPUTATION);
 
@@ -107,9 +109,7 @@ namespace dynamicgraph
         assert(dqDes.size()==m_n   && "Unexpected size of signal dqDes");
         assert(Kp.size()==m_n      && "Unexpected size of signal Kp");
 
-        const Vector & q = state.tail(m_n);
-
-        s = dqDes + Kp.cwiseProduct(qDes-q);
+        s = dqDes + Kp.cwiseProduct(qDes - state.tail(m_n));
 
         getProfiler().stop(PROFILE_JOINTPOSITIONCONTROLLER_DQREF_COMPUTATION);
 
