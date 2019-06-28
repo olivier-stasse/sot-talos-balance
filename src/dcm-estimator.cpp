@@ -49,7 +49,7 @@ namespace dynamicgraph
         : Entity(name)
         ,CONSTRUCT_SIGNAL_IN( q,   dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_IN( v,   dynamicgraph::Vector)        
-        ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, m_qSIN)
+        ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, m_dcSOUT)
         ,CONSTRUCT_SIGNAL_OUT(dc,  dynamicgraph::Vector, m_qSIN << m_vSIN)
         ,m_data(pinocchio::Model())
       {
@@ -108,12 +108,12 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal com before initialization!");
           return s;
         }
-        const Vector & q = m_qSIN(iter);
-        pinocchio::centerOfMass(m_model,m_data,q);
+        const Vector & dc = m_dcSOUT(iter);
+        (void) dc;
         s = m_data.com[0];
         return s;
       }
-      
+
       DEFINE_SIGNAL_OUT_FUNCTION(dc, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
@@ -127,6 +127,7 @@ namespace dynamicgraph
         s = m_data.vcom[0];
         return s;
       }
+
       void DcmEstimator::display(std::ostream& os) const
       {
         os << "DcmEstimator " << getName();
