@@ -150,6 +150,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal stateRef before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_STATEREF_COMPUTATION);
 
@@ -176,12 +178,14 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcomRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_COMREF_COMPUTATION);
 
         const Vector & stateRef = m_stateRefSINNER(iter);
 
-        assert(stateRef.size()==3 && "Unexpected size of signal stateRef");
+        assert(stateRef.size()==6 && "Unexpected size of signal stateRef");
 
         s = stateRef.head<3>();
 
@@ -197,12 +201,14 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcomRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_DCOMREF_COMPUTATION);
 
         const Vector & stateRef = m_stateRefSINNER(iter);
 
-        assert(stateRef.size()==3 && "Unexpected size of signal stateRef");
+        assert(stateRef.size()==6 && "Unexpected size of signal stateRef");
 
         s = stateRef.tail<3>();
 
