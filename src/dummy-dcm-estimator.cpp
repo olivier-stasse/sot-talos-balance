@@ -91,6 +91,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal com_dcom before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_DUMMYDCMESTIMATOR_DCM_COMPUTATION);
 
