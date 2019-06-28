@@ -82,10 +82,6 @@ namespace dynamicgraph
 
           pinocchio::urdf::buildModel(m_robot_util->m_urdf_filename,
                                 pinocchio::JointModelFreeFlyer(), m_model);
-
-          assert(m_model.existFrame(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name));
-          assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
-          assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
         }
         catch (const std::exception& e)
         {
@@ -108,6 +104,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal com before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
         const Vector & dc = m_dcSOUT(iter);
         (void) dc;
         s = m_data.com[0];
@@ -121,6 +119,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcom before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
         const Vector & q = m_qSIN(iter);
         const Vector & v = m_vSIN(iter);
         pinocchio::centerOfMass(m_model,m_data,q,v);
