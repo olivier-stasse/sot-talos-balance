@@ -102,9 +102,9 @@ namespace dynamicgraph
         assert( com.size()==3 && "Unexpected size of signal com" );
         assert( (momenta.size()==3 || momenta.size()==6) && "Unexpected size of signal momenta" );
 
-        const Vector dcom = momenta.head<3>()/mass;
+        const Eigen::Vector3d dcom = momenta.head<3>()/mass;
 
-        const Vector dcm = com + dcom/omega;
+        const Eigen::Vector3d dcm = com + dcom/omega;
 
         s = dcm;
 
