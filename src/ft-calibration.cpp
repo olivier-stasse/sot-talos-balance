@@ -109,7 +109,7 @@ namespace dynamicgraph
           return s;
         }
         const Vector & right_foot_force = m_right_foot_force_inSIN(iter);
-        assert(right_foot_force_in.size() == 6  && "Unexpected size of signal right_foot_force_in, should be 6.");
+        assert(right_foot_force.size() == 6  && "Unexpected size of signal right_foot_force_in, should be 6.");
         
         //do offset calibration if needed
         if (m_right_calibration_iter > 0)
@@ -136,7 +136,7 @@ namespace dynamicgraph
           return s;
         }
         const Vector & left_foot_force = m_left_foot_force_inSIN(iter);
-        assert(left_foot_force_in.size() == 6  && "Unexpected size of signal left_foot_force_in, should be 6.");
+        assert(left_foot_force.size() == 6  && "Unexpected size of signal left_foot_force_in, should be 6.");
         
         //do offset calibration if needed
         if (m_left_calibration_iter > 0)

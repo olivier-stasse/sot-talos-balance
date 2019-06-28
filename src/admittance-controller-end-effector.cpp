@@ -188,7 +188,7 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_dq, dynamicgraph::Vector)
   const Vector &Kp = m_KpSIN(iter);
   const Vector &Kd = m_KdSIN(iter);
   const Vector &dqSaturation = m_dqSaturationSIN(iter);
-  assert(force.size() == m_n && "Unexpected size of signal force");
+  assert(w_force.size() == m_n && "Unexpected size of signal force");
   assert(w_forceDes.size() == m_n && "Unexpected size of signal w_forceDes");
   assert(Kp.size() == m_n && "Unexpected size of signal Kp");
   assert(Kd.size() == m_n && "Unexpected size of signal Kd");
