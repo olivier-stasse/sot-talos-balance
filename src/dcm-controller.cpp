@@ -117,6 +117,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal zmpRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_DCMCONTROLLER_ZMPREF_COMPUTATION);
 
@@ -135,9 +137,9 @@ namespace dynamicgraph
         assert(dcmDes.size()==3 && "Unexpected size of signal dcmDes");
         assert(zmpDes.size()==3 && "Unexpected size of signal zmpDes");
 
-        Vector dcmError = dcmDes - dcm;
+        const Eigen::Vector3d dcmError = dcmDes - dcm;
 
-        Vector zmpRef = zmpDes - (Vector::Constant(3,1,1.0) + Kp/omega).cwiseProduct(dcmError) - Ki.cwiseProduct(m_dcmIntegralError)/omega;
+        Eigen::Vector3d zmpRef = zmpDes - (Eigen::Vector3d::Constant(1.0) + Kp/omega).cwiseProduct(dcmError) - Ki.cwiseProduct(m_dcmIntegralError)/omega;
         zmpRef[2] = 0.0; // maybe needs better way
 
         // update the integrator (AFTER using its value)
@@ -157,6 +159,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal wrenchRef before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         getProfiler().start(PROFILE_DCMCONTROLLER_WRENCHREF_COMPUTATION);
 
@@ -171,9 +175,9 @@ namespace dynamicgraph
         Eigen::Vector3d forceRef = mass*omega*omega*(com-zmpRef);
         forceRef[2] = mass*9.81; // maybe needs better way
 
-        Vector wrenchRef(6);
+        Eigen::Matrix<double,6,1> wrenchRef;
         wrenchRef.head<3>() = forceRef;
-        Eigen::Vector3d com3 = com;
+        const Eigen::Vector3d com3 = com;
         wrenchRef.tail<3>() = com3.cross(forceRef);
 
         s = wrenchRef;

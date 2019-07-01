@@ -118,6 +118,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal ddcomRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_DCMCOMCONTROLLER_DDCOMREF_COMPUTATION);
 
@@ -136,9 +138,9 @@ namespace dynamicgraph
         assert(dcmDes.size()==3   && "Unexpected size of signal dcmDes");
         assert(ddcomDes.size()==3 && "Unexpected size of signal ddcomDes");
 
-        Vector dcmError = dcmDes - dcm;
+        const Eigen::Vector3d dcmError = dcmDes - dcm;
 
-        Vector ddcomRef = ddcomDes + omega * Kp.cwiseProduct(dcmError) + omega * Ki.cwiseProduct(m_dcmIntegralError);
+        const Eigen::Vector3d ddcomRef = ddcomDes + omega * Kp.cwiseProduct(dcmError) + omega * Ki.cwiseProduct(m_dcmIntegralError);
 
         // update the integrator (AFTER using its value)
         m_dcmIntegralError += ( dcmError - decayFactor*m_dcmIntegralError ) * m_dt;
@@ -157,6 +159,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal zmpRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_DCMCOMCONTROLLER_ZMPREF_COMPUTATION);
 
@@ -167,7 +171,7 @@ namespace dynamicgraph
 
         assert(comDes.size()==3 && "Unexpected size of signal comDes");
 
-        Vector zmpRef = comDes - ddcomRef/(omega*omega);
+        Eigen::Vector3d zmpRef = comDes - ddcomRef/(omega*omega);
         zmpRef[2] = 0.0; // maybe needs better way
 
         s = zmpRef;
@@ -184,6 +188,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal wrenchRef before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         getProfiler().start(PROFILE_DCMCOMCONTROLLER_WRENCHREF_COMPUTATION);
 
@@ -194,14 +200,14 @@ namespace dynamicgraph
 
         assert(comDes.size()==3 && "Unexpected size of signal comDes");
 
-        Vector gravity(3);
+        Eigen::Vector3d gravity;
         gravity << 0.0, 0.0, -9.81;
 
-        Vector forceRef = mass * ( ddcomRef - gravity );
+        const Eigen::Vector3d forceRef = mass * ( ddcomRef - gravity );
 
-        Vector wrenchRef(6);
+        Eigen::Matrix<double,6,1> wrenchRef;
         wrenchRef.head<3>() = forceRef;
-        Eigen::Vector3d comDes3 = comDes;
+        const Eigen::Vector3d comDes3 = comDes;
         wrenchRef.tail<3>() = comDes3.cross(wrenchRef.head<3>());
 
         s = wrenchRef;

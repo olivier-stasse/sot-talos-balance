@@ -92,7 +92,7 @@ namespace dynamicgraph
       /* --- SIGNALS ------------------------------------------------------- */
       /* ------------------------------------------------------------------- */
 
-      dynamicgraph::Vector
+      Eigen::Vector3d
       SimpleZmpEstimator::computeCoP(const dg::Vector & wrench, const MatrixHomogeneous & pose) const
       {
         const double h = pose(2,3);
@@ -116,12 +116,12 @@ namespace dynamicgraph
         }
         const double pz = - h;
 
-        dg::Vector copLocal(3);
+        Eigen::Vector3d copLocal;
         copLocal[0] = px;
         copLocal[1] = py;
         copLocal[2] = pz;
 
-        dg::Vector cop = pose.linear()*copLocal + pose.translation();
+        Eigen::Vector3d cop = pose.linear()*copLocal + pose.translation();
 
         return cop;
       }
@@ -133,6 +133,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal copLeft before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_SIMPLEZMPESTIMATOR_COPLEFT_COMPUTATION);
 
@@ -155,6 +157,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal copRight before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_SIMPLEZMPESTIMATOR_COPRIGHT_COMPUTATION);
 
@@ -178,6 +182,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal zmp before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_SIMPLEZMPESTIMATOR_ZMP_COMPUTATION);
 

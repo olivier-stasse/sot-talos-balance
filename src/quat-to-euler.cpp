@@ -68,14 +68,14 @@ namespace dynamicgraph
 
       DEFINE_SIGNAL_OUT_FUNCTION(euler, dynamicgraph::Vector)
       {
+        const dynamicgraph::Vector & input = m_quaternionSIN(iter);
+        const size_t sz = input.size();
+        if((size_t)(s.size())!=(sz-1))
+          s.resize(sz-1);
+
         getProfiler().start(PROFILE_QUATTOEULER_COMPUTATION);
 
-        const dynamicgraph::Vector & input = m_quaternionSIN(iter);
-
         const Eigen::Map<const Eigen::Quaterniond> quat(input.segment<4>(3).data());
-
-        size_t sz = input.size();
-        s.resize(sz-1);
 
         s.head<3>() = input.head<3>();
 

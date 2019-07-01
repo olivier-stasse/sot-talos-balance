@@ -81,7 +81,7 @@ namespace dynamicgraph {
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
 
-        dynamicgraph::Vector computeCoP(const dynamicgraph::Vector & wrench, const MatrixHomogeneous & pose) const;
+        Eigen::Vector3d computeCoP(const dynamicgraph::Vector & wrench, const MatrixHomogeneous & pose) const;
 
       protected:
         bool m_initSucceeded;    /// true if the entity has been successfully initialized

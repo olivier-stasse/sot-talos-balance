@@ -1,4 +1,5 @@
 from __future__ import print_function
+from numpy.testing import assert_almost_equal as assertApprox
 from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController
 
 controller = SimpleAdmittanceController("ciao")
@@ -35,7 +36,7 @@ controller.setPosition(q)
 controller.qRef.recompute(0)
 
 print( "\nqRef: %s" % (controller.qRef.value,) )
-assert controller.qRef.value == q
+assertApprox(controller.qRef.value, q)
 
 tauDes = tuple(N_JOINTS*[1.0])
 controller.tauDes.value = tauDes

@@ -126,6 +126,7 @@ namespace dynamicgraph
         }
 
         const Eigen::VectorXd & q = m_qSIN(iter);
+
         assert(q.size()==m_model.nq     && "Unexpected size of signal q");
 
         getProfiler().start(PROFILE_SIMPLE_DISTRIBUTE_WRENCH_KINEMATICS_COMPUTATIONS);
@@ -151,6 +152,7 @@ namespace dynamicgraph
         const Eigen::VectorXd & wrenchDes = m_wrenchDesSIN(iter);
 
         double rho = m_rhoSIN.isPlugged() ? m_rhoSIN(iter) : 0.5;
+
         if(rho<rho_m)
           rho = rho_m;
         else if(rho>rho_M)
@@ -181,9 +183,13 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal wrenchLeft before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         m_wrenchesSINNER(iter);
+
         s = m_wrenchLeft;
+
         return s;
       }
 
@@ -194,9 +200,13 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal wrenchRight before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         m_wrenchesSINNER(iter);
+
         s = m_wrenchRight;
+
         return s;
       }
 
@@ -207,6 +217,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal wrenchRef before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
         const Eigen::VectorXd & wrenchRight = m_wrenchRightSOUT(iter);
@@ -223,6 +235,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal zmpRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         const Eigen::VectorXd & wrenchRef  = m_wrenchRefSOUT(iter);
 
@@ -247,7 +261,7 @@ namespace dynamicgraph
         }
         const double pz = 0.0;
 
-        dg::Vector zmp(3);
+        Eigen::Vector3d zmp;
         zmp[0] = px;
         zmp[1] = py;
         zmp[2] = pz;

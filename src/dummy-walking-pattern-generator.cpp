@@ -123,15 +123,15 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal comDes before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         const Vector & com = m_comSIN(iter);
         const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
         assert( com.size()==3 && "Unexpected size of signal com" );
 
-        const Vector comDes = actInv(referenceFrame, com);
-
-        s = comDes;
+        s = actInv(referenceFrame, com);
 
         return s;
       }
@@ -143,15 +143,15 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal vcomDes before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         const Vector & vcom = m_vcomSIN(iter);
         const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
         assert( vcom.size()==3 && "Unexpected size of signal vcom" );
 
-        const Vector vcomDes(referenceFrame.linear().transpose()*vcom);
-
-        s = vcomDes;
+        s = referenceFrame.linear().transpose()*vcom;
 
         return s;
       }
@@ -163,15 +163,15 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal acomDes before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         const Vector & acom = m_acomSIN(iter);
         const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
         assert( acom.size()==3 && "Unexpected size of signal acom" );
 
-        const Vector acomDes(referenceFrame.linear().transpose()*acom);
-
-        s = acomDes;
+        s = referenceFrame.linear().transpose()*acom;
 
         return s;
       }
@@ -183,14 +183,14 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcmDes before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         const double & omega = m_omegaSIN(iter);
         const Vector & comDes = m_comDesSOUT(iter);
         const Vector & vcomDes = m_vcomDesSOUT(iter);
 
-        const Vector dcmDes = comDes + vcomDes/omega;
-
-        s = dcmDes;
+        s = comDes + vcomDes/omega;
 
         return s;
       }
@@ -202,15 +202,16 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal zmpDes before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
-        Vector zmpDes;
+        Eigen::Vector3d zmpDes;
 
         if(m_zmpSIN.isPlugged())
         {
           const Vector & zmp = m_zmpSIN(iter);
           const MatrixHomogeneous & referenceFrame = m_rfSINNER(iter);
 
-          zmpDes.resize(3);
           zmpDes[0] = zmp[0];
           zmpDes[1] = zmp[1];
           zmpDes[2] = zmp.size()>2 ? zmp[2] : 0.;

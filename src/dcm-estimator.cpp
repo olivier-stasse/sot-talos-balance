@@ -49,7 +49,7 @@ namespace dynamicgraph
         : Entity(name)
         ,CONSTRUCT_SIGNAL_IN( q,   dynamicgraph::Vector)
         ,CONSTRUCT_SIGNAL_IN( v,   dynamicgraph::Vector)        
-        ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, m_qSIN)
+        ,CONSTRUCT_SIGNAL_OUT(c,   dynamicgraph::Vector, m_dcSOUT)
         ,CONSTRUCT_SIGNAL_OUT(dc,  dynamicgraph::Vector, m_qSIN << m_vSIN)
         ,m_data(pinocchio::Model())
       {
@@ -82,10 +82,6 @@ namespace dynamicgraph
 
           pinocchio::urdf::buildModel(m_robot_util->m_urdf_filename,
                                 pinocchio::JointModelFreeFlyer(), m_model);
-
-          assert(m_model.existFrame(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name));
-          assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
-          assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
         }
         catch (const std::exception& e)
         {
@@ -108,12 +104,14 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal com before initialization!");
           return s;
         }
-        const Vector & q = m_qSIN(iter);
-        pinocchio::centerOfMass(m_model,m_data,q);
+        if(s.size()!=3)
+          s.resize(3);
+        const Vector & dc = m_dcSOUT(iter);
+        (void) dc;
         s = m_data.com[0];
         return s;
       }
-      
+
       DEFINE_SIGNAL_OUT_FUNCTION(dc, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
@@ -121,12 +119,15 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcom before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
         const Vector & q = m_qSIN(iter);
         const Vector & v = m_vSIN(iter);
         pinocchio::centerOfMass(m_model,m_data,q,v);
         s = m_data.vcom[0];
         return s;
       }
+
       void DcmEstimator::display(std::ostream& os) const
       {
         os << "DcmEstimator " << getName();

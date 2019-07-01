@@ -121,6 +121,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal ddcomRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_DDCOMREF_COMPUTATION);
 
@@ -134,9 +136,7 @@ namespace dynamicgraph
         assert(zmpDes.size()==3   && "Unexpected size of signal zmpDes");
         assert(Kp.size()==3       && "Unexpected size of signal Kp");
 
-        const Vector & ddcomRef = ddcomDes + Kp.cwiseProduct(zmp-zmpDes);
-
-        s = ddcomRef;
+        s = ddcomDes + Kp.cwiseProduct(zmp-zmpDes);
 
         getProfiler().stop(PROFILE_COMADMITTANCECONTROLLER_DDCOMREF_COMPUTATION);
 
@@ -150,6 +150,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal stateRef before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_STATEREF_COMPUTATION);
 
@@ -157,7 +159,7 @@ namespace dynamicgraph
 
         assert(ddcomRef.size()==3 && "Unexpected size of signal ddcomRef");
 
-        const Vector & dcomRef = m_state.tail<3>();
+        const Eigen::Vector3d dcomRef = m_state.tail<3>();
 
         m_state.head<3>() +=  dcomRef*m_dt + 0.5*ddcomRef*m_dt*m_dt;
         m_state.tail<3>() += ddcomRef*m_dt;
@@ -176,12 +178,14 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcomRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_COMREF_COMPUTATION);
 
         const Vector & stateRef = m_stateRefSINNER(iter);
 
-        assert(stateRef.size()==3 && "Unexpected size of signal stateRef");
+        assert(stateRef.size()==6 && "Unexpected size of signal stateRef");
 
         s = stateRef.head<3>();
 
@@ -197,12 +201,14 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal dcomRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_COMADMITTANCECONTROLLER_DCOMREF_COMPUTATION);
 
         const Vector & stateRef = m_stateRefSINNER(iter);
 
-        assert(stateRef.size()==3 && "Unexpected size of signal stateRef");
+        assert(stateRef.size()==6 && "Unexpected size of signal stateRef");
 
         s = stateRef.tail<3>();
 

@@ -152,6 +152,8 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_force, dynamicgraph::Vector)
     SEND_WARNING_STREAM_MSG("Cannot compute signal w_force before initialization!");
     return s;
   }
+  if(s.size()!=6)
+    s.resize(6);
 
   getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WFORCE_COMPUTATION);
 
@@ -164,9 +166,7 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_force, dynamicgraph::Vector)
   pinocchio::framesForwardKinematics(m_model, *m_data, q);
   pinocchio::SE3 sensorPlacement = m_data->oMf[m_sensorFrameId];
 
-  Vector w_force = sensorPlacement.act(pinocchio::Force(force)).toVector();
-
-  s = w_force;
+  s = sensorPlacement.act(pinocchio::Force(force)).toVector();
 
   getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WFORCE_COMPUTATION);
 
@@ -180,6 +180,8 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_dq, dynamicgraph::Vector)
     SEND_WARNING_STREAM_MSG("Cannot compute signal w_dq before initialization!");
     return s;
   }
+  if(s.size()!=6)
+    s.resize(6);
 
   getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_WDQ_COMPUTATION);
 
@@ -188,7 +190,7 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_dq, dynamicgraph::Vector)
   const Vector &Kp = m_KpSIN(iter);
   const Vector &Kd = m_KdSIN(iter);
   const Vector &dqSaturation = m_dqSaturationSIN(iter);
-  assert(force.size() == m_n && "Unexpected size of signal force");
+  assert(w_force.size() == m_n && "Unexpected size of signal force");
   assert(w_forceDes.size() == m_n && "Unexpected size of signal w_forceDes");
   assert(Kp.size() == m_n && "Unexpected size of signal Kp");
   assert(Kd.size() == m_n && "Unexpected size of signal Kd");
@@ -218,6 +220,8 @@ DEFINE_SIGNAL_OUT_FUNCTION(dq, dynamicgraph::Vector)
     SEND_WARNING_STREAM_MSG("Cannot compute signal dq before initialization!");
     return s;
   }
+  if(s.size()!=6)
+    s.resize(6);
 
   getProfiler().start(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQ_COMPUTATION);
 
@@ -227,16 +231,14 @@ DEFINE_SIGNAL_OUT_FUNCTION(dq, dynamicgraph::Vector)
   // Get endEffectorPlacement
   pinocchio::SE3 placement = m_data->oMi[m_endEffectorId];
 
-  Vector velocity = placement.actInv(pinocchio::Motion(w_dq)).toVector();
-
-  s = velocity;
+  s = placement.actInv(pinocchio::Motion(w_dq)).toVector();
 
   getProfiler().stop(PROFILE_ADMITTANCECONTROLLERENDEFFECTOR_DQ_COMPUTATION);
 
   return s;
 }
 
-/* --- COMMANDS ------------s---------------------------------------------- */
+/* --- COMMANDS ---------------------------------------------------------- */
 
 /* ------------------------------------------------------------------- */
 /* --- ENTITY -------------------------------------------------------- */

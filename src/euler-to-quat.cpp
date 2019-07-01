@@ -68,9 +68,12 @@ namespace dynamicgraph
 
       DEFINE_SIGNAL_OUT_FUNCTION(quaternion, dynamicgraph::Vector)
       {
-        getProfiler().start(PROFILE_EULERTOQUAT_COMPUTATION);
-
         const dynamicgraph::Vector & input = m_eulerSIN(iter);
+        const size_t sz = input.size();
+        if((size_t)(s.size())!=(sz+1))
+          s.resize(sz+1);
+
+        getProfiler().start(PROFILE_EULERTOQUAT_COMPUTATION);
 
         const Eigen::Vector3d & euler = input.segment<3>(3);
 
@@ -82,9 +85,6 @@ namespace dynamicgraph
         quat = Eigen::AngleAxisd(yaw,   Eigen::Vector3d::UnitZ())
              * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY())
              * Eigen::AngleAxisd(roll,  Eigen::Vector3d::UnitX());
-
-        size_t sz = input.size();
-        s.resize(sz+1);
 
         s.head<3>() = input.head<3>();
 

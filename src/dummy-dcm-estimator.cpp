@@ -91,6 +91,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal com_dcom before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         getProfiler().start(PROFILE_DUMMYDCMESTIMATOR_DCM_COMPUTATION);
 
@@ -102,9 +104,9 @@ namespace dynamicgraph
         assert( com.size()==3 && "Unexpected size of signal com" );
         assert( (momenta.size()==3 || momenta.size()==6) && "Unexpected size of signal momenta" );
 
-        const Vector dcom = momenta.head<3>()/mass;
+        const Eigen::Vector3d dcom = momenta.head<3>()/mass;
 
-        const Vector dcm = com + dcom/omega;
+        const Eigen::Vector3d dcm = com + dcom/omega;
 
         s = dcm;
 
