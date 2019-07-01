@@ -87,6 +87,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Can't compute dqRef before initialization!");
           return s;
         }
+        if(s.size()!=2)
+          s.resize(2);
 
         getProfiler().start(PROFILE_ANKLEADMITTANCECONTROLLER_DRP_COMPUTATION);
 
@@ -98,11 +100,11 @@ namespace dynamicgraph
         assert(wrench.size() == 6   && "Unexpected size of signal wrench");
         assert(gainsXY.size() == 2  && "Unexpected size of signal gainsXY");
 
-        const Vector & error = pRef.cross(wrench.head<3>()) - wrench.tail<3>();
+        const Eigen::Vector3d error = pRef.cross(wrench.head<3>()) - wrench.tail<3>();
         Eigen::Vector2d dRP;
 
-        dRP[0] = gainsXY[1] * error[0];
-        dRP[1] = gainsXY[0] * error[1];
+        dRP[0] = gainsXY[0] * error[0];
+        dRP[1] = gainsXY[1] * error[1];
 
         s = dRP;
 
