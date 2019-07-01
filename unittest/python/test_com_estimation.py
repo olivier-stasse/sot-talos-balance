@@ -111,6 +111,9 @@ base_estimator.set_left_foot_sizes(conf.LEFT_FOOT_SIZES)
 base_estimator.q.recompute(0)
 print(base_estimator.q.value)
 print(len(base_estimator.q.value))
+base_estimator.v.recompute(0)
+print(base_estimator.v.value)
+print(len(base_estimator.v.value))
 
 # --- Conversion ---
 print("--- Conversion ---")

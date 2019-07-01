@@ -94,8 +94,8 @@ namespace dynamicgraph {
         pinocchio::Data  m_data;        /// Pinocchio robot data
         RobotUtilShrPtr  m_robot_util;
 
-        dynamicgraph::Vector m_wrenchLeft;
-        dynamicgraph::Vector m_wrenchRight;
+        Eigen::Matrix<double,6,1> m_wrenchLeft;
+        Eigen::Matrix<double,6,1> m_wrenchRight;
       }; // class SimpleDistributeWrench
 
     }    // namespace talos_balance

@@ -134,6 +134,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal rightWeight before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
             
         const Vector &q = m_qSIN(iter);
         assert(q.size() == m_model.nq && "Unexpected size of signal q");
@@ -142,12 +144,12 @@ namespace dynamicgraph
         pinocchio::framesForwardKinematics(m_model, *m_data, q);
         const pinocchio::SE3 &sensorPlacement = m_data->oMf[m_rightSensorId];
 
-        Vector leverArm = sensorPlacement.rotation() * m_rightLeverArm;
+        Eigen::Vector3d leverArm = sensorPlacement.rotation() * m_rightLeverArm;
 
         m_rightHandWeight[3] =  leverArm(1)*m_rightHandWeight(2);
         m_rightHandWeight[4] = -leverArm(0)*m_rightHandWeight(2);
 
-        Vector weight(6);
+        Eigen::Matrix<double,6,1> weight;
         
         weight.head<3>() = sensorPlacement.rotation().transpose() * m_rightHandWeight.head<3>();
         weight.tail<3>() = sensorPlacement.rotation().transpose() * m_rightHandWeight.tail<3>();
@@ -164,6 +166,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal rightWeight before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
             
         const Vector &q = m_qSIN(iter);
         assert(q.size() == m_model.nq && "Unexpected size of signal q");
@@ -171,12 +175,12 @@ namespace dynamicgraph
         pinocchio::framesForwardKinematics(m_model, *m_data, q);
         const pinocchio::SE3 &sensorPlacement = m_data->oMf[m_leftSensorId];
 
-        Vector leverArm = sensorPlacement.rotation() * m_leftLeverArm;
+        Eigen::Vector3d leverArm = sensorPlacement.rotation() * m_leftLeverArm;
 
         m_leftHandWeight[3] =  leverArm(1) * m_leftHandWeight(2);
         m_leftHandWeight[4] = -leverArm(0) * m_leftHandWeight(2);
 
-        Vector weight(6);
+        Eigen::Matrix<double,6,1> weight;
         
         weight.head<3>() = sensorPlacement.rotation().transpose() * m_leftHandWeight.head<3>();
         weight.tail<3>() = sensorPlacement.rotation().transpose() * m_leftHandWeight.tail<3>();
@@ -193,6 +197,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal sum before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
         const Vector & rightWristForce = m_rightWristForceInSIN(iter);
         assert(rightWristForce.size() == 6  && "Unexpected size of signal rightWristForceIn, should be 6.");
         const Vector & rightWeight = m_rightWeightSINNER(iter);
@@ -229,6 +235,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal sum before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
         const Vector & leftWristForce = m_leftWristForceInSIN(iter);
         assert(leftWristForce.size() == 6  && "Unexpected size of signal leftWristForceIn, should be 6.");
         const Vector & leftWeight = m_leftWeightSINNER(iter);

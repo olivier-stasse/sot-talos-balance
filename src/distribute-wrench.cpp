@@ -72,8 +72,8 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(wNorm, double)
                       , CONSTRUCT_SIGNAL_IN(wRatio, double)
                       , CONSTRUCT_SIGNAL_IN(wAnkle, dynamicgraph::Vector)
-                      , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN << WEIGHT_SIGNALS)
-                      , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_rhoSIN << m_kinematics_computationsSINNER << m_phaseSIN)
+                      , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN)
+                      , CONSTRUCT_SIGNAL_INNER(qp_computations, int, m_wrenchDesSIN << m_rhoSIN << m_phaseSIN << WEIGHT_SIGNALS << m_kinematics_computationsSINNER)
                       , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_qp_computationsSINNER)
                       , CONSTRUCT_SIGNAL_OUT(ankleWrenchLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
                       , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
@@ -211,14 +211,10 @@ namespace dynamicgraph
            -Y,  -X, -(X + Y) * mu, -mu, -mu,  +1;
       }
 
-      dynamicgraph::Vector
+      Eigen::Vector3d
       DistributeWrench::computeCoP(const dg::Vector & wrenchGlobal, const pinocchio::SE3 & pose) const
       {
-//        std::cout << "++++++++++++" << std::endl;
-//        std::cout << wrenchGlobal.transpose() << std::endl;
         const pinocchio::Force::Vector6 & wrench = pose.actInv(pinocchio::Force(wrenchGlobal)).toVector();
-//        std::cout << wrench.transpose() << std::endl;
-//        std::cout << "------------" << std::endl;
 
         const double h = pose.translation()[2];
 
@@ -244,7 +240,7 @@ namespace dynamicgraph
         }
         const double pz = 0.0;
 
-        dg::Vector cop(3);
+        Eigen::Vector3d cop;
         cop[0] = px;
         cop[1] = py;
         cop[2] = pz;
@@ -456,6 +452,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal wrenchLeft before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         m_qp_computationsSINNER(iter);
         s = m_wrenchLeft;
@@ -469,6 +467,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal wrenchRight before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         m_qp_computationsSINNER(iter);
         s = m_wrenchRight;
@@ -482,6 +482,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal ankleWrenchLeft before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
 
@@ -497,6 +499,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal ankleWrenchRight before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
 
@@ -512,6 +516,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal copLeft before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
 
@@ -527,6 +533,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal copRight before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
 
@@ -542,6 +550,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal wrenchRef before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
         const Eigen::VectorXd & wrenchRight = m_wrenchRightSOUT(iter);
@@ -558,6 +568,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal zmpRef before initialization!");
           return s;
         }
+        if(s.size()!=3)
+          s.resize(3);
 
         const Eigen::VectorXd & wrenchRef  = m_wrenchRefSOUT(iter);
 

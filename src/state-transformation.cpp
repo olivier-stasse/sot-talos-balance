@@ -81,7 +81,7 @@ namespace dynamicgraph
         const dynamicgraph::Vector & input = m_q_inSIN(iter);
         const size_t sz = input.size();
         if((size_t)(s.size())!=sz)
-            s.resize(sz);
+          s.resize(sz);
 
         getProfiler().start(PROFILE_STATETRANSFORMATION_Q_COMPUTATION);
 
@@ -124,11 +124,11 @@ namespace dynamicgraph
         const dynamicgraph::Vector & input = m_v_inSIN(iter);
         const size_t sz = input.size();
         if((size_t)(s.size())!=sz)
-            s.resize(sz);
+          s.resize(sz);
 
         getProfiler().start(PROFILE_STATETRANSFORMATION_V_COMPUTATION);
 
-        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);        
+        const MatrixHomogeneous & referenceFrame = m_referenceFrameSIN(iter);
 
         // Write the result
         s.head<3>() = referenceFrame.linear() * input.head<3>();

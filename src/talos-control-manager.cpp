@@ -153,6 +153,7 @@ namespace dynamicgraph
 
         if(s.size()!=(Eigen::VectorXd::Index) m_numDofs)
           s.resize(m_numDofs);
+
         {
           // trigger computation of all ctrl inputs
           for(unsigned int i=0; i<m_ctrlInputsSIN.size(); i++)
@@ -215,6 +216,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal u_safe before initialization!");
           return s;
         }
+        if(s.size()!=(Eigen::VectorXd::Index) m_numDofs)
+          s.resize(m_numDofs);
 
         const dynamicgraph::Vector& u                      = m_uSOUT(iter);
         const dynamicgraph::Vector& ctrl_max               = m_u_maxSIN(iter);

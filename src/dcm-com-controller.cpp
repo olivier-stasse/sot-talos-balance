@@ -200,12 +200,12 @@ namespace dynamicgraph
 
         assert(comDes.size()==3 && "Unexpected size of signal comDes");
 
-        Eigen::Vector3d gravity(3);
+        Eigen::Vector3d gravity;
         gravity << 0.0, 0.0, -9.81;
 
         const Eigen::Vector3d forceRef = mass * ( ddcomRef - gravity );
 
-        Eigen::Matrix<double,6,1> wrenchRef(6);
+        Eigen::Matrix<double,6,1> wrenchRef;
         wrenchRef.head<3>() = forceRef;
         const Eigen::Vector3d comDes3 = comDes;
         wrenchRef.tail<3>() = comDes3.cross(wrenchRef.head<3>());
