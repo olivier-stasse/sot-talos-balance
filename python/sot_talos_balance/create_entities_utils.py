@@ -189,7 +189,7 @@ def create_end_effector_admittance_controller(robot, endEffector):
 
 
 def create_joint_admittance_controller(joint, Kp, dt, robot, filter=False):
-    controller = AdmittanceController("jadmctrl")
+    controller = SimpleAdmittanceController("jadmctrl")
     controller.Kp.value = Kp
 
     robot.stateselec = Selec_of_vector("state_selec")

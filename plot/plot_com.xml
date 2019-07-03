@@ -5,8 +5,8 @@
    <plot col="0" row="0">
     <range bottom="-0.003287" top="0.001892" right="11.600000" left="6.605000"/>
     <limitY/>
-    <curve G="0" name="/sot/cdc_estimator/c/data.0" B="255" R="255" custom_transform="noTransform"/>
-    <curve G="0" name="/sot/dummy_wp/comDes/data.0" B="255" R="0" custom_transform="noTransform"/>
+    <curve G="0" name="/sot/cdc_estimator/c/data.0" B="0" R="255" custom_transform="noTransform"/>
+    <curve G="255" name="/sot/dummy_wp/comDes/data.0" B="0" R="0" custom_transform="noTransform"/>
     <curve G="0" name="/sot/robot_dynamic/com/data.0" B="255" R="0" custom_transform="noTransform"/>
     <transform value="noTransform"/>
    </plot>
@@ -19,9 +19,9 @@
    <plot col="1" row="0">
     <range bottom="-0.027679" top="0.051894" right="11.600000" left="6.605000"/>
     <limitY/>
-    <curve G="0" name="/sot/cdc_estimator/c/data.1" B="128" R="0" custom_transform="noTransform"/>
-    <curve G="128" name="/sot/dummy_wp/comDes/data.1" B="0" R="0" custom_transform="noTransform"/>
-    <curve G="128" name="/sot/robot_dynamic/com/data.1" B="0" R="0" custom_transform="noTransform"/>
+    <curve G="0" name="/sot/cdc_estimator/c/data.1" B="0" R="255" custom_transform="noTransform"/>
+    <curve G="255" name="/sot/dummy_wp/comDes/data.1" B="0" R="0" custom_transform="noTransform"/>
+    <curve G="0" name="/sot/robot_dynamic/com/data.1" B="255" R="0" custom_transform="noTransform"/>
     <transform value="noTransform"/>
    </plot>
    <plot col="1" row="1">
@@ -33,9 +33,9 @@
    <plot col="2" row="0">
     <range bottom="0.874104" top="0.875963" right="11.600000" left="6.605000"/>
     <limitY/>
-    <curve G="128" name="/sot/cdc_estimator/c/data.2" B="128" R="0" custom_transform="noTransform"/>
-    <curve G="0" name="/sot/dummy_wp/comDes/data.2" B="0" R="255" custom_transform="noTransform"/>
-    <curve G="0" name="/sot/robot_dynamic/com/data.2" B="0" R="255" custom_transform="noTransform"/>
+    <curve G="0" name="/sot/cdc_estimator/c/data.2" B="0" R="255" custom_transform="noTransform"/>
+    <curve G="255" name="/sot/dummy_wp/comDes/data.2" B="0" R="0" custom_transform="noTransform"/>
+    <curve G="0" name="/sot/robot_dynamic/com/data.2" B="255" R="0" custom_transform="noTransform"/>
     <transform value="noTransform"/>
    </plot>
    <plot col="2" row="1">
