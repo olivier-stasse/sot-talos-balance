@@ -100,7 +100,7 @@ namespace dynamicgraph
         assert(wrench.size() == 6   && "Unexpected size of signal wrench");
         assert(gainsXY.size() == 2  && "Unexpected size of signal gainsXY");
 
-        const Eigen::Vector3d error = pRef.cross(wrench.head<3>()) - wrench.tail<3>();
+        const Eigen::Vector3d error = wrench.tail<3>() - pRef.cross(wrench.head<3>());
         Eigen::Vector2d dRP;
 
         dRP[0] = gainsXY[0] * error[0];
