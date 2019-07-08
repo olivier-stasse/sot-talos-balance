@@ -70,23 +70,27 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(wrenchDes,  dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(q,  dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(rho, double);
+        DECLARE_SIGNAL_IN(phase, int);
 
         DECLARE_SIGNAL_INNER(kinematics_computations, int);
         DECLARE_SIGNAL_INNER(wrenches,  int);
 
         DECLARE_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector);
-//        DECLARE_SIGNAL_OUT(copLeft, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(ankleWrenchLeft, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(copLeft, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector);
-//        DECLARE_SIGNAL_OUT(copRight, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(ankleWrenchRight, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(copRight, dynamicgraph::Vector);
 
         DECLARE_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(zmpRef, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(emergencyStop, bool);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
 
-//        dynamicgraph::Vector computeCoP(const dynamicgraph::Vector & wrench, const MatrixHomogeneous & pose) const;
+        Eigen::Vector3d computeCoP(const dynamicgraph::Vector & wrench, const pinocchio::SE3 & pose) const;
 
       protected:
         bool  m_initSucceeded;    /// true if the entity has been successfully initialized
@@ -94,8 +98,22 @@ namespace dynamicgraph {
         pinocchio::Data  m_data;        /// Pinocchio robot data
         RobotUtilShrPtr  m_robot_util;
 
+//        pinocchio::SE3 m_ankle_M_ftSens; /// ankle to F/T sensor transformation
+        pinocchio::SE3 m_ankle_M_sole;   /// ankle to sole transformation
+
+        pinocchio::FrameIndex m_left_foot_id;
+        pinocchio::FrameIndex m_right_foot_id;
+
+        pinocchio::SE3 m_contactLeft;
+        pinocchio::SE3 m_contactRight;
+
         Eigen::Matrix<double,6,1> m_wrenchLeft;
         Eigen::Matrix<double,6,1> m_wrenchRight;
+
+        bool distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho);
+        bool saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase);
+
+        bool m_emergency_stop_triggered;
       }; // class SimpleDistributeWrench
 
     }    // namespace talos_balance

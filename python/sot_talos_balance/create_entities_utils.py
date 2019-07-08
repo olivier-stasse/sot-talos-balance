@@ -541,6 +541,14 @@ def create_distribute_wrench(conf):
 
     return distribute
 
+def create_simple_distribute_wrench(name='distribute'):
+    distribute = SimpleDistributeWrench(name)
+
+    distribute.phase.value = 0
+    distribute.rho.value = 0.5
+
+    return distribute
+
 def create_zmp_estimator(robot, filter=False):
     estimator = SimpleZmpEstimator("zmpEst")
     plug(robot.dynamic.LF, estimator.poseLeft)

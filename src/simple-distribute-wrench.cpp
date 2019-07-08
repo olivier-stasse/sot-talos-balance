@@ -16,6 +16,8 @@
 
 #include "sot/talos_balance/simple-distribute-wrench.hh"
 
+#include <iostream>
+
 #include <sot/core/debug.hh>
 #include <dynamic-graph/factory.h>
 #include <dynamic-graph/all-commands.h>
@@ -40,11 +42,11 @@ namespace dynamicgraph
 #define PROFILE_SIMPLE_DISTRIBUTE_WRENCH_KINEMATICS_COMPUTATIONS "SimpleDistributeWrench: kinematics computations              "
 #define PROFILE_SIMPLE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS   "SimpleDistributeWrench: wrenches computations                "
 
-#define INPUT_SIGNALS     m_wrenchDesSIN << m_qSIN << m_rhoSIN
+#define INPUT_SIGNALS     m_wrenchDesSIN << m_qSIN << m_rhoSIN << m_phaseSIN
 
 #define INNER_SIGNALS m_kinematics_computations << m_wrenches
 
-#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_wrenchRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT
+#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_ankleWrenchLeftSOUT << m_copLeftSOUT << m_wrenchRightSOUT << m_ankleWrenchRightSOUT << m_copRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -62,12 +64,18 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(wrenchDes, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(q, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(rho, double)
+                      , CONSTRUCT_SIGNAL_IN(phase, int)
                       , CONSTRUCT_SIGNAL_INNER(kinematics_computations, int, m_qSIN)
-                      , CONSTRUCT_SIGNAL_INNER(wrenches, int, m_wrenchDesSIN << m_kinematics_computationsSINNER)
+                      , CONSTRUCT_SIGNAL_INNER(wrenches, int, m_wrenchDesSIN << m_rhoSIN << m_phaseSIN << m_kinematics_computationsSINNER)
                       , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_wrenchesSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(ankleWrenchLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector, m_wrenchesSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(ankleWrenchRight, dynamicgraph::Vector, m_wrenchRightSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(copRight, dynamicgraph::Vector, m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector, m_wrenchLeftSOUT << m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(zmpRef, dynamicgraph::Vector, m_wrenchRefSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(emergencyStop, bool, m_zmpRefSOUT)
                       , m_initSucceeded(false)
                       , m_model()
                       , m_data(pinocchio::Model())
@@ -110,7 +118,53 @@ namespace dynamicgraph
           return;
         }
 
+
+        assert(m_model.existFrame(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name));
+        assert(m_model.existFrame(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name));
+        m_left_foot_id       = m_model.getFrameId(m_robot_util->m_foot_util.m_Left_Foot_Frame_Name);
+        m_right_foot_id      = m_model.getFrameId(m_robot_util->m_foot_util.m_Right_Foot_Frame_Name);
+
+        //m_ankle_M_ftSens = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Force_Sensor_XYZ.head<3>());
+        m_ankle_M_sole   = pinocchio::SE3(Eigen::Matrix3d::Identity(), m_robot_util->m_foot_util.m_Right_Foot_Sole_XYZ.head<3>());
+
         m_initSucceeded = true;
+      }
+
+      Eigen::Vector3d
+      SimpleDistributeWrench::computeCoP(const dg::Vector & wrenchGlobal, const pinocchio::SE3 & pose) const
+      {
+        const pinocchio::Force::Vector6 & wrench = pose.actInv(pinocchio::Force(wrenchGlobal)).toVector();
+
+        const double h = pose.translation()[2];
+
+        const double fx = wrench[0];
+        const double fy = wrench[1];
+        const double fz = wrench[2];
+        const double tx = wrench[3];
+        const double ty = wrench[4];
+
+        double m_eps = 0.1; // temporary
+
+        double px, py;
+
+        if(fz >= m_eps/2)
+        {
+          px = (- ty - fx*h)/fz;
+          py = (  tx - fy*h)/fz;
+        }
+        else
+        {
+          px = 0.0;
+          py = 0.0;
+        }
+        const double pz = 0.0;
+
+        Eigen::Vector3d cop;
+        cop[0] = px;
+        cop[1] = py;
+        cop[2] = pz;
+
+        return cop;
       }
 
       /* ------------------------------------------------------------------- */
@@ -126,16 +180,63 @@ namespace dynamicgraph
         }
 
         const Eigen::VectorXd & q = m_qSIN(iter);
-
         assert(q.size()==m_model.nq     && "Unexpected size of signal q");
 
         getProfiler().start(PROFILE_SIMPLE_DISTRIBUTE_WRENCH_KINEMATICS_COMPUTATIONS);
 
-        pinocchio::framesForwardKinematics(m_model, m_data, q);
+        pinocchio::forwardKinematics(m_model, m_data, q);
+        pinocchio::updateFramePlacement(m_model, m_data, m_left_foot_id);
+        pinocchio::updateFramePlacement(m_model, m_data, m_right_foot_id);
+
+        m_contactLeft  = m_data.oMf[m_left_foot_id]  * m_ankle_M_sole;
+        m_contactRight = m_data.oMf[m_right_foot_id] * m_ankle_M_sole;
 
         getProfiler().stop(PROFILE_SIMPLE_DISTRIBUTE_WRENCH_KINEMATICS_COMPUTATIONS);
 
         return s;
+      }
+
+      bool SimpleDistributeWrench::distributeWrench(const Eigen::VectorXd & wrenchDes,  const double rho)
+      {
+        Eigen::Vector3d forceLeft = wrenchDes.head<3>()/2;
+        Eigen::Vector3d forceRight = forceLeft;
+        forceLeft[2] = rho * wrenchDes[2];
+        forceRight[2] = (1-rho) * wrenchDes[2];
+
+        Eigen::Vector3d tauLeft = m_contactLeft.translation().cross(forceLeft);
+        Eigen::Vector3d tauRight = m_contactRight.translation().cross(forceRight);
+
+        Eigen::Vector3d tauResidual = (wrenchDes.tail<3>() - tauLeft - tauRight)/2;
+        tauLeft += tauResidual;
+        tauRight += tauResidual;
+
+        m_wrenchLeft << forceLeft, tauLeft;
+        m_wrenchRight << forceRight, tauRight;
+
+        bool success = true;
+
+        m_emergency_stop_triggered = !success;
+
+        return success;
+      }
+
+      bool SimpleDistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase) {
+        bool success = true;
+
+        m_emergency_stop_triggered = !success;
+
+        const Eigen::VectorXd & result = wrenchDes;
+
+        if(phase>0) {
+          m_wrenchLeft  = result;
+          m_wrenchRight.setZero(6);
+        }
+        else if(phase<0) {
+          m_wrenchRight  = result;
+          m_wrenchLeft.setZero(6);
+        }
+
+        return success;
       }
 
       DEFINE_SIGNAL_INNER_FUNCTION(wrenches, int)
@@ -146,32 +247,35 @@ namespace dynamicgraph
           return s;
         }
 
-        const double rho_m = 0.1;
-        const double rho_M = 1.0 - rho_m;
-
         const Eigen::VectorXd & wrenchDes = m_wrenchDesSIN(iter);
-
-        double rho = m_rhoSIN.isPlugged() ? m_rhoSIN(iter) : 0.5;
-
-        if(rho<rho_m)
-          rho = rho_m;
-        else if(rho>rho_M)
-          rho = rho_M;
-
-        m_kinematics_computationsSINNER(iter);
+        const int & dummy = m_kinematics_computationsSINNER(iter);
+        (void) dummy;
+        const int & phase = m_phaseSIN(iter);
 
         assert(wrenchDes.size()==6     && "Unexpected size of signal wrenchDes");
 
         getProfiler().start(PROFILE_SIMPLE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS);
 
-        // stub
-        m_wrenchLeft  = wrenchDes/2;
-        m_wrenchRight = wrenchDes/2;
+        bool success;
 
-        m_wrenchLeft[2] = (1-rho) * wrenchDes[2];
-        m_wrenchRight[2] = rho * wrenchDes[2];
+        if(phase==0)
+        {
+          const double & rho = m_rhoSIN(iter);
+
+          success = distributeWrench(wrenchDes, rho);
+        }
+        else
+        {
+          success = saturateWrench(wrenchDes, phase);
+        }
 
         getProfiler().stop(PROFILE_SIMPLE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS);
+
+        if(!success)
+        {
+          SEND_WARNING_STREAM_MSG("Error in wrench distribution!");
+          return s;
+        }
 
         return s;
       }
@@ -187,9 +291,7 @@ namespace dynamicgraph
           s.resize(6);
 
         m_wrenchesSINNER(iter);
-
         s = m_wrenchLeft;
-
         return s;
       }
 
@@ -204,8 +306,74 @@ namespace dynamicgraph
           s.resize(6);
 
         m_wrenchesSINNER(iter);
-
         s = m_wrenchRight;
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(ankleWrenchLeft, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal ankleWrenchLeft before initialization!");
+          return s;
+        }
+        if(s.size()!=6)
+          s.resize(6);
+
+        const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
+
+        s = m_data.oMf[m_left_foot_id].actInv(pinocchio::Force(wrenchLeft)).toVector();
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(ankleWrenchRight, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal ankleWrenchRight before initialization!");
+          return s;
+        }
+        if(s.size()!=6)
+          s.resize(6);
+
+        const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
+
+        s = m_data.oMf[m_right_foot_id].actInv(pinocchio::Force(wrenchRight)).toVector();
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(copLeft, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal copLeft before initialization!");
+          return s;
+        }
+        if(s.size()!=3)
+          s.resize(3);
+
+        const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
+
+        s = computeCoP(wrenchLeft, m_contactLeft);
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(copRight, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal copRight before initialization!");
+          return s;
+        }
+        if(s.size()!=3)
+          s.resize(3);
+
+        const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
+
+        s = computeCoP(wrenchRight, m_contactRight);
 
         return s;
       }
@@ -240,8 +408,8 @@ namespace dynamicgraph
 
         const Eigen::VectorXd & wrenchRef  = m_wrenchRefSOUT(iter);
 
-        const double fx = wrenchRef[0];
-        const double fy = wrenchRef[1];
+        //const double fx = wrenchRef[0];
+        //const double fy = wrenchRef[1];
         const double fz = wrenchRef[2];
         const double tx = wrenchRef[3];
         const double ty = wrenchRef[4];
@@ -261,13 +429,21 @@ namespace dynamicgraph
         }
         const double pz = 0.0;
 
-        Eigen::Vector3d zmp;
+        Eigen::Vector3d zmp(3);
         zmp[0] = px;
         zmp[1] = py;
         zmp[2] = pz;
 
         s = zmp;
 
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(emergencyStop, bool)
+      {
+        const dynamicgraph::Vector & zmp = m_zmpRefSOUT(iter); // dummy to trigger zmp computation
+        (void) zmp;                                            // disable unused variable warning
+        s = m_emergency_stop_triggered;
         return s;
       }
 
