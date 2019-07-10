@@ -203,7 +203,7 @@ robot.dcm_control = dcm_controller
 Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 
 # --- Distribute wrench
-distribute = create_distribute_wrench(base_estimator_conf)
+distribute = create_simple_distribute_wrench()
 plug(robot.e2q.quaternion, distribute.q)
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
 plug(robot.rhoScalar.sout, distribute.rho)
@@ -393,9 +393,9 @@ robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 
 # --- Plug SOT control to device through control manager
-# plug(robot.sot.control,robot.cm.ctrl_sot_input)
-# plug(robot.cm.u_safe,robot.device.control)
-plug(robot.sot.control, robot.device.control)
+plug(robot.sot.control,robot.cm.ctrl_sot_input)
+plug(robot.cm.u_safe,robot.device.control)
+# plug(robot.sot.control, robot.device.control)
 
 robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
