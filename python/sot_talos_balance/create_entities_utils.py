@@ -36,6 +36,7 @@ from sot_talos_balance.distribute_wrench import DistributeWrench
 from sot_talos_balance.simple_reference_frame import SimpleReferenceFrame
 from sot_talos_balance.state_transformation import StateTransformation
 from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator
+from sot_talos_balance.ankle_joint_selector import AnkleJointSelector
 from sot_talos_balance.qualisys_client import QualisysClient
 
 # python

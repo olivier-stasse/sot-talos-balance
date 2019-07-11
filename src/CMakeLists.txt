@@ -63,6 +63,7 @@ SET(plugins
     qualisys-client
     ft-calibration
     ft-wrist-calibration
+    ankle-joint-selector
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
