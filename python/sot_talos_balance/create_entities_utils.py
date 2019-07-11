@@ -20,6 +20,7 @@ from dynamic_graph.sot.core.operator import MatrixHomoToPoseQuaternion
 from dynamic_graph.sot.core.operator import PoseRollPitchYawToMatrixHomo
 from dynamic_graph.sot.core.operator import MatrixHomoToPoseRollPitchYaw
 from sot_talos_balance.boolean_identity import BooleanIdentity
+from sot_talos_balance.int_identity import IntIdentity
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.simple_pid import SimplePID
 from sot_talos_balance.simple_pidd import SimplePIDD
