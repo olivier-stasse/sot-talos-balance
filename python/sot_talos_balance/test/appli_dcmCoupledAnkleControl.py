@@ -1,5 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
 from sot_talos_balance.coupled_admittance_controller import CoupledAdmittanceController
+from sot_talos_balance.saturation import Saturation
 import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
 import sot_talos_balance.talos.control_manager_conf    as cm_conf
 import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
@@ -11,7 +12,7 @@ from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph.sot.core.operator import Multiply_double_vector
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
-from math import sqrt
+from math import sqrt, pi
 import numpy as np
 
 from dynamic_graph.tracer_real_time import TracerRealTime
@@ -42,6 +43,11 @@ robot.dynamic.createOpPoint('WT',robot.OperationalPointsMap['waist'])
 robot.dynamic.LF.recompute(0)
 robot.dynamic.RF.recompute(0)
 robot.dynamic.WT.recompute(0)
+
+# --- Ankle velocity saturation
+kSat = 10.0
+qLimSat = [pi/6]
+dqLimSat = [0.3]
 
 # -------------------------- DESIRED TRAJECTORY --------------------------
 
@@ -296,29 +302,76 @@ plug(robot.multLR.sout, controller.tauDesL)
 robot.rollController = controller
 
 # --- ANKLE TASKS
+robot.qRP = Selec_of_vector("qRP")
+robot.qRP.selec(RightPitchJoint+6, RightPitchJoint+7)
+plug(robot.device.state, robot.qRP.sin)
+
+robot.saturationRP = Saturation("saturationRP")
+plug(robot.qRP.sout, robot.saturationRP.x)
+plug(robot.pitchController.dqRefR, robot.saturationRP.y)
+robot.saturationRP.k.value = kSat
+robot.saturationRP.xLim.value = qLimSat
+robot.saturationRP.yLim.value = dqLimSat
+
 robot.taskRP = MetaTaskKineJoint(robot.dynamic, RightPitchJoint+6)
 robot.taskRP.task.controlGain.value = 0
 robot.taskRP.task.setWithDerivative(True)
 robot.taskRP.featureDes.errorIN.value = [0.0]
-plug(robot.pitchController.dqRefR, robot.taskRP.featureDes.errordotIN)
+plug(robot.saturationRP.yOut, robot.taskRP.featureDes.errordotIN)
+
+robot.qRR = Selec_of_vector("qRR")
+robot.qRR.selec(RightRollJoint+6, RightRollJoint+7)
+plug(robot.device.state, robot.qRR.sin)
+
+robot.saturationRR = Saturation("saturationRR")
+plug(robot.qRR.sout, robot.saturationRR.x)
+plug(robot.rollController.dqRefR, robot.saturationRR.y)
+robot.saturationRR.k.value = kSat
+robot.saturationRR.xLim.value = qLimSat
+robot.saturationRR.yLim.value = dqLimSat
 
 robot.taskRR = MetaTaskKineJoint(robot.dynamic, RightRollJoint+6)
 robot.taskRR.task.controlGain.value = 0
 robot.taskRR.task.setWithDerivative(True)
 robot.taskRR.featureDes.errorIN.value = [0.0]
-plug(robot.rollController.dqRefR, robot.taskRR.featureDes.errordotIN)
+plug(robot.saturationRR.yOut, robot.taskRR.featureDes.errordotIN)
+# plug(robot.rollController.dqRefR, robot.taskRR.featureDes.errordotIN)
+
+robot.qLP = Selec_of_vector("qLP")
+robot.qLP.selec(LeftPitchJoint+6, LeftPitchJoint+7)
+plug(robot.device.state, robot.qLP.sin)
+
+robot.saturationLP = Saturation("saturationLP")
+plug(robot.qLP.sout, robot.saturationLP.x)
+plug(robot.pitchController.dqRefL, robot.saturationLP.y)
+robot.saturationLP.k.value = kSat
+robot.saturationLP.xLim.value = qLimSat
+robot.saturationLP.yLim.value = dqLimSat
 
 robot.taskLP = MetaTaskKineJoint(robot.dynamic, LeftPitchJoint+6)
 robot.taskLP.task.controlGain.value = 0
 robot.taskLP.task.setWithDerivative(True)
 robot.taskLP.featureDes.errorIN.value = [0.0]
-plug(robot.pitchController.dqRefL, robot.taskLP.featureDes.errordotIN)
+plug(robot.saturationLP.yOut, robot.taskLP.featureDes.errordotIN)
+# plug(robot.pitchController.dqRefL, robot.taskLP.featureDes.errordotIN)
+
+robot.qLR = Selec_of_vector("qLR")
+robot.qLR.selec(LeftRollJoint+6, LeftRollJoint+7)
+plug(robot.device.state, robot.qLR.sin)
+
+robot.saturationLR = Saturation("saturationLR")
+plug(robot.qLR.sout, robot.saturationLR.x)
+plug(robot.rollController.dqRefL, robot.saturationLR.y)
+robot.saturationLR.k.value = kSat
+robot.saturationLR.xLim.value = qLimSat
+robot.saturationLR.yLim.value = dqLimSat
 
 robot.taskLR = MetaTaskKineJoint(robot.dynamic, LeftRollJoint+6)
 robot.taskLR.task.controlGain.value = 0
 robot.taskLR.task.setWithDerivative(True)
 robot.taskLR.featureDes.errorIN.value = [0.0]
-plug(robot.rollController.dqRefL, robot.taskLR.featureDes.errordotIN)
+# plug(robot.rollController.dqRefL, robot.taskLR.featureDes.errordotIN)
+plug(robot.saturationLR.yOut, robot.taskLR.featureDes.errordotIN)
 
 # --- Control Manager
 robot.cm = create_ctrl_manager(cm_conf, dt, robot_name='robot')
@@ -464,3 +517,8 @@ create_topic(robot.publisher, robot.rollController, 'tauSum', robot = robot, dat
 create_topic(robot.publisher, robot.rollController, 'tauDiff', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.rollController, 'tauDesSum', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.rollController, 'tauDesDiff', robot = robot, data_type='vector')
+
+create_topic(robot.publisher, robot.saturationRP, 'yOut', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.saturationRR, 'yOut', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.saturationLP, 'yOut', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.saturationLR, 'yOut', robot = robot, data_type='vector')

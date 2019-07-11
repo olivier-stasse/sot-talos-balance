@@ -13,14 +13,14 @@ raw_input("Wait before running the test")
 # Connect ZMP reference and reset controllers
 print('Set controller')
 runCommandClient('plug(robot.zmp_estimator.emergencyStop,robot.cm.emergencyStop_zmp)')
-#runCommandClient('robot.distribute.phase.value = -1')
 runCommandClient('plug(robot.distribute.emergencyStop,robot.cm.emergencyStop_distribute)')
-runCommandClient('robot.pitchController.kSum.value = [2e-3]')
+runCommandClient('robot.pitchController.kSum.value = [0.0]')
 runCommandClient('robot.pitchController.kDiff.value = [0.0]')
-runCommandClient('robot.rollController.kSum.value = [3e-3]')
+runCommandClient('robot.rollController.kSum.value = [0.0]')
 runCommandClient('robot.rollController.kDiff.value =  [0.0]')
 runCommandClient('robot.dcm_control.resetDcmIntegralError()')
 runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
+# runCommandClient('robot.dcm_control.Kp.value = []')
 
 c = ask_for_confirmation("Execute a sinusoid?")
 if c:

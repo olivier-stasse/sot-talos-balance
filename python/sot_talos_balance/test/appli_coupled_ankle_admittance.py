@@ -7,6 +7,7 @@ from dynamic_graph.sot.core.operator import Add_of_vector
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 
+
 from dynamic_graph.ros import RosSubscribe, RosPublish
 from sot_talos_balance.create_entities_utils import *
 
