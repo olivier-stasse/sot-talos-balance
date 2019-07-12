@@ -37,6 +37,7 @@ ENDIF(UNIX)
 SET(plugins
     example
     boolean-identity
+    int-identity
     pose-quaternion-to-matrix-homo
     euler-to-quat
     quat-to-euler
@@ -63,6 +64,7 @@ SET(plugins
     qualisys-client
     ft-calibration
     ft-wrist-calibration
+    ankle-joint-selector
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)

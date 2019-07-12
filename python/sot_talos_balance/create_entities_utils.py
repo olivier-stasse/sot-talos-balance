@@ -20,6 +20,7 @@ from dynamic_graph.sot.core.operator import MatrixHomoToPoseQuaternion
 from dynamic_graph.sot.core.operator import PoseRollPitchYawToMatrixHomo
 from dynamic_graph.sot.core.operator import MatrixHomoToPoseRollPitchYaw
 from sot_talos_balance.boolean_identity import BooleanIdentity
+from sot_talos_balance.int_identity import IntIdentity
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
 from sot_talos_balance.simple_pid import SimplePID
 from sot_talos_balance.simple_pidd import SimplePIDD
@@ -36,6 +37,7 @@ from sot_talos_balance.distribute_wrench import DistributeWrench
 from sot_talos_balance.simple_reference_frame import SimpleReferenceFrame
 from sot_talos_balance.state_transformation import StateTransformation
 from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator
+from sot_talos_balance.ankle_joint_selector import AnkleJointSelector
 from sot_talos_balance.qualisys_client import QualisysClient
 
 # python
