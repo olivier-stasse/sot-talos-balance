@@ -412,7 +412,7 @@ namespace dynamicgraph
 
         const double & mu = m_frictionCoefficientSIN(iter);  // 0.7
 
-        assert(wrenchDes.size()==6     && "Unexpected size of signal q");
+        assert(wrenchDes.size()==6     && "Unexpected size of signal wrenchDes");
 
         getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
 

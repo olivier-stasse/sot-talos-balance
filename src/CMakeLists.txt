@@ -37,6 +37,7 @@ ENDIF(UNIX)
 SET(plugins
     example
     boolean-identity
+    int-identity
     pose-quaternion-to-matrix-homo
     euler-to-quat
     quat-to-euler
@@ -53,6 +54,7 @@ SET(plugins
     dummy-dcm-estimator
     com-admittance-controller
     simple-admittance-controller
+    coupled-admittance-controller
     admittance-controller-end-effector
     joint-position-controller
     nd-trajectory-generator
@@ -62,6 +64,8 @@ SET(plugins
     qualisys-client
     ft-calibration
     ft-wrist-calibration
+    ankle-joint-selector
+    saturation
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
