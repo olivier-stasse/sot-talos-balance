@@ -44,6 +44,12 @@ SET(PKG_CONFIG_ADDITIONAL_VARIABLES
 
 SETUP_PROJECT()
 
+IF(WIN32)
+  SET(LINK copy_if_different)
+ELSE(WIN32)
+  SET(LINK create_symlink)
+ENDIF(WIN32)
+
 OPTION (INITIALIZE_WITH_NAN "Initialize Eigen entries with NaN" ON)
 IF(INITIALIZE_WITH_NAN)
   MESSAGE(STATUS "Initialize with NaN all the Eigen entries.")
@@ -147,58 +153,6 @@ IF (NOT INSTALL_PYTHON_INTERFACE_ONLY)
   INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
 
-IF(BUILD_PYTHON_INTERFACE)
-  INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/__init__.py
-                python/${SOTTALOSBALANCE_PYNAME}/main.py
-                python/${SOTTALOSBALANCE_PYNAME}/create_entities_utils.py
-                python/${SOTTALOSBALANCE_PYNAME}/meta_task_config.py
-                python/${SOTTALOSBALANCE_PYNAME}/meta_task_joint.py
-                python/${SOTTALOSBALANCE_PYNAME}/motor_parameters.py
-                DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME})
-  INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/utils/__init__.py
-                python/${SOTTALOSBALANCE_PYNAME}/utils/control_utils.py
-                python/${SOTTALOSBALANCE_PYNAME}/utils/plot_utils.py
-                python/${SOTTALOSBALANCE_PYNAME}/utils/sot_utils.py
-                python/${SOTTALOSBALANCE_PYNAME}/utils/filter_utils.py
-                python/${SOTTALOSBALANCE_PYNAME}/utils/run_test_utils.py
-                python/${SOTTALOSBALANCE_PYNAME}/utils/gazebo_utils.py
-                DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/utils)
-  INSTALL(DIRECTORY python/${SOTTALOSBALANCE_PYNAME}/talos/
-                DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/talos)
-  IF(BUILD_TEST)
-    INSTALL(FILES python/${SOTTALOSBALANCE_PYNAME}/test/__init__.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_ffSubscriber.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_ffSubscriber.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_zmpEstimator.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_zmpEstimator.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmComControl.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcmComControl.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmComZmpControl.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcmComZmpControl.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmZmpControl.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcmZmpControl.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_dcmZmpControl_file.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcmZmpControl_file.py		  
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_comAdmittance.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_single_joint.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_admittance_single_joint.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_end_effector.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_admittance_end_effector.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_admittance_single_joint_velocity_based.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_admittance_single_joint_velocity_based.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_singleTraj.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_jointTrajGen.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_jointControl.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_COMTraj.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_COMTraj_tracer.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_param_server.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/test_dcm_estimator.py
-                  python/${SOTTALOSBALANCE_PYNAME}/test/appli_dcm_estimator.py
-                  DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}/test)
-  ENDIF(BUILD_TEST)
-ENDIF(BUILD_PYTHON_INTERFACE)
-
 MACRO(DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE MODULENAME SUBMODULENAME LIBRARYNAME TARGETNAME)
 
   # By default the __init__.py file is installed.
@@ -239,6 +193,12 @@ MACRO(DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE MODULENAME SUBMODULENAME LIBRARYNAME TA
     ${PROJECT_SOURCE_DIR}/${SOURCE_PYTHON_MODULE})
 
   FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/src/${FULLMODULENAME})
+
+  # Link to python subfolder
+  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E ${LINK}
+    ${${PROJECT_NAME}_BINARY_DIR}/src/${FULLMODULENAME}
+    ${${PROJECT_NAME}_BINARY_DIR}/python/${FULLMODULENAME}
+    )
 
   SET_TARGET_PROPERTIES(${PYTHON_MODULE}
     PROPERTIES PREFIX ""
@@ -288,6 +248,10 @@ MACRO(SOT_TALOS_BALANCE_PYTHON_MODULE SUBMODULENAME LIBRARYNAME TARGETNAME)
   DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE("${SOTTALOSBALANCE_PYNAME}"
     "${SUBMODULENAME}" "${LIBRARYNAME}" "${TARGETNAME}")
 ENDMACRO(SOT_TALOS_BALANCE_PYTHON_MODULE)
+
+IF(BUILD_PYTHON_INTERFACE)
+  ADD_SUBDIRECTORY(python/${SOTTALOSBALANCE_PYNAME})
+ENDIF(BUILD_PYTHON_INTERFACE)
 
 ADD_SUBDIRECTORY(src)
 
