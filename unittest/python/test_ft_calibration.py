@@ -2,7 +2,6 @@ from sot_talos_balance.create_entities_utils import *
 import numpy as np
 from numpy.testing import assert_almost_equal as assertApprox
 from sot_talos_balance.ft_calibration import FtCalibration
-from IPython import embed
 import sot_talos_balance.talos.ft_calibration_conf as conf
 
 robot_name = 'robot'

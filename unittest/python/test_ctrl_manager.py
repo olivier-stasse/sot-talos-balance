@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 from sot_talos_balance.create_entities_utils                  import *
-from IPython                                                  import embed
 from sot_talos_balance.utils.sot_utils                        import Bunch
 import sot_talos_balance.talos.parameter_server_conf           as param_server_conf
 import sot_talos_balance.talos.control_manager_conf            as control_manager_conf
