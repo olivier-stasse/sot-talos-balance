@@ -45,7 +45,6 @@ from sot_talos_balance.utils.filter_utils import *
 from sot_talos_balance.utils.sot_utils import Bunch
 
 from dynamic_graph import plug
-from dynamic_graph.ros import RosPublish
 
 import numpy as np
 
@@ -351,10 +350,10 @@ def dump_tracer(tracer):
 
 
 def create_rospublish(robot, name):
+    from dynamic_graph.ros import RosPublish
     rospub = RosPublish(name)
     robot.device.after.addSignal(rospub.name+'.trigger')
     return rospub
-
 
 def create_topic(rospub, entity, signalName, robot=None, data_type='vector'):
     # check needed to prevent creation of broken topic
