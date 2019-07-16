@@ -62,6 +62,7 @@ namespace dynamicgraph
           , CONSTRUCT_SIGNAL_IN(tauDes, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_OUT(dqRef, dynamicgraph::Vector, INPUT_SIGNALS)
           , CONSTRUCT_SIGNAL_OUT(qRef, dynamicgraph::Vector, m_dqRefSOUT)
+          , m_useState(false)
           , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );

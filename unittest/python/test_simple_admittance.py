@@ -45,4 +45,4 @@ controller.qRef.recompute(1)
 
 print( "\nqRef: %s" % (controller.qRef.value,) )
 qRef = tuple([ q[i] + Kp[i]*(tauDes[i]-tau[i])*dt for i in range(len(q)) ])
-assert controller.qRef.value == qRef
+assertApprox(controller.qRef.value, qRef)
