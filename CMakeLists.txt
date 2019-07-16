@@ -50,7 +50,7 @@ ELSE(WIN32)
   SET(LINK create_symlink)
 ENDIF(WIN32)
 
-OPTION (INITIALIZE_WITH_NAN "Initialize Eigen entries with NaN" ON)
+OPTION (INITIALIZE_WITH_NAN "Initialize Eigen entries with NaN" OFF)
 IF(INITIALIZE_WITH_NAN)
   MESSAGE(STATUS "Initialize with NaN all the Eigen entries.")
   ADD_DEFINITIONS(-DEIGEN_INITIALIZE_MATRICES_BY_NAN)
