@@ -225,28 +225,6 @@ plug(robot.distribute.copRight, controller.pRef)
 controller.init()
 robot.rightAnkleController = controller
 
-# --- RIGHT ANKLE PITCH
-robot.rightPitchSelec = Selec_of_vector("rightPitchSelec")
-robot.rightPitchSelec.selec(1, 2)
-plug(robot.rightAnkleController.dRP, robot.rightPitchSelec.sin)
-
-robot.rightAnklePitchTask = MetaTaskKineJoint(robot.dynamic, RightPitchJoint+6)
-robot.rightAnklePitchTask.task.controlGain.value = 0
-robot.rightAnklePitchTask.task.setWithDerivative(True)
-robot.rightAnklePitchTask.featureDes.errorIN.value = [0.]
-plug(robot.rightPitchSelec.sout, robot.rightAnklePitchTask.featureDes.errordotIN)
-
-# --- RIGHT ANKLE ROLL
-robot.rightRollSelec = Selec_of_vector("rightRollSelec")
-robot.rightRollSelec.selec(0, 1)
-plug(robot.rightAnkleController.dRP, robot.rightRollSelec.sin)
-
-robot.rightAnkleRollTask = MetaTaskKineJoint(robot.dynamic, RightRollJoint+6)
-robot.rightAnkleRollTask.task.controlGain.value = 0
-robot.rightAnkleRollTask.task.setWithDerivative(True)
-robot.rightAnkleRollTask.featureDes.errorIN.value = [0.]
-plug(robot.rightRollSelec.sout, robot.rightAnkleRollTask.featureDes.errordotIN)
-
 # --- Left ankle
 controller = AnkleAdmittanceController("leftController")
 plug(robot.ftc.left_foot_force_out, controller.wrench)
@@ -254,28 +232,6 @@ controller.gainsXY.value = [0.]*2
 plug(robot.distribute.copLeft, controller.pRef)
 controller.init()
 robot.leftAnkleController = controller
-
-# --- LEFT ANKLE PITCH
-robot.leftPitchSelec = Selec_of_vector("leftPitchSelec")
-robot.leftPitchSelec.selec(1, 2)
-plug(robot.leftAnkleController.dRP, robot.leftPitchSelec.sin)
-
-robot.leftAnklePitchTask = MetaTaskKineJoint(robot.dynamic, LeftPitchJoint+6)
-robot.leftAnklePitchTask.task.controlGain.value = 0
-robot.leftAnklePitchTask.task.setWithDerivative(True)
-robot.leftAnklePitchTask.featureDes.errorIN.value = [0.]
-plug(robot.leftPitchSelec.sout, robot.leftAnklePitchTask.featureDes.errordotIN)
-
-# --- LEFT ANKLE ROLL
-robot.leftRollSelec = Selec_of_vector("leftRollSelec")
-robot.leftRollSelec.selec(0, 1)
-plug(robot.leftAnkleController.dRP, robot.leftRollSelec.sin)
-
-robot.leftAnkleRollTask = MetaTaskKineJoint(robot.dynamic, LeftRollJoint+6)
-robot.leftAnkleRollTask.task.controlGain.value = 0
-robot.leftAnkleRollTask.task.setWithDerivative(True)
-robot.leftAnkleRollTask.featureDes.errorIN.value = [0.]
-plug(robot.leftRollSelec.sout, robot.leftAnkleRollTask.featureDes.errordotIN)
 
 # --- Control Manager
 robot.cm = create_ctrl_manager(cm_conf, dt, robot_name='robot')
@@ -326,21 +282,22 @@ robot.contactLF = MetaTaskKine6d('contactLF',robot.dynamic,'LF',robot.Operationa
 robot.contactLF.feature.frame('desired')
 robot.contactLF.gain.setConstant(300)
 plug(robot.wp.footLeftDes, robot.contactLF.featureDes.position) #.errorIN?
-#robot.contactLF.feature.selec.value = '000111'
+plug(robot.leftAnkleController.vDes, robot.contactLF.featureDes.velocity)
+robot.contactLF.task.setWithDerivative(True)
 locals()['contactLF'] = robot.contactLF
 
 robot.contactRF = MetaTaskKine6d('contactRF',robot.dynamic,'RF',robot.OperationalPointsMap['right-ankle'])
 robot.contactRF.feature.frame('desired')
 robot.contactRF.gain.setConstant(300)
 plug(robot.wp.footRightDes, robot.contactRF.featureDes.position) #.errorIN?
-#robot.contactRF.feature.selec.value = '000111'
+plug(robot.rightAnkleController.vDes, robot.contactRF.featureDes.velocity)
+robot.contactRF.task.setWithDerivative(True)
 locals()['contactRF'] = robot.contactRF
 
 # --- COM
 robot.taskCom = MetaTaskKineCom(robot.dynamic)
 plug(robot.wp.comDes,robot.taskCom.featureDes.errorIN)
 robot.taskCom.task.controlGain.value = 10
-robot.taskCom.feature.selec.value = '100'
 
 # --- Waist
 robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
@@ -362,10 +319,6 @@ robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
 robot.sot.push(robot.contactLF.task.name)
 robot.sot.push(robot.taskCom.task.name)
-robot.sot.push(robot.rightAnklePitchTask.task.name)
-robot.sot.push(robot.rightAnkleRollTask.task.name)
-robot.sot.push(robot.leftAnklePitchTask.task.name)
-robot.sot.push(robot.leftAnkleRollTask.task.name)
 robot.sot.push(robot.keepWaist.task.name)
 
 # --- Fix robot.dynamic inputs
