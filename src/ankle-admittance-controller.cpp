@@ -37,7 +37,7 @@ namespace dynamicgraph
 
 #define INPUT_SIGNALS  m_gainsXYSIN << m_wrenchSIN << m_pRefSIN
 
-#define OUTPUT_SIGNALS m_dRPSOUT
+#define OUTPUT_SIGNALS m_dRPSOUT << m_vDesSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -56,6 +56,7 @@ namespace dynamicgraph
           , CONSTRUCT_SIGNAL_IN(wrench, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_IN(pRef, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_OUT(dRP, dynamicgraph::Vector, INPUT_SIGNALS)
+          , CONSTRUCT_SIGNAL_OUT(vDes, dynamicgraph::Vector, m_dRPSOUT)
           , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -113,6 +114,24 @@ namespace dynamicgraph
         return s;
       }
 
+      DEFINE_SIGNAL_OUT_FUNCTION(vDes, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Can't compute vDes before initialization!");
+          return s;
+        }
+        if(s.size()!=6)
+          s.resize(6);
+
+        const Vector & dRP = m_dRPSOUT(iter);
+
+        s.head<3>().setZero();
+        s.segment<2>(3) = dRP;
+        s[5] = 0;
+
+        return s;
+      }
 
       /* --- COMMANDS ---------------------------------------------------------- */
 

@@ -67,6 +67,7 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_IN(pRef, dynamicgraph::Vector);
 
         DECLARE_SIGNAL_OUT(dRP, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(vDes, dynamicgraph::Vector);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
