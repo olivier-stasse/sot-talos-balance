@@ -105,6 +105,7 @@ rf = SimpleReferenceFrame('rf')
 rf.init(robot_name)
 plug(robot.dynamic.LF, rf.footLeft)
 plug(robot.dynamic.RF, rf.footRight)
+rf.reset.value = 1
 robot.rf = rf
 
 # --- State transformation
@@ -257,12 +258,19 @@ robot.contactRF.gain.setConstant(300)
 plug(robot.wp.footRightDes, robot.contactRF.featureDes.position) #.errorIN?
 locals()['contactRF'] = robot.contactRF
 
+# --- COM height
+robot.taskComH = MetaTaskKineCom(robot.dynamic, name='comH')
+plug(robot.wp.comDes,robot.taskComH.featureDes.errorIN)
+robot.taskComH.task.controlGain.value = 100.
+robot.taskComH.feature.selec.value = '100'
+
 # --- COM
 robot.taskCom = MetaTaskKineCom(robot.dynamic)
 plug(robot.com_admittance_control.comRef,robot.taskCom.featureDes.errorIN)
 plug(robot.com_admittance_control.dcomRef,robot.taskCom.featureDes.errordotIN)
 robot.taskCom.task.controlGain.value = 0
 robot.taskCom.task.setWithDerivative(True)
+robot.taskCom.feature.selec.value = '011'
 
 # --- Waist
 robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
@@ -329,6 +337,7 @@ plug(robot.cm.u_safe,robot.device.control)
 robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
 robot.sot.push(robot.contactLF.task.name)
+robot.sot.push(robot.taskComH.task.name)
 robot.sot.push(robot.taskCom.task.name)
 robot.sot.push(robot.keepWaist.task.name)
 # robot.sot.push(robot.taskPos.name)
@@ -346,6 +355,10 @@ plug(robot.dvdt.sout,robot.dynamic.acceleration)
 
 # --- ROS PUBLISHER
 robot.publisher = create_rospublish(robot, 'robot_publisher')        
+
+create_topic(robot.publisher, robot.device, 'state', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.base_estimator, 'q', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.stf, 'q', robot = robot, data_type='vector')
 
 create_topic(robot.publisher, robot.wp, 'comDes', robot = robot, data_type='vector')                      # desired CoM
 

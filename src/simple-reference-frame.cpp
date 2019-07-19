@@ -112,10 +112,12 @@ namespace dynamicgraph
 
         if(reset||m_first)
         {
-          const Eigen::Vector3d centerTranslation = ( footLeft.translation() + footRight.translation() )/2 + m_rightFootSoleXYZ;
+          Eigen::Vector3d centerTranslation = ( footLeft.translation() + footRight.translation() )/2 + m_rightFootSoleXYZ;
+          centerTranslation[2] = 0;
 
           m_referenceFrame.linear() = footRight.linear();
           m_referenceFrame.translation() = centerTranslation;
+          m_first = false;
         }
 
         s = m_referenceFrame;
