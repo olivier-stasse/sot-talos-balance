@@ -71,10 +71,10 @@ namespace dynamicgraph {
       void matrixToRpy(const Eigen::Matrix3d & M, Eigen::Vector3d & rpy);
 
       /** Multiply to quaternions stored in (w,x,y,z) format */
-      void quanternionMult(const Eigen::Vector4d & q1, const Eigen::Vector4d & q2,  Eigen::Vector4d & q12);
+      //void quanternionMult(const Eigen::Vector4d & q1, const Eigen::Vector4d & q2,  Eigen::Vector4d & q12);
 
       /** Rotate a point or a vector by a quaternion stored in (w,x,y,z) format */
-      void pointRotationByQuaternion(const Eigen::Vector3d & point,const Eigen::Vector4d & quat, Eigen::Vector3d & rotatedPoint);
+      //void pointRotationByQuaternion(const Eigen::Vector3d & point,const Eigen::Vector4d & quat, Eigen::Vector3d & rotatedPoint);
 
       /** Avoids singularity while taking the mean of euler angles**/
       double eulerMean(double a1, double a2);

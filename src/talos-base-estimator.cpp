@@ -79,6 +79,7 @@ namespace dynamicgraph
         }
       }
 
+/*    // ATTENTION! Quaternion elements are assumed to be [w,x,y,z]
       void quanternionMult(const Eigen::Vector4d & q1,
 			   const Eigen::Vector4d & q2,
 			   Eigen::Vector4d & q12)
@@ -103,6 +104,7 @@ namespace dynamicgraph
         rotatedPoint(1) = q_tmp2(2);
         rotatedPoint(2) = q_tmp2(3);
       }
+*/
 
       inline
       double eulerMean(double a1, double a2)
@@ -583,17 +585,17 @@ namespace dynamicgraph
 
         m_oMlfs_xyzquat.head<3>() = m_oMlfs.translation();
         Eigen::Quaternion<double> quat_lf(m_oMlfs.rotation());
-        m_oMlfs_xyzquat(3) = quat_lf.w();
-        m_oMlfs_xyzquat(4) = quat_lf.x();
-        m_oMlfs_xyzquat(5) = quat_lf.y();
-        m_oMlfs_xyzquat(6) = quat_lf.z();
+        m_oMlfs_xyzquat(3) = quat_lf.x();
+        m_oMlfs_xyzquat(4) = quat_lf.y();
+        m_oMlfs_xyzquat(5) = quat_lf.z();
+        m_oMlfs_xyzquat(6) = quat_lf.w();
 
         m_oMrfs_xyzquat.head<3>() = m_oMrfs.translation();
         Eigen::Quaternion<double> quat_rf(m_oMrfs.rotation());
-        m_oMrfs_xyzquat(3) = quat_rf.w();
-        m_oMrfs_xyzquat(4) = quat_rf.x();
-        m_oMrfs_xyzquat(5) = quat_rf.y();
-        m_oMrfs_xyzquat(6) = quat_rf.z();
+        m_oMrfs_xyzquat(3) = quat_rf.x();
+        m_oMrfs_xyzquat(4) = quat_rf.y();
+        m_oMrfs_xyzquat(5) = quat_rf.z();
+        m_oMrfs_xyzquat(6) = quat_rf.w();
 
         //save this poses to use it if no ref is provided
         m_oMlfs_default_ref = m_oMlfs;
@@ -810,14 +812,14 @@ namespace dynamicgraph
                 ///convert from xyzquat to se3
                 const Vector7 & lf_ref_xyzquat_vec  = m_lf_ref_xyzquatSIN(iter);
                 const Vector7 & rf_ref_xyzquat_vec  = m_rf_ref_xyzquatSIN(iter);
-                const Eigen::Quaterniond ql(m_lf_ref_xyzquatSIN(iter)(3),
+                const Eigen::Quaterniond ql(m_lf_ref_xyzquatSIN(iter)(6),
+                                            m_lf_ref_xyzquatSIN(iter)(3),
                                             m_lf_ref_xyzquatSIN(iter)(4),
-                                            m_lf_ref_xyzquatSIN(iter)(5),
-                                            m_lf_ref_xyzquatSIN(iter)(6));
-                const Eigen::Quaterniond qr(m_rf_ref_xyzquatSIN(iter)(3),
+                                            m_lf_ref_xyzquatSIN(iter)(5));
+                const Eigen::Quaterniond qr(m_rf_ref_xyzquatSIN(iter)(6),
+                                            m_rf_ref_xyzquatSIN(iter)(3),
                                             m_rf_ref_xyzquatSIN(iter)(4),
-                                            m_rf_ref_xyzquatSIN(iter)(5),
-                                            m_rf_ref_xyzquatSIN(iter)(6));
+                                            m_rf_ref_xyzquatSIN(iter)(5));
                 oMlfs_ref = SE3(ql.toRotationMatrix(), lf_ref_xyzquat_vec.head<3>());
                 oMrfs_ref = SE3(qr.toRotationMatrix(), rf_ref_xyzquat_vec.head<3>());
               }
@@ -848,17 +850,17 @@ namespace dynamicgraph
           // convert to xyz+quaternion format //Rq: this convertions could be done in outupt signals function?
           m_oMlfs_xyzquat.head<3>() = m_oMlfs.translation();
           Eigen::Quaternion<double> quat_lf(m_oMlfs.rotation());
-          m_oMlfs_xyzquat(3) = quat_lf.w();
-          m_oMlfs_xyzquat(4) = quat_lf.x();
-          m_oMlfs_xyzquat(5) = quat_lf.y();
-          m_oMlfs_xyzquat(6) = quat_lf.z();
+          m_oMlfs_xyzquat(3) = quat_lf.x();
+          m_oMlfs_xyzquat(4) = quat_lf.y();
+          m_oMlfs_xyzquat(5) = quat_lf.z();
+          m_oMlfs_xyzquat(6) = quat_lf.w();
 
           m_oMrfs_xyzquat.head<3>() = m_oMrfs.translation();
           Eigen::Quaternion<double> quat_rf(m_oMrfs.rotation());
-          m_oMrfs_xyzquat(3) = quat_rf.w();
-          m_oMrfs_xyzquat(4) = quat_rf.x();
-          m_oMrfs_xyzquat(5) = quat_rf.y();
-          m_oMrfs_xyzquat(6) = quat_rf.z();
+          m_oMrfs_xyzquat(3) = quat_rf.x();
+          m_oMrfs_xyzquat(4) = quat_rf.y();
+          m_oMrfs_xyzquat(5) = quat_rf.z();
+          m_oMrfs_xyzquat(6) = quat_rf.w();
         }
         getProfiler().stop(PROFILE_BASE_POSITION_ESTIMATION);
         return s;
