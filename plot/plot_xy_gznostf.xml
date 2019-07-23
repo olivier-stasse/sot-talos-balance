@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root>
+ <tabbed_widget parent="main_window" name="Main Window">
+  <plotmatrix tab_name="plot" rows="2" columns="4">
+   <plot row="0" col="0">
+    <range bottom="-0.000001" top="-0.000001" right="26.164000" left="0.000000"/>
+    <limitY/>
+    <curve B="255" name="/sot/PYRENE/state/data.0" R="0" G="0" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="0">
+    <range bottom="0.000072" top="0.000072" right="26.164000" left="0.000000"/>
+    <limitY/>
+    <curve B="0" name="/sot/PYRENE/state/data.1" R="0" G="128" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="0" col="1">
+    <range bottom="-0.100000" top="0.100000" right="0.000000" left="0.000000"/>
+    <limitY/>
+    <curve B="0" name="/sot/base_estimator/q/data.0" R="255" G="0" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="1">
+    <range bottom="-0.100000" top="0.100000" right="0.000000" left="0.000000"/>
+    <limitY/>
+    <curve B="255" name="/sot/base_estimator/q/data.1" R="255" G="0" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="0" col="2">
+    <range bottom="-0.041579" top="-0.041371" right="26.170000" left="0.000000"/>
+    <limitY/>
+    <curve B="164" name="/gazebo/model_states/pose.1/position/x" R="160" G="160" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="2">
+    <range bottom="-0.002136" top="-0.002134" right="26.170000" left="0.000000"/>
+    <limitY/>
+    <curve B="0" name="/gazebo/model_states/pose.1/position/y" R="128" G="128" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="0" col="3">
+    <range bottom="-0.042613" top="0.001038" right="26.170000" left="0.000000"/>
+    <limitY/>
+    <curve B="164" name="/gazebo/model_states/pose.1/position/x" R="160" G="160" custom_transform="noTransform"/>
+    <curve B="255" name="/sot/PYRENE/state/data.0" R="0" G="0" custom_transform="noTransform"/>
+    <curve B="0" name="/sot/base_estimator/q/data.0" R="255" G="0" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="3">
+    <range bottom="-0.002191" top="0.000127" right="26.170000" left="0.000000"/>
+    <limitY/>
+    <curve B="0" name="/gazebo/model_states/pose.1/position/y" R="128" G="128" custom_transform="noTransform"/>
+    <curve B="0" name="/sot/PYRENE/state/data.1" R="0" G="128" custom_transform="noTransform"/>
+    <curve B="255" name="/sot/base_estimator/q/data.1" R="255" G="0" custom_transform="noTransform"/>
+    <transform value="noTransform"/>
+   </plot>
+  </plotmatrix>
+  <currentPlotMatrix index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <Plugins>
+  <DataLoad_CSV>
+   <default time_axis=""/>
+  </DataLoad_CSV>
+  <DataLoad_ROS_bags>
+   <selected_topics list=""/>
+  </DataLoad_ROS_bags>
+  <DataLoad_ULog>
+   <no_params/>
+  </DataLoad_ULog>
+  <ROS_Topic_Streamer>
+   <selected_topics list="/gazebo/model_states;/sot/base_estimator/q;/sot/PYRENE/state"/>
+  </ROS_Topic_Streamer>
+  <RosoutPublisherROS/>
+  <TopicPublisherROS/>
+ </Plugins>
+ <previouslyLoadedStreamer name="ROS_Topic_Streamer"/>
+ <customMathEquations/>
+ <snippets>
+  <snippet name="1st_derivative">
+   <global>var prevX = 0
+var prevY = 0</global>
+   <equation>dx = time - prevX
+dy = value - prevY
+prevX = time
+prevY = value
+
+return dy/dx</equation>
+  </snippet>
+  <snippet name="1st_order_lowpass">
+   <global>var prevY = 0
+var alpha = 0.1</global>
+   <equation>prevY = alpha * value + (1.-alpha) * prevY
+
+return prevY</equation>
+  </snippet>
+  <snippet name="sum_A_B">
+   <global></global>
+   <equation>return $$PLOT_A$$ + $$PLOT_B$$</equation>
+  </snippet>
+  <snippet name="yaw_from_quaternion">
+   <global>// source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+
+function quaternionToYaw(x, y, z, w)
+{
+  // yaw (z-axis rotation)
+  t1 = 2.0 * (w * z + x * y);
+  t2 = 1.0 - 2.0 * (y * y + z * z);
+  yaw = Math.atan2(t1, t2);
+
+  return yaw
+}</global>
+   <equation>return quaternionToYaw(x, y, z, w);</equation>
+  </snippet>
+ </snippets>
+</root>
+

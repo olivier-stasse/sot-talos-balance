@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root>
+ <tabbed_widget name="Main Window" parent="main_window">
+  <plotmatrix columns="4" tab_name="plot" rows="2">
+   <plot row="0" col="0">
+    <range bottom="-0.099558" left="442.267000" right="447.265000" top="0.100442"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="0" B="255" G="0" name="/sot/PYRENE/state/data.0"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="0">
+    <range bottom="-0.099979" left="442.267000" right="447.265000" top="0.100021"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="0" B="0" G="128" name="/sot/PYRENE/state/data.1"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="0" col="1">
+    <range bottom="-0.003379" left="442.267000" right="447.265000" top="-0.003307"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="255" B="0" G="0" name="/sot/base_estimator/q/data.0"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="1">
+    <range bottom="-0.000029" left="442.267000" right="447.265000" top="0.000134"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="255" B="255" G="0" name="/sot/base_estimator/q/data.1"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="0" col="2">
+    <range bottom="-0.038807" left="442.271000" right="447.271000" top="-0.038783"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="160" B="164" G="160" name="/gazebo/model_states/pose.1/position/x"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="2">
+    <range bottom="-0.001875" left="442.271000" right="447.271000" top="-0.001875"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="128" B="0" G="128" name="/gazebo/model_states/pose.1/position/y"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="0" col="3">
+    <range bottom="-0.039787" left="442.267000" right="447.271000" top="0.001423"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="160" B="164" G="160" name="/gazebo/model_states/pose.1/position/x"/>
+    <curve custom_transform="noTransform" R="0" B="255" G="0" name="/sot/PYRENE/state/data.0"/>
+    <curve custom_transform="noTransform" R="255" B="0" G="0" name="/sot/base_estimator/q/data.0"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="3">
+    <range bottom="-0.001926" left="442.267000" right="447.271000" top="0.000181"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="128" B="0" G="128" name="/gazebo/model_states/pose.1/position/y"/>
+    <curve custom_transform="noTransform" R="0" B="0" G="128" name="/sot/PYRENE/state/data.1"/>
+    <curve custom_transform="noTransform" R="255" B="255" G="0" name="/sot/base_estimator/q/data.1"/>
+    <transform value="noTransform"/>
+   </plot>
+  </plotmatrix>
+  <plotmatrix columns="2" tab_name="plot" rows="2">
+   <plot row="0" col="0">
+    <range bottom="0.000010" left="436.472000" right="441.463000" top="0.000163"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="160" B="164" G="160" name="/sot/imu_filter/imu_quat/data.0"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="0">
+    <range bottom="-0.143066" left="436.472000" right="441.463000" top="-0.143065"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="128" B="0" G="0" name="/sot/imu_filter/imu_quat/data.2"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="0" col="1">
+    <range bottom="0.989713" left="436.472000" right="441.463000" top="0.989713"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="128" B="0" G="128" name="/sot/imu_filter/imu_quat/data.1"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="1">
+    <range bottom="-0.000153" left="436.472000" right="441.463000" top="0.000099"/>
+    <limitY/>
+    <curve custom_transform="noTransform" R="0" B="255" G="0" name="/sot/imu_filter/imu_quat/data.3"/>
+    <transform value="noTransform"/>
+   </plot>
+  </plotmatrix>
+  <currentPlotMatrix index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <Plugins>
+  <DataLoad_CSV>
+   <default time_axis=""/>
+  </DataLoad_CSV>
+  <DataLoad_ROS_bags>
+   <selected_topics list=""/>
+  </DataLoad_ROS_bags>
+  <DataLoad_ULog>
+   <no_params/>
+  </DataLoad_ULog>
+  <ROS_Topic_Streamer>
+   <selected_topics list="/gazebo/model_states;/sot/base_estimator/q;/sot/PYRENE/state;/sot/imu_filter/imu_quat"/>
+  </ROS_Topic_Streamer>
+  <RosoutPublisherROS/>
+  <TopicPublisherROS/>
+ </Plugins>
+ <previouslyLoadedStreamer name="ROS_Topic_Streamer"/>
+ <customMathEquations/>
+ <snippets>
+  <snippet name="1st_derivative">
+   <global>var prevX = 0
+var prevY = 0</global>
+   <equation>dx = time - prevX
+dy = value - prevY
+prevX = time
+prevY = value
+
+return dy/dx</equation>
+  </snippet>
+  <snippet name="1st_order_lowpass">
+   <global>var prevY = 0
+var alpha = 0.1</global>
+   <equation>prevY = alpha * value + (1.-alpha) * prevY
+
+return prevY</equation>
+  </snippet>
+  <snippet name="sum_A_B">
+   <global></global>
+   <equation>return $$PLOT_A$$ + $$PLOT_B$$</equation>
+  </snippet>
+  <snippet name="yaw_from_quaternion">
+   <global>// source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+
+function quaternionToYaw(x, y, z, w)
+{
+  // yaw (z-axis rotation)
+  t1 = 2.0 * (w * z + x * y);
+  t2 = 1.0 - 2.0 * (y * y + z * z);
+  yaw = Math.atan2(t1, t2);
+
+  return yaw
+}</global>
+   <equation>return quaternionToYaw(x, y, z, w);</equation>
+  </snippet>
+ </snippets>
+</root>
+
