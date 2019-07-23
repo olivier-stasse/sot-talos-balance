@@ -10,6 +10,15 @@ runCommandClient('test_folder = "' + test_folder + '"')
 
 run_test('appli_dcmZmpControl_file.py')
 
+raw_input("Wait before resetting madgwick")
+runCommandClient('robot.imu_filters.setBeta(1e-3)')
+c = ask_for_confirmation('Reset foot positions?')
+if c:
+    print('Resetting foot positions')
+    runCommandClient('robot.base_estimator.reset_foot_positions()')
+else:
+    print('Not resetting foot positions')
+
 run_ft_calibration('robot.ftc')
 raw_input("Wait before running the test")
 

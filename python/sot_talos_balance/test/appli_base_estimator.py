@@ -236,3 +236,19 @@ create_topic(robot.publisher, robot.device, 'state', robot = robot, data_type='v
 create_topic(robot.publisher, robot.base_estimator, 'q', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.imu_filters, 'imu_quat', robot = robot, data_type='vector')
 
+create_topic(robot.publisher, robot.base_estimator, 'w_lf', robot = robot, data_type='double')
+create_topic(robot.publisher, robot.base_estimator, 'w_rf', robot = robot, data_type='double')
+create_topic(robot.publisher, robot.base_estimator, 'w_lf_filtered', robot = robot, data_type='double')
+create_topic(robot.publisher, robot.base_estimator, 'w_rf_filtered', robot = robot, data_type='double')
+
+create_topic(robot.publisher, robot.device, 'forceLLEG', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.device_filters.ft_LF_filter, 'x_filtered', robot = robot, data_type='vector')
+
+create_topic(robot.publisher, robot.device, 'forceRLEG', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.device_filters.ft_RF_filter, 'x_filtered', robot = robot, data_type='vector')
+
+create_topic(robot.publisher, robot.base_estimator, 'lf_xyzquat', robot = robot, data_type='vector')
+create_topic(robot.publisher, robot.base_estimator, 'rf_xyzquat', robot = robot, data_type='vector')
+
+#create_topic(robot.publisher, robot.base_estimator, 'lf_ref_xyzquat', robot = robot, data_type='vector')
+#create_topic(robot.publisher, robot.base_estimator, 'rf_ref_xyzquat', robot = robot, data_type='vector')
