@@ -847,6 +847,30 @@ namespace dynamicgraph
               m_oMrfs = m_oMrfs * drift_to_ref;
             }
           }
+
+          if (m_lf_ref_xyzquatSIN.isPlugged() and
+              m_rf_ref_xyzquatSIN.isPlugged())
+          {
+            ///convert from xyzquat to se3
+            const Vector7 & lf_ref_xyzquat_vec  = m_lf_ref_xyzquatSIN(iter);
+            const Vector7 & rf_ref_xyzquat_vec  = m_rf_ref_xyzquatSIN(iter);
+            const Eigen::Quaterniond ql(m_lf_ref_xyzquatSIN(iter)(6),
+                                        m_lf_ref_xyzquatSIN(iter)(3),
+                                        m_lf_ref_xyzquatSIN(iter)(4),
+                                        m_lf_ref_xyzquatSIN(iter)(5));
+            const Eigen::Quaterniond qr(m_rf_ref_xyzquatSIN(iter)(6),
+                                        m_rf_ref_xyzquatSIN(iter)(3),
+                                        m_rf_ref_xyzquatSIN(iter)(4),
+                                        m_rf_ref_xyzquatSIN(iter)(5));
+            m_oMlfs = SE3(ql.toRotationMatrix(), lf_ref_xyzquat_vec.head<3>());
+            m_oMrfs = SE3(qr.toRotationMatrix(), rf_ref_xyzquat_vec.head<3>());
+          }
+          else
+          {
+            m_oMlfs = m_oMlfs_default_ref;
+            m_oMrfs = m_oMrfs_default_ref;
+          }
+
           // convert to xyz+quaternion format //Rq: this convertions could be done in outupt signals function?
           m_oMlfs_xyzquat.head<3>() = m_oMlfs.translation();
           Eigen::Quaternion<double> quat_lf(m_oMlfs.rotation());
