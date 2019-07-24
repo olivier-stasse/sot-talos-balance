@@ -84,7 +84,8 @@ base_estimator.accelerometer.value = [0.0]*3
 base_estimator.K_fb_feet_poses.value =               conf.K_fb_feet_poses
 base_estimator.w_lf_in.value =                       conf.w_lf_in
 base_estimator.w_rf_in.value =                       conf.w_rf_in
-base_estimator.set_imu_weight(conf.w_imu)
+#base_estimator.set_imu_weight(conf.w_imu) # TEMP!
+base_estimator.set_imu_weight(0.)
 base_estimator.set_stiffness_right_foot(conf.K)
 base_estimator.set_stiffness_left_foot(conf.K)
 base_estimator.set_zmp_std_dev_right_foot(conf.std_dev_zmp)
@@ -133,6 +134,12 @@ print(e2q.quaternion.value)
 print(len(e2q.quaternion.value))
 q_est = np.matrix(e2q.quaternion.value).T
 
+# temp
+if q_est[6]<0 and q[6]>0:
+    print("Warning: quaternions have different signs")
+    q_est[3:7] = - q_est[3:7]
+
+print(q_est.T)
 assertApprox(q,q_est,3)
 
 # --- Raw q difference ---
