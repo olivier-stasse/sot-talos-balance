@@ -103,36 +103,46 @@ robot.wp.zmpDes.recompute(0)
 # --- Base Estimation
 robot.device_filters          = create_device_filters(robot, dt)
 robot.imu_filters             = create_imu_filters(robot, dt)
+robot.imu_filters.setBeta(1.)
 robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf)
+
+from dynamic_graph.sot.core import MatrixHomoToPoseQuaternion
+robot.m2qLF = MatrixHomoToPoseQuaternion('m2qLF')
+plug(robot.dynamic.LF, robot.m2qLF.sin)
+plug(robot.m2qLF.sout, robot.base_estimator.lf_ref_xyzquat)
+robot.m2qRF = MatrixHomoToPoseQuaternion('m2qRF')
+plug(robot.dynamic.RF, robot.m2qRF.sin)
+plug(robot.m2qRF.sout, robot.base_estimator.rf_ref_xyzquat)
+
 # robot.be_filters              = create_be_filters(robot, dt)
 
-# --- Reference frame
+## --- Reference frame
 
-rf = SimpleReferenceFrame('rf')
-rf.init(robot_name)
-plug(robot.dynamic.LF, rf.footLeft)
-plug(robot.dynamic.RF, rf.footRight)
-rf.reset.value = 1
-robot.rf = rf
+#rf = SimpleReferenceFrame('rf')
+#rf.init(robot_name)
+#plug(robot.dynamic.LF, rf.footLeft)
+#plug(robot.dynamic.RF, rf.footRight)
+#rf.reset.value = 1
+#robot.rf = rf
 
-# --- State transformation
-stf = StateTransformation("stf")
-stf.init()
-plug(robot.rf.referenceFrame,stf.referenceFrame)
-plug(robot.base_estimator.q,stf.q_in)
-plug(robot.base_estimator.v,stf.v_in)
-robot.stf = stf
+## --- State transformation
+#stf = StateTransformation("stf")
+#stf.init()
+#plug(robot.rf.referenceFrame,stf.referenceFrame)
+#plug(robot.base_estimator.q,stf.q_in)
+#plug(robot.base_estimator.v,stf.v_in)
+#robot.stf = stf
 
 # --- Conversion
 e2q = EulerToQuat('e2q')
-plug(robot.stf.q,e2q.euler)
+plug(robot.base_estimator.q,e2q.euler)
 robot.e2q = e2q
 
 # --- Kinematic computations
 robot.rdynamic = DynamicPinocchio("real_dynamics")
 robot.rdynamic.setModel(robot.dynamic.model)
 robot.rdynamic.setData(robot.rdynamic.model.createData())
-plug(robot.stf.q,robot.rdynamic.position)
+plug(robot.base_estimator.q,robot.rdynamic.position)
 robot.rdynamic.velocity.value = [0.0]*robotDim
 robot.rdynamic.acceleration.value = [0.0]*robotDim
 
@@ -140,7 +150,7 @@ robot.rdynamic.acceleration.value = [0.0]*robotDim
 cdc_estimator = DcmEstimator('cdc_estimator')
 cdc_estimator.init(dt, robot_name)
 plug(robot.e2q.quaternion, cdc_estimator.q)
-plug(robot.stf.v, cdc_estimator.v)
+plug(robot.base_estimator.v, cdc_estimator.v)
 robot.cdc_estimator = cdc_estimator
 
 # --- DCM Estimation
@@ -195,7 +205,8 @@ Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 
 # --- Distribute wrench
 distribute = create_distribute_wrench(distribute_conf)
-plug(robot.e2q.quaternion, distribute.q)
+#plug(robot.e2q.quaternion, distribute.q)  # TEMP! Needs to wait for Madgwick convergence
+plug(robot.device.state, distribute.q)         # TEMP! Needs to wait for Madgwick convergence
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
 plug(robot.rhoScalar.sout, distribute.rho)
 distribute.init(robot_name)
@@ -374,7 +385,7 @@ robot.publisher = create_rospublish(robot, 'robot_publisher')
 
 create_topic(robot.publisher, robot.device, 'state', robot = robot, data_type='vector')
 create_topic(robot.publisher, robot.base_estimator, 'q', robot = robot, data_type='vector')
-create_topic(robot.publisher, robot.stf, 'q', robot = robot, data_type='vector')
+#create_topic(robot.publisher, robot.stf, 'q', robot = robot, data_type='vector')
 
 create_topic(robot.publisher, robot.wp, 'comDes', robot = robot, data_type='vector')                      # desired CoM
 
