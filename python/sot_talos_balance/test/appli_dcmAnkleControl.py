@@ -2,6 +2,7 @@ from sot_talos_balance.create_entities_utils import *
 import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
 import sot_talos_balance.talos.control_manager_conf    as cm_conf
 import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
+import sot_talos_balance.talos.distribute_conf         as distribute_conf
 import sot_talos_balance.talos.ft_calibration_conf     as ft_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from sot_talos_balance.meta_task_joint import MetaTaskKineJoint
@@ -202,7 +203,7 @@ robot.dcm_control = dcm_controller
 Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 
 # --- Distribute wrench
-distribute = create_distribute_wrench(base_estimator_conf)
+distribute = create_distribute_wrench(distribute_conf)
 plug(robot.e2q.quaternion, distribute.q)
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
 plug(robot.rhoScalar.sout, distribute.rho)

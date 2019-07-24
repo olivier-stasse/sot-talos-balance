@@ -530,12 +530,12 @@ def create_distribute_wrench(conf):
     distribute.phase.value = 0
     distribute.rho.value = 0.5
 
-    distribute.setMinPressure(15.)
-    distribute.frictionCoefficient.value = 0.7
-    distribute.wSum.value = 10000.0
-    distribute.wNorm.value = 10.0
-    distribute.wRatio.value = 1.0
-    distribute.wAnkle.value = [1., 1., 1e-4, 1., 1., 1e-4]
+    distribute.setMinPressure(conf.minPressure)
+    distribute.frictionCoefficient.value = conf.frictionCoefficient
+    distribute.wSum.value = conf.wSum
+    distribute.wNorm.value = conf.wNorm
+    distribute.wRatio.value = conf.wRatio
+    distribute.wAnkle.value = conf.wAnkle
 
     distribute.set_right_foot_sizes(conf.RIGHT_FOOT_SIZES)
     distribute.set_left_foot_sizes(conf.LEFT_FOOT_SIZES)

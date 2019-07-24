@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from sot_talos_balance.create_entities_utils import *
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
-import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
+import sot_talos_balance.talos.distribute_conf       as distribute_conf
 import numpy as np
 import pinocchio as pin
 from numpy.testing import assert_almost_equal as assertApprox
@@ -71,7 +71,7 @@ param_server = create_parameter_server(param_server_conf,dt)
 # --- DistributeWrench ---
 print("--- DistributeWrench ---")
 
-distribute = create_distribute_wrench(base_estimator_conf)
+distribute = create_distribute_wrench(distribute_conf)
 
 distribute.q.value = halfSitting
 distribute.wrenchDes.value = wrench
@@ -156,7 +156,7 @@ print( "expected global wrench: %s" % str(wrench) )
 print( "expected global left wrench: %s"  % str(wrenchLeft) )
 print( "expected ankle left wrench: %s"  % str(ankleWrenchLeft) )
 
-copLeft  = [float(com[0] - leftPos.translation[0]),  base_estimator_conf.RIGHT_FOOT_SIZES[3], 0.]
+copLeft  = [float(com[0] - leftPos.translation[0]),  distribute_conf.RIGHT_FOOT_SIZES[3], 0.]
 
 print( "expected sole left CoP: %s"  % str(copLeft) )
 print()
@@ -196,7 +196,7 @@ print( "expected global wrench: %s" % str(wrench) )
 print( "expected global right wrench: %s" % str(wrenchRight) )
 print( "expected ankle right wrench: %s" % str(ankleWrenchRight) )
 
-copRight = [float(com[0] - rightPos.translation[0]),  base_estimator_conf.RIGHT_FOOT_SIZES[2], 0.]
+copRight = [float(com[0] - rightPos.translation[0]),  distribute_conf.RIGHT_FOOT_SIZES[2], 0.]
 
 print( "expected sole right CoP: %s" % str(copRight) )
 print()

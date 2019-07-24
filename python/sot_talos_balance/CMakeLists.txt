@@ -38,6 +38,7 @@ SET(${PROJECT_NAME}_TALOS_PYTHON_FILES
   balance_ctrl_sim_conf.py
   base_estimator_conf.py
   base_estimator_sim_conf.py
+  distribute_conf.py
   control_manager_conf.py
   control_manager_sim_conf.py
   current_controller_conf.py

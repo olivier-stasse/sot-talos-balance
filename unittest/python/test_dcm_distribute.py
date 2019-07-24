@@ -1,6 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
-import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
+import sot_talos_balance.talos.distribute_conf       as distribute_conf
 import numpy as np
 from math import sqrt
 import pinocchio as pin
@@ -101,7 +101,7 @@ dcm_controller.init(dt)
 # --- Wrench distribution ---
 print("--- Wrench distribution ---")
 
-distribute = create_distribute_wrench(base_estimator_conf)
+distribute = create_distribute_wrench(distribute_conf)
 
 distribute.q.value = halfSitting
 plug(dcm_controller.wrenchRef,distribute.wrenchDes)
