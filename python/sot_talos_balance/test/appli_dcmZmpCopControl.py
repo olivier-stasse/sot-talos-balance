@@ -2,12 +2,11 @@ from sot_talos_balance.create_entities_utils import *
 import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
 import sot_talos_balance.talos.control_manager_conf    as cm_conf
 import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
+import sot_talos_balance.talos.distribute_conf         as distribute_conf
 import sot_talos_balance.talos.ft_calibration_conf     as ft_conf
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
-from sot_talos_balance.meta_task_joint import MetaTaskKineJoint
 from dynamic_graph.sot.core import Task, FeaturePosture
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
-from dynamic_graph.sot.core.operator import Multiply_double_vector
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT
 from math import sqrt
@@ -82,12 +81,6 @@ robot.rhoScalar = Component_of_vector("rho_scalar")
 robot.rhoScalar.setIndex(0)
 plug(robot.rhoTrajGen.x, robot.rhoScalar.sin)
 
-# --- Phase
-robot.phaseTrajGen = create_scalar_trajectory_generator(dt, 0.5, 'phaseTrajGen')
-robot.phaseScalar = Component_of_vector("phase_scalar")
-robot.phaseScalar.setIndex(0)
-plug(robot.phaseTrajGen.x, robot.phaseScalar.sin)
-
 # --- Interface with controller entities
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
@@ -112,35 +105,46 @@ robot.wp.zmpDes.recompute(0)
 # --- Base Estimation
 robot.device_filters          = create_device_filters(robot, dt)
 robot.imu_filters             = create_imu_filters(robot, dt)
+robot.imu_filters.setBeta(1.)
 robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf)
+
+from dynamic_graph.sot.core import MatrixHomoToPoseQuaternion
+robot.m2qLF = MatrixHomoToPoseQuaternion('m2qLF')
+plug(robot.dynamic.LF, robot.m2qLF.sin)
+plug(robot.m2qLF.sout, robot.base_estimator.lf_ref_xyzquat)
+robot.m2qRF = MatrixHomoToPoseQuaternion('m2qRF')
+plug(robot.dynamic.RF, robot.m2qRF.sin)
+plug(robot.m2qRF.sout, robot.base_estimator.rf_ref_xyzquat)
+
 # robot.be_filters              = create_be_filters(robot, dt)
 
-# --- Reference frame
+## --- Reference frame
 
-rf = SimpleReferenceFrame('rf')
-rf.init(robot_name)
-plug(robot.dynamic.LF, rf.footLeft)
-plug(robot.dynamic.RF, rf.footRight)
-robot.rf = rf
+#rf = SimpleReferenceFrame('rf')
+#rf.init(robot_name)
+#plug(robot.dynamic.LF, rf.footLeft)
+#plug(robot.dynamic.RF, rf.footRight)
+#rf.reset.value = 1
+#robot.rf = rf
 
-# --- State transformation
-stf = StateTransformation("stf")
-stf.init()
-plug(robot.rf.referenceFrame,stf.referenceFrame)
-plug(robot.base_estimator.q,stf.q_in)
-plug(robot.base_estimator.v,stf.v_in)
-robot.stf = stf
+## --- State transformation
+#stf = StateTransformation("stf")
+#stf.init()
+#plug(robot.rf.referenceFrame,stf.referenceFrame)
+#plug(robot.base_estimator.q,stf.q_in)
+#plug(robot.base_estimator.v,stf.v_in)
+#robot.stf = stf
 
 # --- Conversion
 e2q = EulerToQuat('e2q')
-plug(robot.stf.q,e2q.euler)
+plug(robot.base_estimator.q,e2q.euler)
 robot.e2q = e2q
 
 # --- Kinematic computations
 robot.rdynamic = DynamicPinocchio("real_dynamics")
 robot.rdynamic.setModel(robot.dynamic.model)
 robot.rdynamic.setData(robot.rdynamic.model.createData())
-plug(robot.stf.q,robot.rdynamic.position)
+plug(robot.base_estimator.q,robot.rdynamic.position)
 robot.rdynamic.velocity.value = [0.0]*robotDim
 robot.rdynamic.acceleration.value = [0.0]*robotDim
 
@@ -148,7 +152,7 @@ robot.rdynamic.acceleration.value = [0.0]*robotDim
 cdc_estimator = DcmEstimator('cdc_estimator')
 cdc_estimator.init(dt, robot_name)
 plug(robot.e2q.quaternion, cdc_estimator.q)
-plug(robot.stf.v, cdc_estimator.v)
+plug(robot.base_estimator.v, cdc_estimator.v)
 robot.cdc_estimator = cdc_estimator
 
 # --- DCM Estimation
@@ -202,8 +206,9 @@ robot.dcm_control = dcm_controller
 Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 
 # --- Distribute wrench
-distribute = create_distribute_wrench(base_estimator_conf)
-plug(robot.e2q.quaternion, distribute.q)
+distribute = create_distribute_wrench(distribute_conf)
+#plug(robot.e2q.quaternion, distribute.q)  # TEMP! Needs to wait for Madgwick convergence
+plug(robot.device.state, distribute.q)         # TEMP! Needs to wait for Madgwick convergence
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
 plug(robot.rhoScalar.sout, distribute.rho)
 distribute.init(robot_name)
