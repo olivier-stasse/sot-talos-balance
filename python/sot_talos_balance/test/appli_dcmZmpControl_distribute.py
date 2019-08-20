@@ -103,7 +103,6 @@ robot.wp.zmpDes.recompute(0)
 # --- Base Estimation
 robot.device_filters          = create_device_filters(robot, dt)
 robot.imu_filters             = create_imu_filters(robot, dt)
-robot.imu_filters.setBeta(1.)
 robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf)
 
 from dynamic_graph.sot.core import MatrixHomoToPoseQuaternion
@@ -205,8 +204,7 @@ Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 
 # --- Distribute wrench
 distribute = create_distribute_wrench(distribute_conf)
-#plug(robot.e2q.quaternion, distribute.q)  # TEMP! Needs to wait for Madgwick convergence
-plug(robot.device.state, distribute.q)         # TEMP! Needs to wait for Madgwick convergence
+plug(robot.e2q.quaternion, distribute.q)
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
 plug(robot.rhoScalar.sout, distribute.rho)
 distribute.init(robot_name)

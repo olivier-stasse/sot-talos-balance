@@ -132,7 +132,6 @@ robot.wp.zmpDes.recompute(0)
 # --- Base Estimation
 robot.device_filters          = create_device_filters(robot, dt)
 robot.imu_filters             = create_imu_filters(robot, dt)
-robot.imu_filters.setBeta(1.)
 robot.base_estimator          = create_base_estimator(robot, dt, base_estimator_conf)
 
 from dynamic_graph.sot.core import MatrixHomoToPoseQuaternion

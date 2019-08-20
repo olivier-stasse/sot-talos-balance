@@ -298,6 +298,8 @@ def create_base_estimator(robot, dt, conf, robot_name="robot"):
 def create_imu_filters(robot, dt):
     imu_filter = MadgwickAHRS('imu_filter')
     imu_filter.init(dt)
+    imu_filter.set_imu_quat([0.,1.,0.,0.]) # [w, x, y, z]
+    imu_filter.setBeta(1e-3)
     plug(robot.device_filters.acc_filter.x_filtered,
          imu_filter.accelerometer)  # no IMU compensation
     plug(robot.device_filters.gyro_filter.x_filtered,

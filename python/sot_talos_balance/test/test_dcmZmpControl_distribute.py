@@ -7,16 +7,6 @@ import numpy as np
 
 run_test('appli_dcmZmpControl_distribute.py')
 
-raw_input("Wait before resetting madgwick")
-runCommandClient('robot.imu_filters.setBeta(1e-3)')
-runCommandClient('plug(robot.e2q.quaternion, distribute.q)') # TEMP! Needs to wait for Madgwick convergence
-c = ask_for_confirmation('Reset foot positions?')
-if c:
-    print('Resetting foot positions')
-    runCommandClient('robot.base_estimator.reset_foot_positions()')
-else:
-    print('Not resetting foot positions')
-
 run_ft_calibration('robot.ftc')
 
 use_force_distribution = ask_for_confirmation("Use output of force distribution?")
