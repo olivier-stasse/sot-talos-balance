@@ -48,6 +48,7 @@ SET(plugins
     simple-distribute-wrench
     simple-pid
     simple-pidd
+    simple-controller-6d
     distribute-wrench
     dcm-com-controller
     dcm-controller
