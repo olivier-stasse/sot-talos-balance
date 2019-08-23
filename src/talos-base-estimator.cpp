@@ -802,6 +802,13 @@ namespace dynamicgraph
                 rightDrift_delta = SE3::Identity();
                 leftDrift_delta = SE3::Identity();
               }
+//              std::cout << "------------------------------------------------" << std::endl;
+//              std::cout << "Initial m_oMlfs and m_oMrfs:" << std::endl;
+//              std::cout << m_oMlfs << std::endl;
+//              std::cout << m_oMrfs << std::endl;
+//              std::cout << "leftDrift_delta and rightDrift_delta:" << std::endl;
+//              std::cout << leftDrift_delta << std::endl;
+//              std::cout << rightDrift_delta << std::endl;
               m_oMlfs = m_oMlfs * leftDrift_delta;
               m_oMrfs = m_oMrfs * rightDrift_delta;
               // dedrift (x, y, z, yaw) using feet pose references
@@ -843,32 +850,43 @@ namespace dynamicgraph
               Matrix3 rotation_feet_drift;
               rpyToMatrix(rpy_feet_drift,rotation_feet_drift);
               const SE3 drift_to_ref(rotation_feet_drift , translation_feet_drift);
+//              std::cout << "drift_to_ref:" << std::endl;
+//              std::cout << drift_to_ref << std::endl;
+//              std::cout << "leftDrift_delta*drift_to_ref and rightDrift_delta*drift_to_ref:" << std::endl;
+//              std::cout << leftDrift_delta * drift_to_ref << std::endl;
+//              std::cout << rightDrift_delta * drift_to_ref << std::endl;
               m_oMlfs = m_oMlfs * drift_to_ref;
               m_oMrfs = m_oMrfs * drift_to_ref;
+//              std::cout << "Final m_oMlfs and m_oMrfs:" << std::endl;
+//              std::cout << m_oMlfs << std::endl;
+//              std::cout << m_oMrfs << std::endl;
+//              std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
             }
-          }
-
-          if (m_lf_ref_xyzquatSIN.isPlugged() and
-              m_rf_ref_xyzquatSIN.isPlugged())
-          {
-            ///convert from xyzquat to se3
-            const Vector7 & lf_ref_xyzquat_vec  = m_lf_ref_xyzquatSIN(iter);
-            const Vector7 & rf_ref_xyzquat_vec  = m_rf_ref_xyzquatSIN(iter);
-            const Eigen::Quaterniond ql(m_lf_ref_xyzquatSIN(iter)(6),
-                                        m_lf_ref_xyzquatSIN(iter)(3),
-                                        m_lf_ref_xyzquatSIN(iter)(4),
-                                        m_lf_ref_xyzquatSIN(iter)(5));
-            const Eigen::Quaterniond qr(m_rf_ref_xyzquatSIN(iter)(6),
-                                        m_rf_ref_xyzquatSIN(iter)(3),
-                                        m_rf_ref_xyzquatSIN(iter)(4),
-                                        m_rf_ref_xyzquatSIN(iter)(5));
-            m_oMlfs = SE3(ql.toRotationMatrix(), lf_ref_xyzquat_vec.head<3>());
-            m_oMrfs = SE3(qr.toRotationMatrix(), rf_ref_xyzquat_vec.head<3>());
-          }
-          else
-          {
-            m_oMlfs = m_oMlfs_default_ref;
-            m_oMrfs = m_oMrfs_default_ref;
+            else if (K_fb < -1e-3) // hack. If K_fb<0, disable drift compensation
+            {
+              if (m_lf_ref_xyzquatSIN.isPlugged() and
+                m_rf_ref_xyzquatSIN.isPlugged())
+              {
+                ///convert from xyzquat to se3
+                const Vector7 & lf_ref_xyzquat_vec  = m_lf_ref_xyzquatSIN(iter);
+                const Vector7 & rf_ref_xyzquat_vec  = m_rf_ref_xyzquatSIN(iter);
+                const Eigen::Quaterniond ql(m_lf_ref_xyzquatSIN(iter)(6),
+                                            m_lf_ref_xyzquatSIN(iter)(3),
+                                            m_lf_ref_xyzquatSIN(iter)(4),
+                                            m_lf_ref_xyzquatSIN(iter)(5));
+                const Eigen::Quaterniond qr(m_rf_ref_xyzquatSIN(iter)(6),
+                                            m_rf_ref_xyzquatSIN(iter)(3),
+                                            m_rf_ref_xyzquatSIN(iter)(4),
+                                            m_rf_ref_xyzquatSIN(iter)(5));
+                m_oMlfs = SE3(ql.toRotationMatrix(), lf_ref_xyzquat_vec.head<3>());
+                m_oMrfs = SE3(qr.toRotationMatrix(), rf_ref_xyzquat_vec.head<3>());
+              }
+              else
+              {
+                m_oMlfs = m_oMlfs_default_ref;
+                m_oMrfs = m_oMrfs_default_ref;
+              }
+            }
           }
 
           // convert to xyz+quaternion format //Rq: this convertions could be done in outupt signals function?
