@@ -126,7 +126,14 @@ robot.e2q = e2q
 robot.rdynamic = DynamicPinocchio("real_dynamics")
 robot.rdynamic.setModel(robot.dynamic.model)
 robot.rdynamic.setData(robot.rdynamic.model.createData())
-plug(robot.base_estimator.q,robot.rdynamic.position)
+#plug(robot.base_estimator.q,robot.rdynamic.position)
+
+robot.baseselec = Selec_of_vector("base_selec")
+robot.baseselec.selec(0, 6)
+plug(robot.base_estimator.q, robot.baseselec.sin)
+plug(robot.baseselec.sout, robot.rdynamic.ffposition)
+
+plug(robot.device.state,robot.rdynamic.position)
 robot.rdynamic.velocity.value = [0.0]*robotDim
 robot.rdynamic.acceleration.value = [0.0]*robotDim
 
@@ -203,15 +210,15 @@ plug(robot.dynamic.position, robot.taskUpperBody.feature.state)
 
 # --- CONTACTS
 #define contactLF and contactRF
-robot.contactLF = MetaTaskKine6d('contactLF',robot.dynamic,'LF',robot.OperationalPointsMap['left-ankle'])
+robot.contactLF = MetaTaskKine6d('contactLF',robot.rdynamic,'LF',robot.OperationalPointsMap['left-ankle'])
 robot.contactLF.feature.frame('desired')
-robot.contactLF.gain.setConstant(0)
+robot.contactLF.gain.setConstant(1.)
 plug(robot.wp.footLeftDes, robot.contactLF.featureDes.position) #.errorIN?
 locals()['contactLF'] = robot.contactLF
 
-robot.contactRF = MetaTaskKine6d('contactRF',robot.dynamic,'RF',robot.OperationalPointsMap['right-ankle'])
+robot.contactRF = MetaTaskKine6d('contactRF',robot.rdynamic,'RF',robot.OperationalPointsMap['right-ankle'])
 robot.contactRF.feature.frame('desired')
-robot.contactRF.gain.setConstant(0)
+robot.contactRF.gain.setConstant(1.)
 plug(robot.wp.footRightDes, robot.contactRF.featureDes.position) #.errorIN?
 locals()['contactRF'] = robot.contactRF
 
@@ -222,44 +229,18 @@ locals()['contactRF'] = robot.contactRF
 #robot.taskComH.feature.selec.value = '100'
 
 # --- COM
-robot.taskCom = MetaTaskKineCom(robot.dynamic)
+robot.taskCom = MetaTaskKineCom(robot.rdynamic)
 plug(robot.wp.comDes,robot.taskCom.featureDes.errorIN)
-robot.taskCom.task.controlGain.value = 0.
+robot.taskCom.task.controlGain.value = 1.
 #robot.taskCom.feature.selec.value = '011'
 
 # --- Waist
-#robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
-#robot.keepWaist.feature.frame('desired')
-##robot.keepWaist.gain.setConstant(0)
-##plug(robot.wp.waistDes, robot.keepWaist.featureDes.position)
-#robot.keepWaist.feature.selec.value = '111000'
-
-robot.rdynamic.createOpPoint('WT',robot.OperationalPointsMap['waist'])
-robot.waistControl = SimpleController6d('waistcontrol')
-plug(robot.wp.waistDes, robot.waistControl.x_des)
-plug(robot.rdynamic.WT, robot.waistControl.x)
-robot.waistControl.Kp.value = [0.]*3 + [1.]*3
-robot.waistControl.init()
-
-from dynamic_graph.sot.core import FeatureGeneric, Task
-
-robot.featureWaist = FeatureGeneric('featureWaist')
-plug(robot.waistControl.v_ref, robot.featureWaist.errorIN)
-plug(robot.dynamic.JWT, robot.featureWaist.jacobianIN)
-robot.featureWaist.selec.value = '111000'
-
-robot.taskWaist    = Task('taskWaist')
-robot.taskWaist.add(robot.featureWaist.name)
-robot.taskWaist.controlGain.value = -1.
-
-#robot.keepWaist.task.setWithDerivative(True)
-#robot.keepWaist.task.controlGain.value = 0
-#robot.keepWaist.feature.position.value = np.eye(4)
-#robot.keepWaist.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
-#robot.keepWaist.featureDes.position.value = np.eye(4)
-#plug(robot.waistControl.v_ref, robot.keepWaist.featureDes.velocity)
-
-#locals()['keepWaist'] = robot.keepWaist
+robot.keepWaist = MetaTaskKine6d('keepWaist',robot.rdynamic,'WT',robot.OperationalPointsMap['waist'])
+robot.keepWaist.feature.frame('desired')
+robot.keepWaist.gain.setConstant(1.)
+plug(robot.wp.waistDes, robot.keepWaist.featureDes.position)
+robot.keepWaist.feature.selec.value = '111000'
+locals()['keepWaist'] = robot.keepWaist
 
 # --- SOT solver
 robot.sot = SOT('sot')
@@ -274,8 +255,8 @@ robot.sot.push(robot.contactRF.task.name)
 robot.sot.push(robot.contactLF.task.name)
 #robot.sot.push(robot.taskComH.task.name)
 robot.sot.push(robot.taskCom.task.name)
-#robot.sot.push(robot.keepWaist.task.name)
-robot.sot.push(robot.taskWaist.name)
+robot.sot.push(robot.keepWaist.task.name)
+#robot.sot.push(robot.taskWaist.name)
 
 # --- Fix robot.dynamic inputs
 #robot.baseselec = Selec_of_vector('baseselec')
