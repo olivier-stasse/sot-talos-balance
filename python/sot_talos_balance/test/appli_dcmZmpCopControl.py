@@ -1,4 +1,5 @@
 from sot_talos_balance.create_entities_utils import *
+from sot_talos_balance.simple_controller_6d import SimpleController6d
 import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
 import sot_talos_balance.talos.control_manager_conf    as cm_conf
 import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
@@ -316,7 +317,7 @@ locals()['contactRF'] = robot.contactRF
 # --- COM height
 robot.taskComH = MetaTaskKineCom(robot.dynamic, name='comH')
 plug(robot.wp.comDes,robot.taskComH.featureDes.errorIN)
-robot.taskComH.task.controlGain.value = 100.
+robot.taskComH.task.controlGain.value = 0.
 robot.taskComH.feature.selec.value = '100'
 
 # --- COM
@@ -328,14 +329,38 @@ robot.taskCom.task.setWithDerivative(True)
 robot.taskCom.feature.selec.value = '011'
 
 # --- Waist
-robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
-robot.keepWaist.feature.frame('desired')
-robot.keepWaist.gain.setConstant(300)
-#robot.rdynamic.createOpPoint('WT',robot.OperationalPointsMap['waist'])
-#plug(robot.rdynamic.WT, robot.keepWaist.feature.position)
-plug(robot.wp.waistDes, robot.keepWaist.featureDes.position)
-robot.keepWaist.feature.selec.value = '111000'
-locals()['keepWaist'] = robot.keepWaist
+#robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
+#robot.keepWaist.feature.frame('desired')
+##robot.keepWaist.gain.setConstant(0)
+##plug(robot.wp.waistDes, robot.keepWaist.featureDes.position)
+#robot.keepWaist.feature.selec.value = '111000'
+
+robot.rdynamic.createOpPoint('WT',robot.OperationalPointsMap['waist'])
+robot.waistControl = SimpleController6d('waistcontrol')
+plug(robot.wp.waistDes, robot.waistControl.x_des)
+plug(robot.rdynamic.WT, robot.waistControl.x)
+robot.waistControl.Kp.value = [0.]*3 + [1.]*3
+robot.waistControl.init()
+
+from dynamic_graph.sot.core import FeatureGeneric, Task
+
+robot.featureWaist = FeatureGeneric('featureWaist')
+plug(robot.waistControl.v_ref, robot.featureWaist.errorIN)
+plug(robot.dynamic.JWT, robot.featureWaist.jacobianIN)
+robot.featureWaist.selec.value = '111000'
+
+robot.taskWaist    = Task('taskWaist')
+robot.taskWaist.add(robot.featureWaist.name)
+robot.taskWaist.controlGain.value = -1.
+
+#robot.keepWaist.task.setWithDerivative(True)
+#robot.keepWaist.task.controlGain.value = 0
+#robot.keepWaist.feature.position.value = np.eye(4)
+#robot.keepWaist.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
+#robot.keepWaist.featureDes.position.value = np.eye(4)
+#plug(robot.waistControl.v_ref, robot.keepWaist.featureDes.velocity)
+
+#locals()['keepWaist'] = robot.keepWaist
 
 # --- SOT solver
 robot.sot = SOT('sot')
@@ -350,7 +375,8 @@ robot.sot.push(robot.contactRF.task.name)
 robot.sot.push(robot.contactLF.task.name)
 robot.sot.push(robot.taskComH.task.name)
 robot.sot.push(robot.taskCom.task.name)
-robot.sot.push(robot.keepWaist.task.name)
+#robot.sot.push(robot.keepWaist.task.name)
+robot.sot.push(robot.taskWaist.name)
 
 # --- Fix robot.dynamic inputs
 plug(robot.device.velocity,robot.dynamic.velocity)

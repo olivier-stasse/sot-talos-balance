@@ -238,7 +238,7 @@ robot.rdynamic.createOpPoint('WT',robot.OperationalPointsMap['waist'])
 robot.waistControl = SimpleController6d('waistcontrol')
 plug(robot.wp.waistDes, robot.waistControl.x_des)
 plug(robot.rdynamic.WT, robot.waistControl.x)
-robot.waistControl.Kp.value = [0.]*6
+robot.waistControl.Kp.value = [0.]*3 + [1.]*3
 robot.waistControl.init()
 
 from dynamic_graph.sot.core import FeatureGeneric, Task
