@@ -8,7 +8,7 @@ normal_force_margin = 30.
 zmp_margin          = 0.002
 w_imu               = 1.;
 beta                = 0.00329
-K_fb_feet_poses     = 0;      # gain used for updating foot positions
+K_fb_feet_poses     = -1.;      # gain used for updating foot positions
 
 # --- Real sizes
 # RIGHT_FOOT_SIZES    = (0.100, -0.100, 0.06, -0.06)  # pos x, neg x, pos y, neg y size 
