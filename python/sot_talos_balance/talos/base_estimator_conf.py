@@ -6,7 +6,7 @@ std_dev_zmp         = 0.02
 std_dev_fz          = 50.
 normal_force_margin = 30.
 zmp_margin          = 0.002
-w_imu               = 1.;
+w_imu               = 100.;
 beta                = 0.00329
 K_fb_feet_poses     = -1.;      # gain used for updating foot positions
 
