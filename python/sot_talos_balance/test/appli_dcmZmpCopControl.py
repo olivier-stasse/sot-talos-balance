@@ -144,14 +144,14 @@ robot.e2q = e2q
 robot.rdynamic = DynamicPinocchio("real_dynamics")
 robot.rdynamic.setModel(robot.dynamic.model)
 robot.rdynamic.setData(robot.rdynamic.model.createData())
-#plug(robot.base_estimator.q,robot.rdynamic.position)
+plug(robot.base_estimator.q,robot.rdynamic.position)
 
-robot.baseselec = Selec_of_vector("base_selec")
-robot.baseselec.selec(0, 6)
-plug(robot.base_estimator.q, robot.baseselec.sin)
-plug(robot.baseselec.sout, robot.rdynamic.ffposition)
+#robot.baseselec = Selec_of_vector("base_selec")
+#robot.baseselec.selec(0, 6)
+#plug(robot.base_estimator.q, robot.baseselec.sin)
+#plug(robot.baseselec.sout, robot.rdynamic.ffposition)
 
-plug(robot.device.state,robot.rdynamic.position)
+#plug(robot.device.state,robot.rdynamic.position)
 robot.rdynamic.velocity.value = [0.0]*robotDim
 robot.rdynamic.acceleration.value = [0.0]*robotDim
 
