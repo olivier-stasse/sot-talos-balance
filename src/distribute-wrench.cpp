@@ -337,9 +337,16 @@ namespace dynamicgraph
         Bineq(32) = - m_eps;
         Bineq(33) = - m_eps;
 
-        bool success = m_qp2.solve(Q, C, Aeq, Beq, Aineq, Bineq);
+        const bool success = m_qp2.solve(Q, C, Aeq, Beq, Aineq, Bineq);
 
         m_emergency_stop_triggered = !success;
+
+        if(m_emergency_stop_triggered)
+        {
+          m_wrenchLeft.setZero(6);
+          m_wrenchRight.setZero(6);
+          return success;
+        }
 
         const Eigen::VectorXd & result = m_qp2.result();
 
@@ -379,9 +386,16 @@ namespace dynamicgraph
         Eigen::VectorXd & Bineq = m_Bineq1;
         Bineq.setZero();
 
-        bool success = m_qp1.solve(Q, C, Aeq, Beq, Aineq, Bineq);
+        const bool success = m_qp1.solve(Q, C, Aeq, Beq, Aineq, Bineq);
 
         m_emergency_stop_triggered = !success;
+
+        if(m_emergency_stop_triggered)
+        {
+          m_wrenchLeft.setZero(6);
+          m_wrenchRight.setZero(6);
+          return success;
+        }
 
         const Eigen::VectorXd & result = m_qp1.result();
 
@@ -438,7 +452,7 @@ namespace dynamicgraph
 
         if(!success)
         {
-          SEND_WARNING_STREAM_MSG("No solution to the QP problem!");
+          SEND_ERROR_STREAM_MSG("No solution to the QP problem!");
           return s;
         }
 
@@ -521,6 +535,12 @@ namespace dynamicgraph
 
         const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
 
+        if(m_emergency_stop_triggered)
+        {
+          s.setZero(3);
+          return s;
+        }
+
         s = computeCoP(wrenchLeft, m_contactLeft);
 
         return s;
@@ -537,6 +557,12 @@ namespace dynamicgraph
           s.resize(3);
 
         const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
+
+        if(m_emergency_stop_triggered)
+        {
+          s.setZero(3);
+          return s;
+        }
 
         s = computeCoP(wrenchRight, m_contactRight);
 
