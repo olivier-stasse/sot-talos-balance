@@ -242,7 +242,7 @@ LeftRollJoint = 5
 RightPitchJoint = 10
 RightRollJoint = 11
 
-Kp_ankles = [0.]*2
+Kp_ankles = [-1e-3]*2
 
 # --- Right ankle
 controller = AnkleAdmittanceController("rightController")
