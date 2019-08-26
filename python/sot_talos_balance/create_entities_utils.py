@@ -240,9 +240,9 @@ def create_ankle_admittance_controller(gains, robot, side, name):
 
 
 def create_device_filters(robot, dt):
-#    robot.pselec = Selec_of_vector("pselec")
-#    robot.pselec.selec(6, 6+N_JOINTS)
-#    plug(robot.device.state, robot.pselec.sin)
+    robot.pselec = Selec_of_vector("pselec")
+    robot.pselec.selec(6, 6+N_JOINTS)
+    plug(robot.device.state, robot.pselec.sin)
 
     robot.vselec = Selec_of_vector("vselec")
     robot.vselec.selec(6, 6+N_JOINTS)
@@ -259,8 +259,8 @@ def create_device_filters(robot, dt):
     filters.gyro_filter = create_chebi1_checby2_series_filter("gyro_filter", dt, 3)
     filters.vel_filter = create_butter_lp_filter_Wn_04_N_2("vel_filter", dt, N_JOINTS)
 
-#    plug(robot.pselec.sout,                               filters.joints_kin.x)
-    plug(robot.device.joint_angles,                       filters.joints_kin.x)
+    plug(robot.pselec.sout,                               filters.joints_kin.x)
+#    plug(robot.device.joint_angles,                       filters.joints_kin.x)
     plug(robot.device.forceRLEG,                          filters.ft_RF_filter.x)
     plug(robot.device.forceLLEG,                          filters.ft_LF_filter.x)
     plug(robot.device.forceRARM,                          filters.ft_RH_filter.x)
@@ -294,8 +294,8 @@ def create_base_estimator(robot, dt, conf, robot_name="robot"):
     base_estimator = TalosBaseEstimator('base_estimator')
     base_estimator.init(dt, robot_name)
     # device.state, device.joint_angles or device.motor_angles ?
-    #plug(robot.pselec.sout,                              base_estimator.joint_positions)
-    plug(robot.device.joint_angles,                      base_estimator.joint_positions)
+    plug(robot.pselec.sout,                              base_estimator.joint_positions)
+#    plug(robot.device.joint_angles,                      base_estimator.joint_positions)
     plug(robot.device_filters.ft_LF_filter.x_filtered,   base_estimator.forceLLEG)
     plug(robot.device_filters.ft_RF_filter.x_filtered,   base_estimator.forceRLEG)
     plug(robot.device_filters.ft_LF_filter.dx,           base_estimator.dforceLLEG)
