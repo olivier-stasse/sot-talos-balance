@@ -13,7 +13,6 @@ raw_input("Wait before running the test")
 # Connect ZMP reference and reset controllers
 print('Set controller')
 runCommandClient('plug(robot.zmp_estimator.emergencyStop,robot.cm.emergencyStop_zmp)')
-#runCommandClient('robot.distribute.phase.value = -1')
 runCommandClient('plug(robot.distribute.emergencyStop,robot.cm.emergencyStop_distribute)')
 runCommandClient('robot.rightAnkleController.gainsXY.value = Kp_ankles')
 runCommandClient('robot.leftAnkleController.gainsXY.value = Kp_ankles')
