@@ -1,4 +1,5 @@
 SET(${PROJECT_NAME}_PYTHON_TESTS
+  test_foot_force_difference_controller
   test_ankle_joint_selector
   test_base_estimator
   test_com_admittance
