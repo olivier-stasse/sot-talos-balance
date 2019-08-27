@@ -58,6 +58,7 @@ SET(plugins
     coupled-admittance-controller
     admittance-controller-end-effector
     ankle-admittance-controller
+    foot-force-difference-controller
     joint-position-controller
     nd-trajectory-generator
     talos-base-estimator
