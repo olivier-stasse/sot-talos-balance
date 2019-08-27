@@ -83,6 +83,7 @@ SET(plugins
   ft-wrist-calibration
   ankle-joint-selector
   saturation
+  hip-flexibility-calibration
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)

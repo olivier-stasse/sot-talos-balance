@@ -38,6 +38,8 @@ SET(${PROJECT_NAME}_SIMULATION_FILES
   test_param_server.py
   test_dcm_estimator.py
   appli_dcm_estimator.py
+  test_hip_flexibility_calibration.py
+  appli_hip_flexibility_calibration.py
   )
 
 FOREACH(python ${${PROJECT_NAME}_SIMULATION_FILES})
