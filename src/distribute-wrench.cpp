@@ -277,7 +277,7 @@ namespace dynamicgraph
         return s;
       }
 
-      bool DistributeWrench::distributeWrench(const Eigen::VectorXd & wrenchDes,  const double rho, const double mu)
+      void DistributeWrench::distributeWrench(const Eigen::VectorXd & wrenchDes,  const double rho, const double mu)
       {
 
         // --- COSTS
@@ -345,18 +345,16 @@ namespace dynamicgraph
         {
           m_wrenchLeft.setZero(6);
           m_wrenchRight.setZero(6);
-          return success;
         }
-
-        const Eigen::VectorXd & result = m_qp2.result();
-
-        m_wrenchLeft  = result.head<6>();
-        m_wrenchRight = result.tail<6>();
-
-        return success;
+        else
+        {
+          const Eigen::VectorXd & result = m_qp2.result();
+          m_wrenchLeft  = result.head<6>();
+          m_wrenchRight = result.tail<6>();
+        }
       }
 
-      bool DistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase, const double mu) {
+      void DistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase, const double mu) {
         // Initialize cost matrices
         Eigen::MatrixXd & Q = m_Q1;
         Eigen::VectorXd & C = m_C1;
@@ -394,21 +392,20 @@ namespace dynamicgraph
         {
           m_wrenchLeft.setZero(6);
           m_wrenchRight.setZero(6);
-          return success;
         }
+        else
+        {
+          const Eigen::VectorXd & result = m_qp1.result();
 
-        const Eigen::VectorXd & result = m_qp1.result();
-
-        if(phase>0) {
-          m_wrenchLeft  = result;
-          m_wrenchRight.setZero(6);
+          if(phase>0) {
+            m_wrenchLeft  = result;
+            m_wrenchRight.setZero(6);
+          }
+          else if(phase<0) {
+            m_wrenchRight  = result;
+            m_wrenchLeft.setZero(6);
+          }
         }
-        else if(phase<0) {
-          m_wrenchRight  = result;
-          m_wrenchLeft.setZero(6);
-        }
-
-        return success;
       }
 
       DEFINE_SIGNAL_INNER_FUNCTION(qp_computations, int)
@@ -430,8 +427,6 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
 
-        bool success;
-
         if(phase==0)
         {
           const double & rho = m_rhoSIN(iter);
@@ -441,16 +436,16 @@ namespace dynamicgraph
           m_wRatio = m_wRatioSIN(iter);  // 1.0
           m_wAnkle = m_wAnkleSIN(iter);  // 1., 1., 1e-4, 1., 1., 1e-4
 
-          success = distributeWrench(wrenchDes, rho, mu);
+          distributeWrench(wrenchDes, rho, mu);
         }
         else
         {
-          success = saturateWrench(wrenchDes, phase, mu);
+          saturateWrench(wrenchDes, phase, mu);
         }
 
         getProfiler().stop(PROFILE_DISTRIBUTE_WRENCH_QP_COMPUTATIONS);
 
-        if(!success)
+        if(m_emergency_stop_triggered)
         {
           SEND_ERROR_STREAM_MSG("No solution to the QP problem!");
           return s;
@@ -469,7 +464,8 @@ namespace dynamicgraph
         if(s.size()!=6)
           s.resize(6);
 
-        m_qp_computationsSINNER(iter);
+        const int & dummy = m_qp_computationsSINNER(iter);
+        (void) dummy;
         s = m_wrenchLeft;
         return s;
       }
@@ -484,7 +480,8 @@ namespace dynamicgraph
         if(s.size()!=6)
           s.resize(6);
 
-        m_qp_computationsSINNER(iter);
+        const int & dummy = m_qp_computationsSINNER(iter);
+        (void) dummy;
         s = m_wrenchRight;
         return s;
       }
@@ -598,6 +595,12 @@ namespace dynamicgraph
           s.resize(3);
 
         const Eigen::VectorXd & wrenchRef  = m_wrenchRefSOUT(iter);
+
+        if(m_emergency_stop_triggered)
+        {
+          s.setZero(3);
+          return s;
+        }
 
         //const double fx = wrenchRef[0];
         //const double fy = wrenchRef[1];

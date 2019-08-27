@@ -157,8 +157,8 @@ namespace dynamicgraph {
         double m_wRatio;
         Eigen::VectorXd m_wAnkle;
 
-        bool distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho, const double mu);
-        bool saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase, const double mu);
+        void distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho, const double mu);
+        void saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase, const double mu);
 
         bool m_emergency_stop_triggered;
       }; // class DistributeWrench
