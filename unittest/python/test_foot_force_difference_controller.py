@@ -19,6 +19,7 @@ controller.wrenchRightDes.value = [0.]*6
 controller.wrenchLeftDes.value = [0.]*6
 
 controller.vdcFrequency.value = 0.
+controller.vdcDamping.value = 0.
 
 controller.posRightDes.value = np.eye(4).tolist()
 controller.posLeftDes.value = np.eye(4).tolist()
