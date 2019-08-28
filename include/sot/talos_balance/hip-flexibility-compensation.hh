@@ -14,21 +14,21 @@
  * with sot-talos-balance.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __sot_talos_balance_hip_flexibility_calibration_H__
-#define __sot_talos_balance_hip_flexibility_calibration_H__
+#ifndef __sot_talos_balance_hip_flexibility_compensation_H__
+#define __sot_talos_balance_hip_flexibility_compensation_H__
 
 /* --------------------------------------------------------------------- */
 /* --- API ------------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
 #if defined(WIN32)
-#if defined(hip_flexibility_calibration_EXPORTS)
-#define HIPFLEXIBILITYCALIBRATION_EXPORT __declspec(dllexport)
+#if defined(hip_flexibility_compensation_EXPORTS)
+#define HIPFLEXIBILITYCOMPENSATION_EXPORT __declspec(dllexport)
 #else
-#define HIPFLEXIBILITYCALIBRATION_EXPORT __declspec(dllimport)
+#define HIPFLEXIBILITYCOMPENSATION_EXPORT __declspec(dllimport)
 #endif
 #else
-#define HIPFLEXIBILITYCALIBRATION_EXPORT
+#define HIPFLEXIBILITYCOMPENSATION_EXPORT
 #endif
 
 /* --------------------------------------------------------------------- */
@@ -49,7 +49,7 @@ namespace talos_balance {
 /* --- CLASS ----------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
-class HIPFLEXIBILITYCALIBRATION_EXPORT HipFlexibilityCalibration
+class HIPFLEXIBILITYCOMPENSATION_EXPORT HipFlexibilityCompensation
     : public ::dynamicgraph::Entity {
   DYNAMIC_GRAPH_ENTITY_DECL();
 
@@ -57,7 +57,7 @@ class HIPFLEXIBILITYCALIBRATION_EXPORT HipFlexibilityCalibration
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /* --- CONSTRUCTOR ---- */
-  HipFlexibilityCalibration(const std::string& name);
+  HipFlexibilityCompensation(const std::string& name);
 
   /* --- SIGNALS --- */
   /// \brief  Desired joint configuration of the robot
@@ -70,9 +70,9 @@ class HIPFLEXIBILITYCALIBRATION_EXPORT HipFlexibilityCalibration
   DECLARE_SIGNAL_IN(K_r, double);
 
   /// \brief  Angular correction of the flexibility 
-  DECLARE_SIGNAL_OUT(theta_diff, dynamicgraph::Vector);
+  DECLARE_SIGNAL_OUT(delta_q, dynamicgraph::Vector);
   /// \brief  Corrected desired joint configuration of the robot with flexibilityjoint configuration
-  /// q_cmd = q_des + theta_diff
+  /// q_cmd = q_des + delta_q
   DECLARE_SIGNAL_OUT(q_cmd, dynamicgraph::Vector);
 
   /* --- COMMANDS --- */
@@ -80,24 +80,26 @@ class HIPFLEXIBILITYCALIBRATION_EXPORT HipFlexibilityCalibration
   virtual void display(std::ostream& os) const;
 
   /// \brief Initialize the entity
-  void init(const std::string& robotName);
-  /// \brief Activate the LowPassFilter for the angular correction computation.
-  void activateLowPassFilter();
-  /// \brief Activate the saturation for the angular correction computation, set the value of the saturation.
-  void activateAngularSaturation(const double& saturation);
+  void init(const double &dt, const std::string& robotName);
+  /// \brief Set the LowPassFilter frequency for the angular correction computation.
+  void setLowPassFilterFrequency(const double& frequency);
+  /// \brief Set the value of the saturation for the angular correction computation.
+  void setAngularSaturation(const double& saturation);
 
  protected:
   bool m_initSucceeded;  /// true if the entity has been successfully initialized
-  bool m_useLowPassFilter;
-  bool m_useAngularSaturation;
-  double m_theta_diff_saturation;
+  // time step of the robot
+  double m_dt;
+  double m_lowPassFilterFrequency;
+  double m_delta_q_saturation;
+  dynamicgraph::Vector m_previous_delta_q;
 
   RobotUtilShrPtr m_robot_util;
 
-};  // class HipFlexibilityCalibration
+};  // class HipFlexibilityCompensation
 
 }  // namespace talos_balance
 }  // namespace sot
 }  // namespace dynamicgraph
 
-#endif // #ifndef __sot_talos_balance_hip_flexibility_calibration_H__
+#endif // #ifndef __sot_talos_balance_hip_flexibility_compensation_H__

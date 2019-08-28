@@ -40,7 +40,7 @@ from sot_talos_balance.state_transformation import StateTransformation
 from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator
 from sot_talos_balance.ankle_joint_selector import AnkleJointSelector
 from sot_talos_balance.qualisys_client import QualisysClient
-from sot_talos_balance.hip_flexibility_calibration import HipFlexibilityCalibration
+from sot_talos_balance.hip_flexibility_compensation import HipFlexibilityCompensation
 
 # python
 from sot_talos_balance.utils.filter_utils import *
@@ -213,16 +213,17 @@ def create_joint_admittance_controller(joint, Kp, dt, robot, filter=False):
     controller.setPosition([robot.device.state.value[joint+6]])
     return controller
 
-def create_hip_flexibility_calibration(robot, robot_name='robot'):
-    hipCalib = HipFlexibilityCalibration("hipFlexCalib")
+def create_hip_flexibility_compensation(robot, robot_name='robot'):
+    timeStep = robot.timeStep
+    hipComp = HipFlexibilityCompensation("hipFlexCompensation")
     # K = 1.02753655126 in mm/Nm
     # For a lever arm of 1 m/rad -> K = 973.201390037 in Nm/rad
-    hipCalib.K_l.value = 973.201390037  
-    hipCalib.K_r.value = 973.201390037 
-    hipCalib.q_des.value = robot.halfSitting[6:]   
-    plug(robot.device.ptorque, hipCalib.tau)
-    hipCalib.init(robot_name)
-    return hipCalib
+    hipComp.K_l.value = 973.201390037  
+    hipComp.K_r.value = 973.201390037 
+    hipComp.q_des.value = robot.halfSitting[6:]   
+    plug(robot.device.ptorque, hipComp.tau)
+    hipComp.init(timeStep, robot_name)
+    return hipComp
     
 def create_ankle_admittance_controller(gains, robot, side, name):
     controller = AnkleAdmittanceController(name)

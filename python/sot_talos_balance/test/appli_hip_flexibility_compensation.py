@@ -46,27 +46,28 @@ robot.param_server = create_parameter_server(paramServerConfig, robot.timeStep)
 
 # --- HIP TASK ----------------------------------------------------------------
 
-robot.hipCalib = create_hip_flexibility_calibration(robot, robot_name)
+robot.hipComp = create_hip_flexibility_compensation(robot, robot_name)
 
 
 # --- PLUG CONTROL ----------------------------------------------------------------
 # Plug control to device through control manager
-# plug(robot.hipCalib.q_cmd, robot.controlManager.ctrl_pos)
+# plug(robot.hipComp.q_cmd, robot.controlManager.ctrl_pos)
 # plug(robot.controlManager.u_safe, robot.device.control)
-# plug(robot.hipCalib.q_cmd, robot.device.control)
+# plug(robot.hipComp.q_cmd, robot.device.control)
+
 
 # # --- ROS PUBLISHER ----------------------------------------------------------
 
 robot.publisher = create_rospublish(robot, 'robot_publisher')
-create_topic(robot.publisher, robot.hipCalib, 'theta_diff', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.hipCalib, 'q_cmd', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.hipCalib, 'q_des', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.hipCalib, 'tau', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.hipComp, 'delta_q', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.hipComp, 'q_cmd', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.hipComp, 'q_des', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.hipComp, 'tau', robot=robot, data_type='vector')
 
 # # --- ROS SUBSCRIBER
-robot.subscriber = RosSubscribe("hip_calib_subscriber")
-robot.subscriber.add("vector", "theta_diff", "/sot/hip_calib/theta_diff")
-robot.subscriber.add("vector", "q_cmd", "/sot/hip_calib/q_cmd")
-robot.subscriber.add("vector", "q_des", "/sot/hip_calib/q_des")
-robot.subscriber.add("vector", "tau", "/sot/hip_calib/tau")
+robot.subscriber = RosSubscribe("hip_compens_subscriber")
+robot.subscriber.add("vector", "delta_q", "/sot/hip_compens/delta_q")
+robot.subscriber.add("vector", "q_cmd", "/sot/hip_compens/q_cmd")
+robot.subscriber.add("vector", "q_des", "/sot/hip_compens/q_des")
+robot.subscriber.add("vector", "tau", "/sot/hip_compens/tau")
 
