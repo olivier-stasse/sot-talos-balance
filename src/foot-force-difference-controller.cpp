@@ -32,7 +32,7 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
 
-#define INPUT_SIGNALS  m_dfzAdmittanceSIN << m_vdcFrequencySIN << m_wrenchRightDesSIN << m_wrenchLeftDesSIN << m_wrenchRightSIN << m_wrenchLeftSIN << m_posRightDesSIN << m_posLeftDesSIN << m_posRightSIN << m_posLeftSIN
+#define INPUT_SIGNALS  m_dfzAdmittanceSIN << m_vdcFrequencySIN << m_vdcDampingSIN << m_wrenchRightDesSIN << m_wrenchLeftDesSIN << m_wrenchRightSIN << m_wrenchLeftSIN << m_posRightDesSIN << m_posLeftDesSIN << m_posRightSIN << m_posLeftSIN
 
 #define INNER_SIGNALS m_dz_ctrlSOUT << m_dz_posSOUT
 
@@ -53,6 +53,7 @@ namespace dynamicgraph
           : Entity(name)
           , CONSTRUCT_SIGNAL_IN(dfzAdmittance, double)
           , CONSTRUCT_SIGNAL_IN(vdcFrequency, double)
+          , CONSTRUCT_SIGNAL_IN(vdcDamping, double)
           , CONSTRUCT_SIGNAL_IN(wrenchRightDes, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_IN(wrenchLeftDes, dynamicgraph::Vector)
           , CONSTRUCT_SIGNAL_IN(wrenchRight, dynamicgraph::Vector)
@@ -61,7 +62,7 @@ namespace dynamicgraph
           , CONSTRUCT_SIGNAL_IN(posLeftDes, MatrixHomogeneous)
           , CONSTRUCT_SIGNAL_IN(posRight, MatrixHomogeneous)
           , CONSTRUCT_SIGNAL_IN(posLeft, MatrixHomogeneous)
-          , CONSTRUCT_SIGNAL_INNER(dz_ctrl, double, m_dfzAdmittanceSIN << m_wrenchRightDesSIN << m_wrenchLeftDesSIN << m_wrenchRightSIN << m_wrenchLeftSIN)
+          , CONSTRUCT_SIGNAL_INNER(dz_ctrl, double, m_dfzAdmittanceSIN << m_vdcDampingSIN << m_wrenchRightDesSIN << m_wrenchLeftDesSIN << m_wrenchRightSIN << m_wrenchLeftSIN << m_posRightSIN << m_posLeftSIN)
           , CONSTRUCT_SIGNAL_INNER(dz_pos, double, m_vdcFrequencySIN << m_posRightDesSIN << m_posLeftDesSIN << m_posRightSIN << m_posLeftSIN)
           , CONSTRUCT_SIGNAL_OUT(vRight, dynamicgraph::Vector, m_dz_ctrlSINNER << m_dz_posSINNER)
           , CONSTRUCT_SIGNAL_OUT(vLeft,  dynamicgraph::Vector, m_dz_ctrlSINNER << m_dz_posSINNER)
@@ -91,11 +92,18 @@ namespace dynamicgraph
         }
 
         const double & dfzAdmittance = m_dfzAdmittanceSIN(iter);
+        const double & vdcDamping = m_vdcDampingSIN(iter);
 
         const Eigen::VectorXd & wrenchRightDes = m_wrenchRightDesSIN(iter);
         const Eigen::VectorXd & wrenchLeftDes  = m_wrenchLeftDesSIN(iter);
         const Eigen::VectorXd & wrenchRight = m_wrenchRightSIN(iter);
         const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSIN(iter);
+
+        const MatrixHomogeneous & posRight = m_posRightSIN(iter);
+        const MatrixHomogeneous & posLeft  = m_posLeftSIN(iter);
+
+        const double RTz = posRight.translation()[2];
+        const double LTz = posLeft.translation()[2];
 
         const double RFz_d = wrenchRightDes[2];
         const double LFz_d = wrenchLeftDes[2];
@@ -103,7 +111,7 @@ namespace dynamicgraph
         const double RFz = wrenchRight[2];
         const double LFz = wrenchLeft[2];
 
-        const double dz_ctrl = dfzAdmittance * ((LFz_d - RFz_d) - (LFz - RFz));
+        const double dz_ctrl = dfzAdmittance * ((LFz_d - RFz_d) - (LFz - RFz)) - vdcDamping * (RTz - LTz);
 
         s = dz_ctrl;
 

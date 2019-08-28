@@ -67,6 +67,7 @@ namespace dynamicgraph {
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(dfzAdmittance, double);
         DECLARE_SIGNAL_IN(vdcFrequency, double);
+        DECLARE_SIGNAL_IN(vdcDamping, double);
 
         DECLARE_SIGNAL_IN(wrenchRightDes, dynamicgraph::Vector);
         DECLARE_SIGNAL_IN(wrenchLeftDes, dynamicgraph::Vector);
