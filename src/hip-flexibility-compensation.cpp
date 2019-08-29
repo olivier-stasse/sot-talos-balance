@@ -62,8 +62,8 @@ HipFlexibilityCompensation::HipFlexibilityCompensation(const std::string& name)
   , CONSTRUCT_SIGNAL_OUT(delta_q, dynamicgraph::Vector, INPUT_SIGNALS) 
   , CONSTRUCT_SIGNAL_OUT(q_cmd, dynamicgraph::Vector, JOINT_DES_SIGNALS << m_delta_qSOUT)
   , m_initSucceeded(false) 
-  , m_lowPassFilterFrequency(0)
-  , m_delta_q_saturation(1e6){
+  , m_lowPassFilterFrequency(5)
+  , m_delta_q_saturation(0.052){
 
   Entity::signalRegistration( JOINT_DES_SIGNALS << INPUT_SIGNALS << OUTPUT_SIGNALS );
 
