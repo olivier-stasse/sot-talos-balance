@@ -65,6 +65,8 @@ namespace dynamicgraph {
         void init();
 
         /* --- SIGNALS --- */
+        DECLARE_SIGNAL_IN(phase, int);
+
         DECLARE_SIGNAL_IN(dfzAdmittance, double);
         DECLARE_SIGNAL_IN(vdcFrequency, double);
         DECLARE_SIGNAL_IN(vdcDamping, double);
