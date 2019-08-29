@@ -245,6 +245,7 @@ vdcDamping = 0.
 
 controller = FootForceDifferenceController("footController")
 controller.init()
+controller.phase.value = 0
 
 controller.dfzAdmittance.value = 0.
 

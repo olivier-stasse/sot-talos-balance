@@ -9,20 +9,24 @@ controller = FootForceDifferenceController("footController")
 controller.init()
 
 controller.dfzAdmittance.value = 1.
+controller.vdcFrequency.value = 0.
+controller.vdcDamping.value = 0.
 
 controller.wrenchRight.value = [0.]*2 + [500.] + [0.]*3
 controller.wrenchLeft.value  = [0.]*2 + [300.] + [0.]*3
 controller.wrenchRightDes.value = [0.]*2 + [400.] + [0.]*3
 controller.wrenchLeftDes.value  = [0.]*2 + [400.] + [0.]*3
 
+print("---- Input ----")
 print("wrenchRight:    %s" % str(controller.wrenchRight.value))
 print("wrenchLeft:     %s" % str(controller.wrenchLeft.value))
 print("wrenchRightDes: %s" % str(controller.wrenchRightDes.value))
 print("wrenchLeftDes:  %s" % str(controller.wrenchLeftDes.value))
 print()
 
-controller.vdcFrequency.value = 0.
-controller.vdcDamping.value = 0.
+print("---- Double support ----")
+
+controller.phase.value = 0
 
 controller.posRightDes.value = np.eye(4).tolist()
 controller.posLeftDes.value = np.eye(4).tolist()
@@ -41,7 +45,20 @@ print("Expected vRight: %s" % str(vRight))
 print("Actual vRight:   %s" % str(controller.vRight.value))
 print("Expected vLeft:  %s" % str(vLeft))
 print("Actual vLeft:    %s" % str(controller.vLeft.value))
+print()
 
 assertApprox(vRight,controller.vRight.value)
 assertApprox(vLeft,controller.vLeft.value)
+
+print("---- Single support ----")
+controller.phase.value = 1
+
+controller.vRight.recompute(1)
+controller.vLeft.recompute(1)
+print("vRight:   %s" % str(controller.vRight.value))
+print("vLeft:    %s" % str(controller.vLeft.value))
+print()
+
+assertApprox([0.]*6,controller.vRight.value)
+assertApprox([0.]*6,controller.vLeft.value)
 

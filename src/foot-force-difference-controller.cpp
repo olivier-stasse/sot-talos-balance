@@ -32,7 +32,7 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
 
-#define INPUT_SIGNALS  m_dfzAdmittanceSIN << m_vdcFrequencySIN << m_vdcDampingSIN << m_wrenchRightDesSIN << m_wrenchLeftDesSIN << m_wrenchRightSIN << m_wrenchLeftSIN << m_posRightDesSIN << m_posLeftDesSIN << m_posRightSIN << m_posLeftSIN
+#define INPUT_SIGNALS  m_phaseSIN << m_dfzAdmittanceSIN << m_vdcFrequencySIN << m_vdcDampingSIN << m_wrenchRightDesSIN << m_wrenchLeftDesSIN << m_wrenchRightSIN << m_wrenchLeftSIN << m_posRightDesSIN << m_posLeftDesSIN << m_posRightSIN << m_posLeftSIN
 
 #define INNER_SIGNALS m_dz_ctrlSOUT << m_dz_posSOUT
 
@@ -51,6 +51,7 @@ namespace dynamicgraph
       /* ------------------------------------------------------------------- */
       FootForceDifferenceController::FootForceDifferenceController(const std::string& name)
           : Entity(name)
+          , CONSTRUCT_SIGNAL_IN(phase, int)
           , CONSTRUCT_SIGNAL_IN(dfzAdmittance, double)
           , CONSTRUCT_SIGNAL_IN(vdcFrequency, double)
           , CONSTRUCT_SIGNAL_IN(vdcDamping, double)
@@ -64,8 +65,8 @@ namespace dynamicgraph
           , CONSTRUCT_SIGNAL_IN(posLeft, MatrixHomogeneous)
           , CONSTRUCT_SIGNAL_INNER(dz_ctrl, double, m_dfzAdmittanceSIN << m_vdcDampingSIN << m_wrenchRightDesSIN << m_wrenchLeftDesSIN << m_wrenchRightSIN << m_wrenchLeftSIN << m_posRightSIN << m_posLeftSIN)
           , CONSTRUCT_SIGNAL_INNER(dz_pos, double, m_vdcFrequencySIN << m_posRightDesSIN << m_posLeftDesSIN << m_posRightSIN << m_posLeftSIN)
-          , CONSTRUCT_SIGNAL_OUT(vRight, dynamicgraph::Vector, m_dz_ctrlSINNER << m_dz_posSINNER)
-          , CONSTRUCT_SIGNAL_OUT(vLeft,  dynamicgraph::Vector, m_dz_ctrlSINNER << m_dz_posSINNER)
+          , CONSTRUCT_SIGNAL_OUT(vRight, dynamicgraph::Vector, m_phaseSIN << m_dz_ctrlSINNER << m_dz_posSINNER)
+          , CONSTRUCT_SIGNAL_OUT(vLeft,  dynamicgraph::Vector, m_phaseSIN << m_dz_ctrlSINNER << m_dz_posSINNER)
           , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -158,9 +159,12 @@ namespace dynamicgraph
 
         const double & dz_ctrl = m_dz_ctrlSINNER(iter);
         const double & dz_pos  = m_dz_posSINNER(iter);
+        const int & phase = m_phaseSIN(iter);
 
         s.setZero(6);
-        s[2] = 0.5 * (dz_pos + dz_ctrl);
+
+        if(phase==0)
+          s[2] = 0.5 * (dz_pos + dz_ctrl);
 
         return s;
       }
@@ -177,9 +181,12 @@ namespace dynamicgraph
 
         const double & dz_ctrl = m_dz_ctrlSINNER(iter);
         const double & dz_pos  = m_dz_posSINNER(iter);
+        const int & phase = m_phaseSIN(iter);
 
         s.setZero(6);
-        s[2] = 0.5 * (dz_pos - dz_ctrl);
+
+        if(phase==0)
+          s[2] = 0.5 * (dz_pos - dz_ctrl);
 
         return s;
       }
