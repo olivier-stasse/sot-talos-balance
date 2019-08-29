@@ -239,8 +239,9 @@ Kp_adm = [20.0,10.0,0.0] # this value is employed later
 
 # --- Foot force difference control
 
-dfzAdmittance = 1e-4
-vdcFrequency = 1.
+dfzAdmittance = -1e-4
+vdcFrequency = -1.
+vdcDamping = 0.
 
 controller = FootForceDifferenceController("footController")
 controller.init()
@@ -253,6 +254,7 @@ plug(robot.distribute.surfaceWrenchRight, controller.wrenchRightDes)
 plug(robot.distribute.surfaceWrenchLeft,  controller.wrenchLeftDes)
 
 controller.vdcFrequency.value = 0.
+controller.vdcDamping.value = 0.
 
 plug(robot.wp.footRightDes,  controller.posRightDes)
 plug(robot.wp.footLeftDes, controller.posLeftDes)
@@ -308,7 +310,7 @@ plug(robot.dynamic.position, robot.taskUpperBody.feature.state)
 #define contactLF and contactRF
 robot.contactLF = MetaTaskKine6d('contactLF',robot.dynamic,'LF',robot.OperationalPointsMap['left-ankle'])
 robot.contactLF.feature.frame('desired')
-robot.contactLF.gain.setConstant(300)
+robot.contactLF.gain.setConstant(0)
 plug(robot.wp.footLeftDes, robot.contactLF.featureDes.position) #.errorIN?
 plug(robot.ffdc.vLeft, robot.contactLF.featureDes.velocity)
 robot.contactLF.task.setWithDerivative(True)
@@ -316,7 +318,7 @@ locals()['contactLF'] = robot.contactLF
 
 robot.contactRF = MetaTaskKine6d('contactRF',robot.dynamic,'RF',robot.OperationalPointsMap['right-ankle'])
 robot.contactRF.feature.frame('desired')
-robot.contactRF.gain.setConstant(300)
+robot.contactRF.gain.setConstant(0)
 plug(robot.wp.footRightDes, robot.contactRF.featureDes.position) #.errorIN?
 plug(robot.ffdc.vRight, robot.contactRF.featureDes.velocity)
 robot.contactRF.task.setWithDerivative(True)
@@ -390,6 +392,8 @@ create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot = robot, data_t
 create_topic(robot.publisher, robot.dcm_control, 'wrenchRef', robot = robot, data_type='vector')          # unoptimized reference wrench
 create_topic(robot.publisher, robot.distribute, 'wrenchLeft', robot = robot, data_type='vector')          # reference left wrench
 create_topic(robot.publisher, robot.distribute, 'wrenchRight', robot = robot, data_type='vector')         # reference right wrench
+create_topic(robot.publisher, robot.distribute, 'surfaceWrenchLeft', robot = robot, data_type='vector')   # reference surface left wrench
+create_topic(robot.publisher, robot.distribute, 'surfaceWrenchRight', robot = robot, data_type='vector')  # reference right wrench
 create_topic(robot.publisher, robot.distribute, 'wrenchRef', robot = robot, data_type='vector')           # optimized reference wrench
 
 #create_topic(robot.publisher, robot.device, 'forceLLEG', robot = robot, data_type='vector')               # measured left wrench

@@ -17,10 +17,13 @@ runCommandClient('plug(robot.distribute.emergencyStop,robot.cm.emergencyStop_dis
 runCommandClient('plug(robot.distribute.zmpRef,robot.com_admittance_control.zmpDes)')
 runCommandClient('robot.com_admittance_control.setState(robot.wp.comDes.value,[0.0,0.0,0.0])')
 runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
-runCommandClient('robot.ffdc.dfzAdmittance.value = dfzAdmittance')
-runCommandClient('robot.ffdc.vdcFrequency.value = dfzAdmittance')
 runCommandClient('robot.dcm_control.resetDcmIntegralError()')
 runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
+
+raw_input("Wait before activating foot force difference control")
+runCommandClient('robot.ffdc.dfzAdmittance.value = dfzAdmittance')
+runCommandClient('robot.ffdc.vdcFrequency.value = vdcFrequency')
+runCommandClient('robot.ffdc.vdcDamping.value = vdcDamping')
 
 c = ask_for_confirmation("Execute a sinusoid?")
 if c:
