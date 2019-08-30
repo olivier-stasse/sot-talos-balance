@@ -36,11 +36,11 @@ namespace dynamicgraph
 //Size to be aligned                                         "-------------------------------------------------------"
 #define PROFILE_DUMMYWALKINGPATTERNGENERATOR_DCM_COMPUTATION "DummyWalkingPatternGenerator: dcm computation          "
 
-#define INPUT_SIGNALS     m_omegaSIN << m_footLeftSIN << m_footRightSIN << m_waistSIN << m_comSIN << m_vcomSIN << m_acomSIN << m_zmpSIN << m_referenceFrameSIN
+#define INPUT_SIGNALS     m_omegaSIN << m_rhoSIN << m_phaseSIN << m_footLeftSIN << m_footRightSIN << m_waistSIN << m_comSIN << m_vcomSIN << m_acomSIN << m_zmpSIN << m_referenceFrameSIN
 
 #define INNER_SIGNALS m_rfSINNER
 
-#define OUTPUT_SIGNALS m_comDesSOUT << m_vcomDesSOUT << m_acomDesSOUT << m_dcmDesSOUT << m_zmpDesSOUT << m_footLeftDesSOUT << m_footRightDesSOUT << m_waistDesSOUT
+#define OUTPUT_SIGNALS m_comDesSOUT << m_vcomDesSOUT << m_acomDesSOUT << m_dcmDesSOUT << m_zmpDesSOUT << m_footLeftDesSOUT << m_footRightDesSOUT << m_waistDesSOUT << m_omegaDesSOUT << m_rhoDesSOUT << m_phaseDesSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -56,6 +56,8 @@ namespace dynamicgraph
       DummyWalkingPatternGenerator::DummyWalkingPatternGenerator(const std::string& name)
                       : Entity(name)
                       , CONSTRUCT_SIGNAL_IN(omega, double)
+                      , CONSTRUCT_SIGNAL_IN(rho, double)
+                      , CONSTRUCT_SIGNAL_IN(phase, int)
                       , CONSTRUCT_SIGNAL_IN(footLeft,  MatrixHomogeneous)
                       , CONSTRUCT_SIGNAL_IN(footRight, MatrixHomogeneous)
                       , CONSTRUCT_SIGNAL_IN(waist, MatrixHomogeneous)
@@ -73,6 +75,9 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_OUT(footLeftDes,  MatrixHomogeneous, m_footLeftSIN  << m_rfSINNER)
                       , CONSTRUCT_SIGNAL_OUT(footRightDes, MatrixHomogeneous, m_footRightSIN << m_rfSINNER)
                       , CONSTRUCT_SIGNAL_OUT(waistDes, MatrixHomogeneous, m_waistSIN << m_rfSINNER)
+                      , CONSTRUCT_SIGNAL_OUT(omegaDes, double, m_omegaSIN)
+                      , CONSTRUCT_SIGNAL_OUT(rhoDes, double, m_rhoSIN)
+                      , CONSTRUCT_SIGNAL_OUT(phaseDes, int, m_phaseSIN)
                       , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -280,6 +285,42 @@ namespace dynamicgraph
 
         s = actInv(referenceFrame, waist);
 
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(omegaDes, double)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal omegaDes before initialization!");
+          return s;
+        }
+
+        s = m_omegaSIN(iter);
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(rhoDes, double)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal rhoDes before initialization!");
+          return s;
+        }
+
+        s = m_rhoSIN(iter);
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(phaseDes, int)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal phaseDes before initialization!");
+          return s;
+        }
+
+        s = m_phaseSIN(iter);
         return s;
       }
 
