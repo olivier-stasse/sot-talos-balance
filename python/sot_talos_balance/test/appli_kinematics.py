@@ -35,30 +35,46 @@ robot.contactRF.featureDes.velocity.value = [0.]*6
 locals()['contactRF'] = robot.contactRF
 
 robot.taskRH = MetaTaskKine6d('taskRH', robot.dynamic, 'RH', 'arm_right_7_joint')
-handMgrip = np.eye(4)
-handMgrip[0:3, 3] = (0.1, 0, 0)
-robot.taskRH.opmodif = matrixToTuple(handMgrip)
 robot.taskRH.feature.frame('desired')
-robot.taskRH.feature.selec.value = '111111'
+robot.taskRH.gain.setConstant(0)
+robot.taskRH.keep()
 robot.taskRH.task.setWithDerivative(True)
-robot.taskRH.task.controlGain.value = 0
-robot.taskRH.feature.position.value = np.eye(4)
-robot.taskRH.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
-robot.taskRH.featureDes.position.value = np.eye(4)
-robot.taskRH.featureDes.velocity.value = [0., 0., 0., 0., 0., 0.]
+robot.taskRH.featureDes.velocity.value = [0.]*6
+locals()['taskRH'] = robot.taskRH
 
 robot.taskLH = MetaTaskKine6d('taskLH', robot.dynamic, 'LH', 'arm_left_7_joint')
-handMgrip = np.eye(4)
-handMgrip[0:3, 3] = (0.1, 0, 0)
-robot.taskLH.opmodif = matrixToTuple(handMgrip)
 robot.taskLH.feature.frame('desired')
-robot.taskLH.feature.selec.value = '111111'
+robot.taskLH.gain.setConstant(0)
+robot.taskLH.keep()
 robot.taskLH.task.setWithDerivative(True)
-robot.taskLH.task.controlGain.value = 0
-robot.taskLH.feature.position.value = np.eye(4)
-robot.taskLH.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
-robot.taskLH.featureDes.position.value = np.eye(4)
-robot.taskLH.featureDes.velocity.value = [0., 0., 0., 0., 0., 0.]
+robot.taskLH.featureDes.velocity.value = [0.]*6
+locals()['taskLH'] = robot.taskLH
+
+#robot.taskRH = MetaTaskKine6d('taskRH', robot.dynamic, 'RH', 'arm_right_7_joint')
+#handMgrip = np.eye(4)
+#handMgrip[0:3, 3] = (0.1, 0, 0)
+#robot.taskRH.opmodif = matrixToTuple(handMgrip)
+#robot.taskRH.feature.frame('desired')
+#robot.taskRH.feature.selec.value = '111111'
+#robot.taskRH.task.setWithDerivative(True)
+#robot.taskRH.task.controlGain.value = 0
+#robot.taskRH.feature.position.value = np.eye(4)
+#robot.taskRH.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
+#robot.taskRH.featureDes.position.value = np.eye(4)
+#robot.taskRH.featureDes.velocity.value = [0., 0., 0., 0., 0., 0.]
+
+#robot.taskLH = MetaTaskKine6d('taskLH', robot.dynamic, 'LH', 'arm_left_7_joint')
+#handMgrip = np.eye(4)
+#handMgrip[0:3, 3] = (0.1, 0, 0)
+#robot.taskLH.opmodif = matrixToTuple(handMgrip)
+#robot.taskLH.feature.frame('desired')
+#robot.taskLH.feature.selec.value = '111111'
+#robot.taskLH.task.setWithDerivative(True)
+#robot.taskLH.task.controlGain.value = 0
+#robot.taskLH.feature.position.value = np.eye(4)
+#robot.taskLH.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
+#robot.taskLH.featureDes.position.value = np.eye(4)
+#robot.taskLH.featureDes.velocity.value = [0., 0., 0., 0., 0., 0.]
 
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
