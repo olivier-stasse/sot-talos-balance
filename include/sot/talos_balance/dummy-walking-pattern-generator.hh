@@ -67,6 +67,8 @@ namespace dynamicgraph {
 
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(omega, double);
+        DECLARE_SIGNAL_IN(rho, double);
+        DECLARE_SIGNAL_IN(phase, int);
 
         DECLARE_SIGNAL_IN(footLeft,  MatrixHomogeneous);
         DECLARE_SIGNAL_IN(footRight, MatrixHomogeneous);
@@ -91,6 +93,10 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_OUT(footLeftDes,  MatrixHomogeneous);
         DECLARE_SIGNAL_OUT(footRightDes, MatrixHomogeneous);
         DECLARE_SIGNAL_OUT(waistDes, MatrixHomogeneous);
+
+        DECLARE_SIGNAL_OUT(omegaDes, double);
+        DECLARE_SIGNAL_OUT(rhoDes, double);
+        DECLARE_SIGNAL_OUT(phaseDes, int);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
