@@ -1,4 +1,5 @@
 from sot_talos_balance.create_entities_utils import *
+from sot_talos_balance.round_double_to_int import RoundDoubleToInt
 from sot_talos_balance.simple_controller_6d import SimpleController6d
 from sot_talos_balance.foot_force_difference_controller import FootForceDifferenceController
 import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
@@ -83,11 +84,21 @@ robot.rhoScalar = Component_of_vector("rho_scalar")
 robot.rhoScalar.setIndex(0)
 plug(robot.rhoTrajGen.x, robot.rhoScalar.sin)
 
+# --- Phase
+robot.phaseTrajGen = create_scalar_trajectory_generator(dt, 0., 'phaseTrajGen')
+robot.phaseScalar = Component_of_vector("phase_scalar")
+robot.phaseScalar.setIndex(0)
+plug(robot.phaseTrajGen.x, robot.phaseScalar.sin)
+robot.phaseInt = RoundDoubleToInt("phase_int")
+plug(robot.phaseScalar.sout, robot.phaseInt.sin)
+
 # --- Interface with controller entities
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
 wp.init()
 wp.omega.value = omega
+plug(robot.rhoScalar.sout, wp.rho)
+plug(robot.phaseInt.sout, wp.phase)
 plug(robot.waistToMatrix.sout, wp.waist)
 plug(robot.lfToMatrix.sout, wp.footLeft)
 plug(robot.rfToMatrix.sout, wp.footRight)
@@ -165,7 +176,7 @@ robot.cdc_estimator = cdc_estimator
 
 # --- DCM Estimation
 estimator = DummyDcmEstimator("dummy")
-estimator.omega.value = omega
+plug(robot.wp.omegaDes, estimator.omega)
 estimator.mass.value = 1.0
 plug(robot.cdc_estimator.c, estimator.com)
 plug(robot.cdc_estimator.dc,estimator.momenta)
@@ -199,7 +210,7 @@ dcm_controller.Kp.value = Kp_dcm
 dcm_controller.Ki.value = Ki_dcm
 dcm_controller.decayFactor.value = gamma_dcm
 dcm_controller.mass.value = mass
-dcm_controller.omega.value = omega
+plug(robot.wp.omegaDes, dcm_controller.omega)
 
 plug(robot.cdc_estimator.c,dcm_controller.com)
 plug(robot.estimator.dcm,dcm_controller.dcm)
@@ -217,7 +228,8 @@ Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 distribute = create_distribute_wrench(distribute_conf)
 plug(robot.e2q.quaternion, distribute.q)
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
-plug(robot.rhoScalar.sout, distribute.rho)
+plug(robot.wp.rhoDes, distribute.rho)
+plug(robot.wp.phaseDes, distribute.phase)
 distribute.init(robot_name)
 robot.distribute = distribute
 
@@ -245,7 +257,7 @@ vdcDamping = 0.
 
 controller = FootForceDifferenceController("footController")
 controller.init()
-controller.phase.value = 0
+plug(robot.wp.phaseDes, controller.phase)
 
 controller.dfzAdmittance.value = 0.
 
@@ -311,7 +323,7 @@ plug(robot.dynamic.position, robot.taskUpperBody.feature.state)
 #define contactLF and contactRF
 robot.contactLF = MetaTaskKine6d('contactLF',robot.dynamic,'LF',robot.OperationalPointsMap['left-ankle'])
 robot.contactLF.feature.frame('desired')
-robot.contactLF.gain.setConstant(0)
+robot.contactLF.gain.setConstant(1)
 plug(robot.wp.footLeftDes, robot.contactLF.featureDes.position) #.errorIN?
 plug(robot.ffdc.vLeft, robot.contactLF.featureDes.velocity)
 robot.contactLF.task.setWithDerivative(True)
@@ -319,7 +331,7 @@ locals()['contactLF'] = robot.contactLF
 
 robot.contactRF = MetaTaskKine6d('contactRF',robot.dynamic,'RF',robot.OperationalPointsMap['right-ankle'])
 robot.contactRF.feature.frame('desired')
-robot.contactRF.gain.setConstant(0)
+robot.contactRF.gain.setConstant(1)
 plug(robot.wp.footRightDes, robot.contactRF.featureDes.position) #.errorIN?
 plug(robot.ffdc.vRight, robot.contactRF.featureDes.velocity)
 robot.contactRF.task.setWithDerivative(True)
