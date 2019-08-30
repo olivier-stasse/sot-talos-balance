@@ -37,6 +37,7 @@ ENDIF(UNIX)
 SET(plugins
     example
     boolean-identity
+    round-double-to-int
     int-identity
     pose-quaternion-to-matrix-homo
     euler-to-quat
