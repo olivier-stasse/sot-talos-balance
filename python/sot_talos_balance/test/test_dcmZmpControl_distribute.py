@@ -70,7 +70,7 @@ if c:
     c2 = ask_for_confirmation("Confirm raising the foot?")
     if c2:
         print("Raising the foot...")
-        runCommandClient('robot.distribute.phase.value = -1')
+        runCommandClient('robot.phaseTrajGen.set(0,-1)')
         runCommandClient('h = robot.dynamic.LF.value[2][3]')
         runCommandClient('robot.lfTrajGen.move(2,h+0.05,10.0)')
         sleep(10.0)
@@ -84,7 +84,7 @@ if c:
         print("Putting the foot back...")
         runCommandClient('robot.lfTrajGen.move(2,h,10.0)')
         sleep(10.0)
-        runCommandClient('robot.distribute.phase.value = 0')
+        runCommandClient('robot.phaseTrajGen.set(0,0)')
         print("The foot is back in position!")
         c4 = ask_for_confirmation("Put the robot back?")
     else:

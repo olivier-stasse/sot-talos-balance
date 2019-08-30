@@ -1,4 +1,5 @@
 from sot_talos_balance.create_entities_utils import *
+from sot_talos_balance.round_double_to_int import RoundDoubleToInt
 import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
 import sot_talos_balance.talos.control_manager_conf    as cm_conf
 import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
@@ -79,11 +80,21 @@ robot.rhoScalar = Component_of_vector("rho_scalar")
 robot.rhoScalar.setIndex(0)
 plug(robot.rhoTrajGen.x, robot.rhoScalar.sin)
 
+# --- Phase
+robot.phaseTrajGen = create_scalar_trajectory_generator(dt, 0., 'phaseTrajGen')
+robot.phaseScalar = Component_of_vector("phase_scalar")
+robot.phaseScalar.setIndex(0)
+plug(robot.phaseTrajGen.x, robot.phaseScalar.sin)
+robot.phaseInt = RoundDoubleToInt("phase_int")
+plug(robot.phaseScalar.sout, robot.phaseInt.sin)
+
 # --- Interface with controller entities
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
 wp.init()
 wp.omega.value = omega
+plug(robot.rhoScalar.sout, wp.rho)
+plug(robot.phaseInt.sout, wp.phase)
 plug(robot.waistToMatrix.sout, wp.waist)
 plug(robot.lfToMatrix.sout, wp.footLeft)
 plug(robot.rfToMatrix.sout, wp.footRight)
@@ -154,7 +165,7 @@ robot.cdc_estimator = cdc_estimator
 
 # --- DCM Estimation
 estimator = DummyDcmEstimator("dummy")
-estimator.omega.value = omega
+plug(robot.wp.omegaDes, estimator.omega)
 estimator.mass.value = 1.0
 plug(robot.cdc_estimator.c, estimator.com)
 plug(robot.cdc_estimator.dc,estimator.momenta)
@@ -188,7 +199,7 @@ dcm_controller.Kp.value = Kp_dcm
 dcm_controller.Ki.value = Ki_dcm
 dcm_controller.decayFactor.value = gamma_dcm
 dcm_controller.mass.value = mass
-dcm_controller.omega.value = omega
+plug(robot.wp.omegaDes, dcm_controller.omega)
 
 plug(robot.cdc_estimator.c,dcm_controller.com)
 plug(robot.estimator.dcm,dcm_controller.dcm)
@@ -206,7 +217,8 @@ Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 distribute = create_distribute_wrench(distribute_conf)
 plug(robot.e2q.quaternion, distribute.q)
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
-plug(robot.rhoScalar.sout, distribute.rho)
+plug(robot.wp.rhoDes, distribute.rho)
+plug(robot.wp.phaseDes, distribute.phase)
 distribute.init(robot_name)
 robot.distribute = distribute
 
