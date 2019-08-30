@@ -127,6 +127,11 @@ namespace dynamicgraph
                                                     "(int)    index",
                                                     "(double) final values",
                                                     "(double) time to reach the final value in sec")));
+        addCommand("set",
+                   makeCommandVoid2(*this, &NdTrajectoryGenerator::set,
+                                    docCommandVoid2("Instantaneously set component corresponding to index to the specified value.",
+                                                    "(int)    index",
+                                                    "(double) desired value")));
         addCommand("stop",
                    makeCommandVoid1(*this, &NdTrajectoryGenerator::stop,
                                     docCommandVoid1("Stop the motion of the specified index, or of all components of the vector if index is equal to -1.",
@@ -610,6 +615,23 @@ namespace dynamicgraph
         m_t = 0.0;
       }
 
+      void NdTrajectoryGenerator::set(const int& id, const double& xVal)
+      {
+        if(!m_initSucceeded)
+          return SEND_MSG("Cannot set value before initialization!",MSG_TYPE_ERROR);
+        unsigned int i = id;
+        if(id<0 || id>=static_cast<int>(m_n))
+          return SEND_MSG("Index is out of bounds", MSG_TYPE_ERROR);
+        if(m_status[i]!=JTG_STOP)
+          return SEND_MSG("You cannot set the specified component because it is already controlled.", MSG_TYPE_ERROR);
+
+        m_noTrajGen[i]->setInitialPoint(xVal);
+
+//        m_status[i] = JTG_STOP;
+//        m_splineReady = false;
+//        m_currentTrajGen[i] = m_noTrajGen[i];
+//        m_t = 0.0;
+      }
 
       void NdTrajectoryGenerator::stop(const int& id)
       {

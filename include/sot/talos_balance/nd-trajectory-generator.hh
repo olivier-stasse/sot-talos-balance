@@ -105,6 +105,12 @@ namespace dynamicgraph {
          */
         void move(const int& id, const double& xFinal, const double& time);
 
+        /** Instantaneously set a component to a given position.
+         * @param id integer index.
+         * @param xVal The desired position of the component.
+         */
+        void set(const int& id, const double& xVal);
+
         /** Start an infinite sinusoidal trajectory.
          * @param id integer index.
          * @param xFinal The position of the component corresponding to the max amplitude of the sinusoid.
