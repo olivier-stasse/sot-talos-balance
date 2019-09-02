@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE ( test_distribute )
   const double dt = 0.001;
   const std::string robot_name = "robot";
 
-  Eigen::VectorXd q(38);
+  Eigen::VectorXd q(39);
 
   q <<  0.0,  0.0,  1.018213,  0.0,  0.0, 0.0, 1.0,                     //Free flyer
         0.0,  0.0, -0.411354,  0.859395, -0.448041, -0.0,                  //Left Leg
@@ -105,9 +105,9 @@ BOOST_AUTO_TEST_CASE ( test_distribute )
 //    # Set the map from the urdf joint list to the sot joint list
 //    param_server.setJointsUrdfToSot(conf.urdftosot)
 
-//    # Set the foot frame name
-//    for key in conf.footFrameNames:
-//        param_server.setFootFrameName(key, conf.footFrameNames[key])
+  // Set the foot frame name
+  param_server.setFootFrameName("Right", "leg_right_6_joint");
+  param_server.setFootFrameName("Left" , "leg_left_6_joint");
 
 //    # Set IMU hosting joint name
 //    param_server.setImuJointName(conf.ImuJointName)
@@ -126,91 +126,107 @@ BOOST_AUTO_TEST_CASE ( test_distribute )
 
   DistributeWrench distribute("distribute");
 
-//    distribute.phase.value = 0
-//    distribute.rho.value = 0.5
+  distribute.m_phaseSIN.setConstant(0);
+  distribute.m_rhoSIN.setConstant(0.5);
 
-//    distribute.setMinPressure(conf.minPressure)
-//    distribute.frictionCoefficient.value = conf.frictionCoefficient
-//    distribute.wSum.value = conf.wSum
-//    distribute.wNorm.value = conf.wNorm
-//    distribute.wRatio.value = conf.wRatio
-//    distribute.wAnkle.value = conf.wAnkle
+  Eigen::VectorXd RIGHT_FOOT_SIZES(4);
+  RIGHT_FOOT_SIZES << 0.100, -0.100, 0.06, -0.06;  // pos x, neg x, pos y, neg y size 
+  Eigen::VectorXd LEFT_FOOT_SIZES(4);
+  LEFT_FOOT_SIZES  << 0.100, -0.100, 0.06, -0.06;  // pos x, neg x, pos y, neg y size
 
-//    distribute.set_right_foot_sizes(conf.RIGHT_FOOT_SIZES)
-//    distribute.set_left_foot_sizes(conf.LEFT_FOOT_SIZES)
+  const double minPressure = 15.;
+  const double frictionCoefficient = 0.7;
 
+  const double wSum   = 10000.0;
+  const double wNorm  = 10.0;
+  const double wRatio = 1.0;
+  Eigen::VectorXd wAnkle(6);
+  wAnkle << 1., 1., 1e-4, 1., 1., 1e-4;
 
+  distribute.m_eps = minPressure; // setMinPressure(minPressure);
+  distribute.m_frictionCoefficientSIN.setConstant(frictionCoefficient);
+  distribute.m_wSumSIN.setConstant(wSum);
+  distribute.m_wNormSIN.setConstant(wNorm);
+  distribute.m_wRatioSIN.setConstant(wRatio);
+  distribute.m_wAnkleSIN.setConstant(wAnkle);
 
+  distribute.set_right_foot_sizes(RIGHT_FOOT_SIZES);
+  distribute.set_left_foot_sizes(LEFT_FOOT_SIZES);
 
+  distribute.m_qSIN.setConstant(q);
+  distribute.m_wrenchDesSIN.setConstant(wrench);
 
+  distribute.init(robot_name);
 
+  // --- Wrench distribution ---
+  std::cout << std::endl;
+  std::cout << "--- Wrench distribution ---" << std::endl;
+  distribute.m_phaseSIN.setConstant(0);
 
+  Eigen::Vector3d forceLeft(0.0, 0.0, fz/2);
+  Eigen::Vector3d forceRight(0.0, 0.0, fz/2);
+  const double ly = leftPos.translation()[1];
+  const double taux = fz*ly/2;
+  Eigen::Vector3d momentLeft(  taux, tauy/2, 0.0);
+  Eigen::Vector3d momentRight(-taux, tauy/2, 0.0);
 
+  Eigen::VectorXd wrenchLeft(6);
+  wrenchLeft << forceLeft, momentLeft;
+  Eigen::VectorXd wrenchRight(6);
+  wrenchRight << forceRight, momentRight;
 
+  lx = com[0]-leftPos.translation()[0];
+  tauy = -fz*lx/2;
+  Eigen::Vector3d ankleMomentLeft( 0.0, tauy, 0.0);
+  Eigen::Vector3d ankleMomentRight(0.0, tauy, 0.0);
 
-//distribute.q.value = halfSitting
-//distribute.wrenchDes.value = wrench
+  Eigen::VectorXd ankleWrenchLeft(6);
+  ankleWrenchLeft << forceLeft, ankleMomentLeft;
+  Eigen::VectorXd ankleWrenchRight(6);
+  ankleWrenchRight << forceRight, ankleMomentRight;
 
-//distribute.init(robot_name)
+  std::cout << "expected global wrench:       " << wrench.transpose() << std::endl;
+  std::cout << "expected global left wrench:  " << wrenchLeft.transpose() << std::endl;
+  std::cout << "expected global right wrench: " << wrenchRight.transpose() << std::endl;
+  std::cout << "expected ankle left wrench:   " << ankleWrenchLeft.transpose() << std::endl;
+  std::cout << "expected ankle right wrench:  " << ankleWrenchRight.transpose() << std::endl;
 
-//# --- Wrench distribution ---
-//print()
-//print("--- Wrench distribution ---")
-//distribute.phase.value = 0
+  Eigen::Vector3d copLeft(com[0] - leftPos.translation()[0],  0., 0.);
+  Eigen::Vector3d copRight(com[0] - rightPos.translation()[0], 0., 0.);
 
-//forceLeft  = [0.0, 0.0, fz/2]
-//forceRight = [0.0, 0.0, fz/2]
-//ly = float(leftPos.translation[1])
-//taux = fz*ly/2
-//wrenchLeft  = forceLeft  + [ taux, tauy/2, 0.0]
-//wrenchRight = forceRight + [-taux, tauy/2, 0.0]
+  std::cout << "expected sole left CoP: "  << copLeft.transpose()  << std::endl;
+  std::cout << "expected sole right CoP: " << copRight.transpose() << std::endl;
+  std::cout << std::endl;
 
-//lx = float(com[0]-leftPos.translation[0])
-//tauy = -fz*lx/2
-//ankleWrenchLeft  = forceLeft  + [0.0, tauy, 0.0]
-//ankleWrenchRight = forceRight + [0.0, tauy, 0.0]
+  distribute.m_zmpRefSOUT.recompute(0);
 
-//print( "expected global wrench: %s" % str(wrench) )
-//print( "expected global left wrench: %s"  % str(wrenchLeft) )
-//print( "expected global right wrench: %s" % str(wrenchRight) )
-//print( "expected ankle left wrench: %s"  % str(ankleWrenchLeft) )
-//print( "expected ankle right wrench: %s" % str(ankleWrenchRight) )
+  std::cout << "resulting global wrench: " << distribute.m_wrenchRefSOUT(0).transpose() << std::endl;
+  BOOST_CHECK(wrench.isApprox(distribute.m_wrenchRefSOUT(0),1e-3));
 
-//copLeft  = [float(com[0] - leftPos.translation[0]),  0., 0.]
-//copRight = [float(com[0] - rightPos.translation[0]), 0., 0.]
+  std::cout << "resulting global left wrench:  " << distribute.m_wrenchLeftSOUT(0).transpose() << std::endl;
+  BOOST_CHECK(wrenchLeft.isApprox(distribute.m_wrenchLeftSOUT(0),1e-3));
+  std::cout << "resulting global right wrench: " << distribute.m_wrenchRightSOUT(0).transpose() << std::endl;
+  BOOST_CHECK(wrenchRight.isApprox(distribute.m_wrenchRightSOUT(0),1e-3));
 
-//print( "expected sole left CoP: %s"  % str(copLeft) )
-//print( "expected sole right CoP: %s" % str(copRight) )
-//print()
+  distribute.m_ankleWrenchLeftSOUT.recompute(0);
+  distribute.m_ankleWrenchRightSOUT.recompute(0);
 
-//distribute.zmpRef.recompute(0)
+  std::cout << "resulting ankle left wrench:  " << distribute.m_ankleWrenchLeftSOUT(0).transpose() << std::endl;
+  BOOST_CHECK(ankleWrenchLeft.isApprox(distribute.m_ankleWrenchLeftSOUT(0),1e-3));
+  std::cout << "resulting ankle right wrench: " << distribute.m_ankleWrenchRightSOUT(0).transpose() << std::endl;
+  BOOST_CHECK(ankleWrenchRight.isApprox(distribute.m_ankleWrenchRightSOUT(0),1e-3));
 
-//print( "resulting global wrench: %s" % str(distribute.wrenchRef.value) )
-//assertApprox(wrench,distribute.wrenchRef.value,2)
-//print( "resulting global left wrench: %s"  % str(distribute.wrenchLeft.value) )
-//assertApprox(wrenchLeft,distribute.wrenchLeft.value,3)
-//print( "resulting global right wrench: %s" % str(distribute.wrenchRight.value) )
-//assertApprox(wrenchRight,distribute.wrenchRight.value,3)
+  distribute.m_copLeftSOUT.recompute(0);
+  distribute.m_copRightSOUT.recompute(0);
 
-//distribute.ankleWrenchLeft.recompute(0)
-//distribute.ankleWrenchRight.recompute(0)
+  std::cout << "resulting sole left CoP:  " << distribute.m_copLeftSOUT(0).transpose() << std::endl;
+  BOOST_CHECK(copLeft.isApprox(distribute.m_copLeftSOUT(0),1e-3));
+  std::cout << "resulting sole right CoP: " << distribute.m_copRightSOUT(0).transpose() << std::endl;
+  BOOST_CHECK(copRight.isApprox(distribute.m_copRightSOUT(0),1e-3));
 
-//print( "resulting ankle left wrench: %s"  % str(distribute.ankleWrenchLeft.value) )
-//assertApprox(ankleWrenchLeft,distribute.ankleWrenchLeft.value,3)
-//print( "resulting ankle right wrench: %s" % str(distribute.ankleWrenchRight.value) )
-//assertApprox(ankleWrenchRight,distribute.ankleWrenchRight.value,3)
-
-//distribute.copLeft.recompute(0)
-//distribute.copRight.recompute(0)
-
-//print( "resulting sole left CoP: %s"  % str(distribute.copLeft.value) )
-//assertApprox(copLeft,distribute.copLeft.value,3)
-//print( "resulting sole right CoP: %s" % str(distribute.copRight.value) )
-//assertApprox(copRight,distribute.copRight.value,3)
-
-//distribute.emergencyStop.recompute(0)
-//stop = distribute.emergencyStop.value
-//np.testing.assert_equal(stop,0)
+  distribute.m_emergencyStopSOUT.recompute(0);
+  bool stop = distribute.m_emergencyStopSOUT(0);
+  BOOST_CHECK(!stop);
 
 //# --- Wrench saturation (left) ---
 //print()
