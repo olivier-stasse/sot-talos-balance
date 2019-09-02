@@ -7,10 +7,14 @@
 #include "sot/core/parameter-server.hh"
 #include "sot/talos_balance/distribute-wrench.hh"
 
+#include <boost/test/unit_test.hpp>
+
 using namespace dynamicgraph::sot;
 using namespace dynamicgraph::sot::talos_balance;
 
-int main (int , char** )
+BOOST_AUTO_TEST_SUITE ( BOOST_TEST_MODULE )
+
+BOOST_AUTO_TEST_CASE ( test_distribute )
 {
   // --- General ---
   std::cout << "--- General ---" << std::endl;
@@ -295,3 +299,6 @@ int main (int , char** )
 //np.testing.assert_equal(stop,0)
 
 }
+
+BOOST_AUTO_TEST_SUITE_END ()
+
