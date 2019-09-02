@@ -21,39 +21,18 @@ ADD_DEFINITIONS(-DTESTS_DYNLIBSUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}")
 # The sot-core plugin libraries that tests have to be linked against
 # the name of the variable for test EXECUTABLE_NAME is
 # TEST_${EXECUTABLE_NAME}_LIBS
-#SET(TEST_tsot_LIBS
-#  task
-#  feature-visual-point
-#  gain-adaptive
-#  )
-#
-#SET(TEST_test_gain_LIBS
-#  gain-adaptive feature-visual-point
-#  )
-#
-#SET(TEST_test_task_LIBS
-#  gain-adaptive feature-visual-point task
-#  )
-#
-#SET(TEST_test_mailbox_LIBS
-#  mailbox-vector
-#  )
-#
-#SET(TEST_test_control_pd_LIBS
-#  control-pd
-#  )
-#
-#SET(TEST_test_filter_differentiator_LIBS
-#  filter-differentiator
-#  )
-#
-#SET(TEST_test_madgwick_ahrs_LIBS
-#  madgwickahrs
-#  )
+SET(TEST_test_distribute_LIBS
+  distribute-wrench
+  )
+
+SET(TEST_test_distribute_EXT_LIBS
+  sot-core ${CMAKE_INSTALL_PREFIX}/lib/plugin/parameter-server.so
+  )
 
 #test paths and names (without .cpp extension)
 SET (tests
   dummy
+  test_distribute
   )
 
 #IF(UNIX)
@@ -70,6 +49,9 @@ SET (tests
 #  LINK_DIRECTORIES(${SOT_PLUGIN_OUT_DIR} ${FULLPLUGINDIR})
 #ENDIF(UNIX)
 
+IF(UNIX)
+  LINK_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/lib/plugin)
+ENDIF(UNIX)
 
 
 ADD_DEFINITIONS(-DDEBUG=2)
@@ -99,6 +81,7 @@ FOREACH(test ${tests})
   ENDIF(UNIX)
 
   PKG_CONFIG_USE_DEPENDENCY(${EXECUTABLE_NAME} dynamic-graph)
+  PKG_CONFIG_USE_DEPENDENCY(${EXECUTABLE_NAME} pinocchio)
   IF(BUILD_PYTHON_INTERFACE)
     PKG_CONFIG_USE_DEPENDENCY(${EXECUTABLE_NAME} dynamic-graph-python)
   ENDIF(BUILD_PYTHON_INTERFACE)
@@ -110,7 +93,7 @@ FOREACH(test ${tests})
   IF (UNIX)
     SET(EXTRA_LD_LIBRARY_PATH $ENV{LD_LIBRARY_PATH})
     SET_PROPERTY(TEST ${test} PROPERTY
-      ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/src:${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}:${BOOST_ROOT}/lib:${EXTRA_LD_LIBRARY_PATH}")
+      ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/src:${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}:${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/plugin:${BOOST_ROOT}/lib:${EXTRA_LD_LIBRARY_PATH}")
   ENDIF(UNIX)
 
 ENDFOREACH(test)
