@@ -3,27 +3,7 @@ from sot_talos_balance.utils.run_test_utils import *
 from time import sleep
 
 from sys import argv
-if len(sys.argv)>3:
-    raise ValueError("Too many options")
-elif len(sys.argv)==3:
-    opt = sys.argv[1]
-    if opt != '-0':
-        raise ValueError("Unrecognized option: " + opt)
-    sot_talos_balance_folder = True
-    test_folder = sys.argv[2]
-    print('Using folder ' + test_folder + ' from sot_talos_balance')
-    runCommandClient('test_folder = "' + test_folder + '"')
-    runCommandClient('sot_talos_balance_folder = True')
-elif len(sys.argv)==2:
-    test_folder = sys.argv[1]
-    print('Using folder ' + test_folder)
-    runCommandClient('test_folder = "' + test_folder + '"')
-    runCommandClient('sot_talos_balance_folder = False')
-else:
-    test_folder = None
-    print('No folder data')
-    runCommandClient('test_folder = None')
-    runCommandClient('sot_talos_balance_folder = False')
+test_folder, sot_talos_balance_folder = get_file_folder(argv)
 
 run_test('appli_dcm_zmp_control.py')
 

@@ -131,3 +131,30 @@ def run_ft_wrist_calibration(sensor_name,force=False):
     else:
         print("Skipping sensor calibration")
 
+def get_file_folder(argv, send=True):
+    if len(argv)==1:
+        test_folder = None
+        sot_talos_balance_folder = False
+        print('No folder data')
+    elif len(argv)==2:
+        test_folder = argv[1]
+        sot_talos_balance_folder = False
+        print('Using folder ' + test_folder)
+    elif len(argv)==3:
+        if argv[1] != '-0':
+            raise ValueError("Unrecognized option: " + argv[1])
+        test_folder = argv[2]
+        sot_talos_balance_folder = True
+        print('Using folder ' + test_folder + ' from sot_talos_balance')
+    else:
+        raise ValueError("Bad options")
+
+    if send:
+        print("Sending folder info...")
+        if test_folder is None:
+            runCommandClient('test_folder = None')
+        else:
+            runCommandClient('test_folder = "' + test_folder + '"')
+        runCommandClient('sot_talos_balance_folder = ' + str(sot_talos_balance_folder))
+
+    return test_folder, sot_talos_balance_folder
