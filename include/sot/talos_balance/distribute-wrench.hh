@@ -96,6 +96,7 @@ namespace dynamicgraph {
         DECLARE_SIGNAL_OUT(zmpRef, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(emergencyStop, bool);
 
+      public:
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
