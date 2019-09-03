@@ -67,6 +67,10 @@ namespace dynamicgraph {
         /* --- SIGNALS --- */
         DECLARE_SIGNAL_IN(phase, int);
 
+        DECLARE_SIGNAL_IN(gainSwing, double);
+        DECLARE_SIGNAL_IN(gainStance, double);
+        DECLARE_SIGNAL_IN(gainDouble, double);
+
         DECLARE_SIGNAL_IN(dfzAdmittance, double);
         DECLARE_SIGNAL_IN(vdcFrequency, double);
         DECLARE_SIGNAL_IN(vdcDamping, double);
@@ -86,6 +90,9 @@ namespace dynamicgraph {
 
         DECLARE_SIGNAL_OUT(vRight, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(vLeft, dynamicgraph::Vector);
+
+        DECLARE_SIGNAL_OUT(gainRight, double);
+        DECLARE_SIGNAL_OUT(gainLeft, double);
 
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */

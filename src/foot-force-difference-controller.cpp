@@ -32,11 +32,11 @@ namespace dynamicgraph
       using namespace dg;
       using namespace dg::command;
 
-#define INPUT_SIGNALS  m_phaseSIN << m_dfzAdmittanceSIN << m_vdcFrequencySIN << m_vdcDampingSIN << m_wrenchRightDesSIN << m_wrenchLeftDesSIN << m_wrenchRightSIN << m_wrenchLeftSIN << m_posRightDesSIN << m_posLeftDesSIN << m_posRightSIN << m_posLeftSIN
+#define INPUT_SIGNALS  m_phaseSIN << m_gainSwingSIN << m_gainStanceSIN << m_gainDoubleSIN << m_dfzAdmittanceSIN << m_vdcFrequencySIN << m_vdcDampingSIN << m_wrenchRightDesSIN << m_wrenchLeftDesSIN << m_wrenchRightSIN << m_wrenchLeftSIN << m_posRightDesSIN << m_posLeftDesSIN << m_posRightSIN << m_posLeftSIN
 
 #define INNER_SIGNALS m_dz_ctrlSOUT << m_dz_posSOUT
 
-#define OUTPUT_SIGNALS m_vRightSOUT << m_vLeftSOUT
+#define OUTPUT_SIGNALS m_vRightSOUT << m_vLeftSOUT << m_gainRightSOUT << m_gainLeftSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -52,6 +52,9 @@ namespace dynamicgraph
       FootForceDifferenceController::FootForceDifferenceController(const std::string& name)
           : Entity(name)
           , CONSTRUCT_SIGNAL_IN(phase, int)
+          , CONSTRUCT_SIGNAL_IN(gainSwing, double)
+          , CONSTRUCT_SIGNAL_IN(gainStance, double)
+          , CONSTRUCT_SIGNAL_IN(gainDouble, double)
           , CONSTRUCT_SIGNAL_IN(dfzAdmittance, double)
           , CONSTRUCT_SIGNAL_IN(vdcFrequency, double)
           , CONSTRUCT_SIGNAL_IN(vdcDamping, double)
@@ -67,6 +70,8 @@ namespace dynamicgraph
           , CONSTRUCT_SIGNAL_INNER(dz_pos, double, m_vdcFrequencySIN << m_posRightDesSIN << m_posLeftDesSIN << m_posRightSIN << m_posLeftSIN)
           , CONSTRUCT_SIGNAL_OUT(vRight, dynamicgraph::Vector, m_phaseSIN << m_dz_ctrlSINNER << m_dz_posSINNER)
           , CONSTRUCT_SIGNAL_OUT(vLeft,  dynamicgraph::Vector, m_phaseSIN << m_dz_ctrlSINNER << m_dz_posSINNER)
+          , CONSTRUCT_SIGNAL_OUT(gainRight, double, m_phaseSIN << m_gainSwingSIN << m_gainStanceSIN << m_gainDoubleSIN)
+          , CONSTRUCT_SIGNAL_OUT(gainLeft,  double, m_phaseSIN << m_gainSwingSIN << m_gainStanceSIN << m_gainDoubleSIN)
           , m_initSucceeded(false)
       {
         Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -187,6 +192,52 @@ namespace dynamicgraph
 
         if(phase==0)
           s[2] = 0.5 * (dz_pos - dz_ctrl);
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(gainRight, double)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Can't compute gainRight before initialization!");
+          return s;
+        }
+
+        const int & phase = m_phaseSIN(iter);
+        const double & gainSwing  = m_gainSwingSIN(iter);
+        const double & gainStance = m_gainStanceSIN(iter);
+        const double & gainDouble = m_gainDoubleSIN(iter);
+
+        if(phase>0)
+          s = gainSwing;
+        else if (phase<0)
+          s = gainStance;
+        else
+          s = gainDouble;
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(gainLeft, double)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Can't compute gainLeft before initialization!");
+          return s;
+        }
+
+        const int & phase = m_phaseSIN(iter);
+        const double & gainSwing  = m_gainSwingSIN(iter);
+        const double & gainStance = m_gainStanceSIN(iter);
+        const double & gainDouble = m_gainDoubleSIN(iter);
+
+        if(phase>0)
+          s = gainStance;
+        else if (phase<0)
+          s = gainSwing;
+        else
+          s = gainDouble;
 
         return s;
       }
