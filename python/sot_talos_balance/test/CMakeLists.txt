@@ -1,6 +1,11 @@
 # simulation files
 SET(${PROJECT_NAME}_SIMULATION_FILES
   __init__.py
+  test_dcm_zmp_control.py
+  appli_dcm_zmp_control.py
+  test_dcm_zmp_control_distribute.py
+  appli_dcm_zmp_control_distribute.py
+  test_ffSubscriber.py
   test_ffSubscriber.py
   appli_ffSubscriber.py
   test_zmpEstimator.py
