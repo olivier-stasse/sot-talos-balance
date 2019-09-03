@@ -5,22 +5,18 @@ from time import sleep
 from sys import argv
 test_folder, sot_talos_balance_folder = get_file_folder(argv)
 
+use_distribute = ask_for_confirmation("Use output of force distribution?")
+print( ("Using" if use_distribute else "Not using") + " output of force distribution" )
+
 run_test('appli_dcm_zmp_control_distribute.py')
 
 run_ft_calibration('robot.ftc')
-
-use_force_distribution = ask_for_confirmation("Use output of force distribution?")
-if use_force_distribution:
-    print("Using output of force distribution")
-else:
-    print("Not using output of force distribution")
-
 raw_input("Wait before running the test")
 
 # Connect ZMP reference and reset controllers
 print('Connect ZMP reference')
 runCommandClient('plug(robot.zmp_estimator.emergencyStop,robot.cm.emergencyStop_zmp)')
-if use_force_distribution:
+if use_distribute:
     runCommandClient('plug(robot.distribute.emergencyStop,robot.cm.emergencyStop_distribute)')
     runCommandClient('plug(robot.distribute.zmpRef,robot.com_admittance_control.zmpDes)')
 else:
@@ -112,7 +108,9 @@ else:
     else:
         print("Not raising the foot")
 
-raw_input("Wait before dumping the data")
+#raw_input("Wait before dumping the data")
 
-runCommandClient('dump_tracer(robot.tracer)')
+#runCommandClient('dump_tracer(robot.tracer)')
+
+print('Bye!')
 
