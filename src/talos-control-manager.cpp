@@ -227,7 +227,7 @@ namespace dynamicgraph
           if ((* m_emergencyStopVector[i]).isPlugged() && (* m_emergencyStopVector[i])(iter)) 
           {
             m_emergency_stop_triggered = true;
-            SEND_MSG("Emergency Stop has been triggered by an external entity", MSG_TYPE_ERROR);
+            SEND_MSG("t = " + toString(iter) + ": Emergency Stop has been triggered by an external entity: " + (*m_emergencyStopVector[i]).getName(), MSG_TYPE_ERROR);
           }
         }
 
@@ -239,7 +239,7 @@ namespace dynamicgraph
             if(fabs(u(i)) > ctrl_max(i))
             {
               m_emergency_stop_triggered = true;
-              SEND_MSG("Joint " + toString(i) + " desired control is too large: "+ toString(u(i))+" > "+toString(ctrl_max(i)), MSG_TYPE_ERROR_STREAM);
+              SEND_MSG("t = " + toString(iter) + ": Joint " + toString(i) + " desired control is too large: "+ toString(u(i))+" > "+toString(ctrl_max(i)), MSG_TYPE_ERROR_STREAM);
               break;
             }
           }
