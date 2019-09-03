@@ -171,7 +171,7 @@ robot.cdc_estimator = cdc_estimator
 
 # --- DCM Estimation
 estimator = DummyDcmEstimator("dummy")
-estimator.omega.value = omega
+plug(robot.wp.omegaDes, estimator.omega)
 estimator.mass.value = 1.0
 plug(robot.cdc_estimator.c, estimator.com)
 plug(robot.cdc_estimator.dc,estimator.momenta)
@@ -205,7 +205,7 @@ dcm_controller.Kp.value = Kp_dcm
 dcm_controller.Ki.value = Ki_dcm
 dcm_controller.decayFactor.value = gamma_dcm
 dcm_controller.mass.value = mass
-dcm_controller.omega.value = omega
+plug(robot.wp.omegaDes, dcm_controller.omega)
 
 plug(robot.cdc_estimator.c,dcm_controller.com)
 plug(robot.estimator.dcm,dcm_controller.dcm)
@@ -367,33 +367,33 @@ create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot = robot, 
 create_topic(robot.publisher,  robot.dynamic, 'LF', robot = robot, data_type='matrixHomo')  # left foot
 create_topic(robot.publisher,  robot.dynamic, 'RF', robot = robot, data_type='matrixHomo')  # right foot
 
-# --- TRACER
-robot.tracer = TracerRealTime("com_tracer")
-robot.tracer.setBufferSize(80*(2**20))
-robot.tracer.open('/tmp','dg_','.dat')
-robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
+## --- TRACER
+#robot.tracer = TracerRealTime("com_tracer")
+#robot.tracer.setBufferSize(80*(2**20))
+#robot.tracer.open('/tmp','dg_','.dat')
+#robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
-addTrace(robot.tracer, robot.wp, 'comDes')                      # desired CoM
+#addTrace(robot.tracer, robot.wp, 'comDes')                      # desired CoM
 
-addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
-addTrace(robot.tracer, robot.cdc_estimator, 'dc')               # estimated CoM velocity
+#addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
+#addTrace(robot.tracer, robot.cdc_estimator, 'dc')               # estimated CoM velocity
 
-addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
-addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
+#addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
+#addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
 
-addTrace(robot.tracer, robot.dcm_control, 'dcmDes')             # desired DCM
-addTrace(robot.tracer, robot.estimator, 'dcm')                  # estimated DCM
+#addTrace(robot.tracer, robot.dcm_control, 'dcmDes')             # desired DCM
+#addTrace(robot.tracer, robot.estimator, 'dcm')                  # estimated DCM
 
-addTrace(robot.tracer, robot.dcm_control, 'zmpDes')             # desired ZMP
-addTrace(robot.tracer, robot.dynamic, 'zmp')                    # SOT ZMP
-addTrace(robot.tracer, robot.zmp_estimator, 'zmp')              # estimated ZMP
-addTrace(robot.tracer, robot.dcm_control, 'zmpRef')             # reference ZMP
+#addTrace(robot.tracer, robot.dcm_control, 'zmpDes')             # desired ZMP
+#addTrace(robot.tracer, robot.dynamic, 'zmp')                    # SOT ZMP
+#addTrace(robot.tracer, robot.zmp_estimator, 'zmp')              # estimated ZMP
+#addTrace(robot.tracer, robot.dcm_control, 'zmpRef')             # reference ZMP
 
-addTrace(robot.tracer, robot.ftc, 'left_foot_force_out')        # calibrated left wrench
-addTrace(robot.tracer,  robot.ftc, 'right_foot_force_out')      # calibrated right wrench
+#addTrace(robot.tracer, robot.ftc, 'left_foot_force_out')        # calibrated left wrench
+#addTrace(robot.tracer,  robot.ftc, 'right_foot_force_out')      # calibrated right wrench
 
-addTrace(robot.tracer,  robot.dynamic, 'LF')                    # left foot
-addTrace(robot.tracer,  robot.dynamic, 'RF')                    # right foot
+#addTrace(robot.tracer,  robot.dynamic, 'LF')                    # left foot
+#addTrace(robot.tracer,  robot.dynamic, 'RF')                    # right foot
 
-robot.tracer.start()
+#robot.tracer.start()
 

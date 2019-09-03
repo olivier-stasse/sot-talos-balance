@@ -97,7 +97,9 @@ else:
     else:
         print("Not raising the foot")
 
-raw_input("Wait before dumping the data")
+#raw_input("Wait before dumping the data")
 
-runCommandClient('dump_tracer(robot.tracer)')
+#runCommandClient('dump_tracer(robot.tracer)')
+
+print('Bye!')
 
