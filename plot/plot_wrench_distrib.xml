@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root version="2.3.0">
+ <tabbed_widget name="Main Window" parent="main_window">
+  <plotmatrix rows="2" columns="3" tab_name="plot">
+   <plot row="0" col="0">
+    <range top="-1.926198" bottom="-2.704815" left="0.000000" right="11.113000"/>
+    <limitY/>
+    <curve name="/sot/dcmCtrl/wrenchRef/data.0" R="20" G="100" custom_transform="noTransform" B="160"/>
+    <curve name="/sot/distribute/wrenchRef/data.0" R="247" G="0" custom_transform="noTransform" B="247"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="0">
+    <range top="-0.947004" bottom="-1.368506" left="0.000000" right="11.113000"/>
+    <limitY/>
+    <curve name="/sot/distribute/wrenchLeft/data.0" R="80" G="180" custom_transform="noTransform" B="127"/>
+    <curve name="/sot/distribute/wrenchRight/data.0" R="20" G="100" custom_transform="noTransform" B="160"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="0" col="1">
+    <range top="1.292420" bottom="1.087894" left="0.000000" right="11.113000"/>
+    <limitY/>
+    <curve name="/sot/dcmCtrl/wrenchRef/data.1" R="5" G="116" custom_transform="noTransform" B="13"/>
+    <curve name="/sot/distribute/wrenchRef/data.1" R="0" G="51" custom_transform="noTransform" B="238"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="1">
+    <range top="0.994414" bottom="0.195436" left="0.000000" right="11.113000"/>
+    <limitY/>
+    <curve name="/sot/distribute/wrenchLeft/data.1" R="244" G="83" custom_transform="noTransform" B="29"/>
+    <curve name="/sot/distribute/wrenchRight/data.1" R="5" G="116" custom_transform="noTransform" B="13"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="0" col="2">
+    <range top="885.570204" bottom="885.570203" left="0.000000" right="11.113000"/>
+    <limitY/>
+    <curve name="/sot/dcmCtrl/wrenchRef/data.2" R="255" G="19" custom_transform="noTransform" B="24"/>
+    <curve name="/sot/distribute/wrenchRef/data.2" R="0" G="119" custom_transform="noTransform" B="119"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot row="1" col="2">
+    <range top="442.786545" bottom="442.783658" left="0.000000" right="11.113000"/>
+    <limitY/>
+    <curve name="/sot/distribute/wrenchLeft/data.2" R="142" G="52" custom_transform="noTransform" B="136"/>
+    <curve name="/sot/distribute/wrenchRight/data.2" R="255" G="19" custom_transform="noTransform" B="24"/>
+    <transform value="noTransform"/>
+   </plot>
+  </plotmatrix>
+  <currentPlotMatrix index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <!-- - - - - - - - - - - - - - - -->
+ <Plugins>
+  <plugin ID="DataLoad_CSV">
+   <default time_axis=""/>
+  </plugin>
+  <plugin ID="DataLoad_ROS_bags">
+   <use_header_stamp value="false"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="DataLoad_ULog"/>
+  <plugin ID="ROS_Topic_Streamer">
+   <use_header_stamp value="false"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="RosoutPublisherROS" status="idle"/>
+  <plugin ID="TopicPublisherROS" status="idle"/>
+ </Plugins>
+ <!-- - - - - - - - - - - - - - - -->
+ <previouslyLoaded_Datafiles/>
+ <previouslyLoaded_Streamer name="ROS_Topic_Streamer"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <customMathEquations/>
+ <snippets>
+  <snippet name="1st_derivative">
+   <global>var prevX = 0
+var prevY = 0</global>
+   <equation>dx = time - prevX
+dy = value - prevY
+prevX = time
+prevY = value
+
+return dy/dx</equation>
+  </snippet>
+  <snippet name="1st_order_lowpass">
+   <global>var prevY = 0
+var alpha = 0.1</global>
+   <equation>prevY = alpha * value + (1.-alpha) * prevY
+
+return prevY</equation>
+  </snippet>
+  <snippet name="sum_A_B">
+   <global></global>
+   <equation>return $$PLOT_A$$ + $$PLOT_B$$</equation>
+  </snippet>
+  <snippet name="yaw_from_quaternion">
+   <global>// source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+
+function quaternionToYaw(x, y, z, w)
+{
+  // yaw (z-axis rotation)
+  t1 = 2.0 * (w * z + x * y);
+  t2 = 1.0 - 2.0 * (y * y + z * z);
+  yaw = Math.atan2(t1, t2);
+
+  return yaw
+}</global>
+   <equation>return quaternionToYaw(x, y, z, w);</equation>
+  </snippet>
+ </snippets>
+ <!-- - - - - - - - - - - - - - - -->
+</root>
+
