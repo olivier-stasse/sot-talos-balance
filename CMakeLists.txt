@@ -22,9 +22,10 @@ INCLUDE(cmake/eigen.cmake)
 INCLUDE(cmake/python.cmake)
 INCLUDE(cmake/test.cmake)
 
+SET(PROJECT_NAMESPACE loco-3d)
 SET(PROJECT_NAME sot-talos-balance)
 SET(PROJECT_DESCRIPTION "Collection of dynamic-graph entities aimed at implementing balance control on talos.")
-SET(PROJECT_URL "https://gepgitlab.laas.fr/loco-3d/sot-talos-balance")
+SET(PROJECT_URL "https://gepgitlab.laas.fr/${PROJECT_NAMESPACE}/${PROJECT_NAME}")
 
 # So that generated headers are in same place as standard ones
 SET(CUSTOM_HEADER_DIR "sot/talos_balance")
@@ -41,6 +42,14 @@ SET(PKG_CONFIG_ADDITIONAL_VARIABLES
   plugindirname
   plugindir
   )
+
+OPTION (INSTALL_PYTHON_INTERFACE_ONLY "Install *ONLY* the python binding" OFF)
+
+IF(INSTALL_PYTHON_INTERFACE_ONLY)
+  SET(INSTALL_DOCUMENTATION OFF CACHE BOOL "documentation is not in python interface")
+  SET(INSTALL_GENERATED_HEADERS OFF CACHE BOOL "headers are not in python interface")
+  SET(INSTALL_PKG_CONFIG_FILE OFF CACHE BOOL ".pc is not in python interface")
+ENDIF(INSTALL_PYTHON_INTERFACE_ONLY)
 
 SETUP_PROJECT()
 
@@ -64,7 +73,6 @@ SET(BOOST_COMPONENTS thread filesystem program_options unit_test_framework syste
 
 OPTION (BUILD_ROS_PACKAGES "Build ros packages" ON)
 OPTION (BUILD_PYTHON_INTERFACE "Build the python bindings" ON)
-OPTION (INSTALL_PYTHON_INTERFACE_ONLY "Install *ONLY* the python binding" OFF)
 OPTION (BUILD_TEST "Build tests" ON)
 
 # name of the python module
@@ -90,27 +98,30 @@ ADD_REQUIRED_DEPENDENCY("sot-core >= 4.5.0")
 ADD_REQUIRED_DEPENDENCY("pinocchio >= 2.1")
 ADD_REQUIRED_DEPENDENCY("parametric-curves")
 ADD_REQUIRED_DEPENDENCY("eigen-quadprog")
+ADD_OPTIONAL_DEPENDENCY("talos_data")
 
 SET(SOTTALOSBALANCE_LIB_NAME ${PROJECT_NAME})
 SET(LIBRARY_NAME ${SOTTALOSBALANCE_LIB_NAME})
 
-SET(${LIBRARY_NAME}_HEADERS
-  include/sot/talos_balance/utils/commands-helper.hh
-  include/sot/talos_balance/utils/statistics.hh
-  include/sot/talos_balance/math/fwd.hh
-  include/sot/talos_balance/robot/fwd.hh
-  include/sot/talos_balance/robot/robot-wrapper.hh
-  include/sot/talos_balance/sdk_qualisys/Network.h
-  include/sot/talos_balance/sdk_qualisys/RTPacket.h
-  include/sot/talos_balance/sdk_qualisys/RTProtocol.h
-  include/sot/talos_balance/sdk_qualisys/Markup.h
-)
+IF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
+  SET(${LIBRARY_NAME}_HEADERS
+    include/sot/talos_balance/utils/commands-helper.hh
+    include/sot/talos_balance/utils/statistics.hh
+    include/sot/talos_balance/math/fwd.hh
+    include/sot/talos_balance/robot/fwd.hh
+    include/sot/talos_balance/robot/robot-wrapper.hh
+    include/sot/talos_balance/sdk_qualisys/Network.h
+    include/sot/talos_balance/sdk_qualisys/RTPacket.h
+    include/sot/talos_balance/sdk_qualisys/RTProtocol.h
+    include/sot/talos_balance/sdk_qualisys/Markup.h
+  )
 
-#INSTALL(FILES ${${LIBRARY_NAME}_HEADERS}
-#  DESTINATION include/sot/talos_balance
-#  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_WRITE)
+  INSTALL(FILES ${${LIBRARY_NAME}_HEADERS}
+    DESTINATION include/${CUSTOM_HEADER_DIR}
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_WRITE)
+ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
 
-SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
+SET(${LIBRARY_NAME}_SOURCES
     src/utils/statistics.cpp
     src/robot/robot-wrapper.cpp
     src/sdk_qualisys/Network.cpp
@@ -118,7 +129,6 @@ SET(${LIBRARY_NAME}_SOURCES ${${LIBRARY_NAME}_HEADERS}
     src/sdk_qualisys/RTProtocol.cpp
     src/sdk_qualisys/Markup.cpp
 )
-
 
 ADD_LIBRARY(${LIBRARY_NAME} SHARED ${${LIBRARY_NAME}_SOURCES})
 
@@ -255,9 +265,9 @@ ENDIF(BUILD_PYTHON_INTERFACE)
 
 ADD_SUBDIRECTORY(src)
 
-IF(BUILD_ROS_PACKAGES)
+IF(BUILD_ROS_PACKAGES AND NOT INSTALL_PYTHON_INTERFACE_ONLY)
   ADD_SUBDIRECTORY(ros)
-ENDIF(BUILD_ROS_PACKAGES)
+ENDIF(BUILD_ROS_PACKAGES AND NOT INSTALL_PYTHON_INTERFACE_ONLY)
 
 ADD_SUBDIRECTORY(unittest)
 
