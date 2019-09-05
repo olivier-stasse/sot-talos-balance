@@ -220,7 +220,8 @@ def create_hip_flexibility_compensation(robot, robot_name='robot'):
     # For a lever arm of 1 m/rad -> K = 973.201390037 in Nm/rad
     hipComp.K_l.value = 973.201390037  
     hipComp.K_r.value = 973.201390037 
-    hipComp.q_des.value = robot.halfSitting[6:]   
+    hipComp.K_d.value = 0.0 
+    hipComp.q_des.value = robot.halfSitting[6:]
     plug(robot.device.ptorque, hipComp.tau)
     hipComp.init(timeStep, robot_name)
     return hipComp
