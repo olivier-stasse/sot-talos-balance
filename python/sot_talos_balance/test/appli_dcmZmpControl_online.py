@@ -52,16 +52,19 @@ robot.pg.buildModel()
 
 robot.pg.parseCmd(":samplingperiod 0.005")
 robot.pg.parseCmd(":previewcontroltime 1.6")
-robot.pg.parseCmd(":comheight 0.876681")
 robot.pg.parseCmd(":omega 0.0")
-robot.pg.parseCmd(":stepheight 0.07")
-robot.pg.parseCmd(":singlesupporttime 0.780")
-robot.pg.parseCmd(":doublesupporttime 0.020")
+robot.pg.parseCmd(':stepheight 0.05')
+robot.pg.parseCmd(':doublesupporttime 0.2')
+robot.pg.parseCmd(':singlesupporttime 1.0')
 robot.pg.parseCmd(":armparameters 0.5")
 robot.pg.parseCmd(":LimitsFeasibility 0.0")
 robot.pg.parseCmd(":ZMPShiftParameters 0.015 0.015 0.015 0.015")
 robot.pg.parseCmd(":TimeDistributeParameters 2.0 3.5 1.7 3.0")
 robot.pg.parseCmd(":UpperBodyMotionParameters -0.1 -1.0 0.0")
+robot.pg.parseCmd(":comheight 0.875624")
+#robot.pg.parseCmd(":setVelReference  0.1 0.0 0.0")
+
+robot.pg.parseCmd(":SetAlgoForZmpTrajectory Naveau")
 
 plug(robot.dynamic.position,robot.pg.position)
 plug(robot.dynamic.com, robot.pg.com)
@@ -74,19 +77,17 @@ robot.pg.zmppreviouscontroller.value = (0,0,0)
 
 robot.pg.initState()
 
-robot.pg.parseCmd(":SetAlgoForZmpTrajectory Naveau")
 robot.pg.parseCmd(':setDSFeetDistance 0.162')
-robot.pg.parseCmd(':doublesupporttime 0.2')
-robot.pg.parseCmd(':singlesupporttime 1.0')
+
 robot.pg.parseCmd(':NaveauOnline')
 robot.pg.parseCmd(':numberstepsbeforestop 2')
 robot.pg.parseCmd(':setfeetconstraint XY 0.091 0.0489')
-robot.pg.parseCmd(':stepheight 0.05')
+
 robot.pg.parseCmd(':deleteallobstacles')
 robot.pg.parseCmd(':feedBackControl false')
 robot.pg.parseCmd(':useDynamicFilter true')
 
-robot.pg.velocitydes.value=(0.01,0.0,0.0)
+robot.pg.velocitydes.value=(0.1,0.0,0.0)
 
 #robot.pg.displaySignals()
 
@@ -290,6 +291,8 @@ plug(robot.com_admittance_control.comRef,robot.taskCom.featureDes.errorIN)
 plug(robot.com_admittance_control.dcomRef,robot.taskCom.featureDes.errordotIN)
 robot.taskCom.task.controlGain.value = 0
 robot.taskCom.task.setWithDerivative(True)
+# plug(robot.wp.comDes,robot.taskCom.featureDes.errorIN)
+# robot.taskCom.task.controlGain.value = 300
 
 # --- Waist
 robot.keepWaist = MetaTaskKine6d('keepWaist',robot.dynamic,'WT',robot.OperationalPointsMap['waist'])
@@ -352,6 +355,7 @@ robot.sot.setSize(robot.dynamic.getDimension())
 # --- Plug SOT control to device through control manager
 plug(robot.sot.control,robot.cm.ctrl_sot_input)
 plug(robot.cm.u_safe,robot.device.control)
+#plug(robot.sot.control,robot.device.control)
 
 robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
@@ -368,7 +372,6 @@ robot.dvdt = Derivator_of_Vector("dv_dt")
 robot.dvdt.dt.value = dt
 plug(robot.device.velocity,robot.dvdt.sin)
 plug(robot.dvdt.sout,robot.dynamic.acceleration)
-
 
 
 ##################################
@@ -791,7 +794,7 @@ plug(robot.dvdt.sout,robot.dynamic.acceleration)
 # # # -------------------------- PLOTS --------------------------
 
 # # # --- ROS PUBLISHER
-# # robot.publisher = create_rospublish(robot, 'robot_publisher')        
+robot.publisher = create_rospublish(robot, 'robot_publisher')        
 
 # # create_topic(robot.publisher, robot.device, 'state', robot = robot, data_type='vector')
 # # create_topic(robot.publisher, robot.base_estimator, 'q', robot = robot, data_type='vector')
@@ -801,8 +804,8 @@ plug(robot.dvdt.sout,robot.dynamic.acceleration)
 # # create_topic(robot.publisher, robot.comTrajGen, 'dx', robot = robot, data_type='vector')                  # generated CoM velocity
 # # create_topic(robot.publisher, robot.comTrajGen, 'ddx', robot = robot, data_type='vector')                 # generated CoM acceleration
 
-# # create_topic(robot.publisher, robot.wp, 'comDes', robot = robot, data_type='vector')                      # desired CoM
-
+create_topic(robot.publisher, robot.pg, 'comref', robot = robot, data_type='vector')                      # desired CoM
+create_topic(robot.publisher, robot.pg, 'dcomref', robot = robot, data_type='vector')   
 # # create_topic(robot.publisher, robot.cdc_estimator, 'c', robot = robot, data_type='vector')                # estimated CoM
 # # create_topic(robot.publisher, robot.cdc_estimator, 'dc', robot = robot, data_type='vector')               # estimated CoM velocity
 
@@ -836,15 +839,23 @@ plug(robot.dvdt.sout,robot.dynamic.acceleration)
 # # create_topic(robot.publisher,  robot.dynamic, 'RF', robot = robot, data_type='matrixHomo')  # right foot
 
 # # # --- TRACER
-# # robot.tracer = TracerRealTime("com_tracer")
-# # robot.tracer.setBufferSize(80*(2**20))
-# # robot.tracer.open('/tmp','dg_','.dat')
-# # robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
+robot.tracer = TracerRealTime("com_tracer")
+robot.tracer.setBufferSize(80*(2**20))
+robot.tracer.open('/local/imaroger/sot-talos-balance/python/sot_talos_balance/test_result','dg_','.dat')
+robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
-# # addTrace(robot.tracer, robot.wp, 'comDes')                      # desired CoM
+addTrace(robot.tracer, robot.wp, 'comDes')                      
+addTrace(robot.tracer, robot.dynamic, 'com')
+addTrace(robot.tracer, robot.pg, 'comref')
+addTrace(robot.tracer, robot.pg, 'dcomref')    
+addTrace(robot.tracer, robot.pg, 'ddcomref')                   
+addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
+addTrace(robot.tracer, robot.cdc_estimator, 'dc')               # estimated CoM velocity
 
-# # addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
-# # addTrace(robot.tracer, robot.cdc_estimator, 'dc')               # estimated CoM velocity
+addTrace(robot.tracer, robot.pg, 'rightfootref')
+addTrace(robot.tracer, robot.pg, 'leftfootref')
+addTrace(robot.tracer, robot.dynamic, 'LF')
+addTrace(robot.tracer, robot.dynamic, 'RF')
 
 # # addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
 # # addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
@@ -863,5 +874,5 @@ plug(robot.dvdt.sout,robot.dynamic.acceleration)
 # # addTrace(robot.tracer,  robot.dynamic, 'LF')                    # left foot
 # # addTrace(robot.tracer,  robot.dynamic, 'RF')                    # right foot
 
-# # robot.tracer.start()
+robot.tracer.start()
 
