@@ -278,7 +278,7 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
   derivativeGain[1] = K_d;
   derivativeGain[7] = K_d;
   Vector tauDotHead = tau_dot.head(q_des.size());
-  Vector tempSignal = q_des + delta_q + m_dt * derivativeGain.cwiseProduct(tauDotHead);
+  Vector tempSignal = q_des + delta_q - m_dt * derivativeGain.cwiseProduct(tauDotHead);
   rateLimiter(tempSignal, m_previous_q, s);
   m_previous_q = s;
 
