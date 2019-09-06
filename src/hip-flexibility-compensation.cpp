@@ -64,10 +64,10 @@ HipFlexibilityCompensation::HipFlexibilityCompensation(const std::string& name)
   , CONSTRUCT_SIGNAL_IN(K_d, double)
   , CONSTRUCT_SIGNAL_OUT(tau_dot, dynamicgraph::Vector, m_tauSIN)
   , CONSTRUCT_SIGNAL_OUT(delta_q, dynamicgraph::Vector, INPUT_SIGNALS) 
-  , CONSTRUCT_SIGNAL_OUT(q_cmd, dynamicgraph::Vector, JOINT_DES_SIGNALS << m_tau_dotSOUT << m_delta_qSOUT)
+  , CONSTRUCT_SIGNAL_OUT(q_cmd, dynamicgraph::Vector, m_K_dSIN << JOINT_DES_SIGNALS << m_tau_dotSOUT << m_delta_qSOUT)
   , m_initSucceeded(false) 
   , m_angularLowPassFilterFrequency(5)
-  , m_torqueLowPassFilterFrequency(1)
+  , m_torqueLowPassFilterFrequency(10)
   , m_delta_q_saturation(0.052){
 
   Entity::signalRegistration( JOINT_DES_SIGNALS << INPUT_SIGNALS << OUTPUT_SIGNALS );
@@ -153,7 +153,7 @@ void HipFlexibilityCompensation::setAngularSaturation(const double& saturation) 
 
 Vector HipFlexibilityCompensation::lowPassFilter(const double& frequency, Vector& signal, Vector& previous_signal){
   // delta_q = alpha * previous_delta_q(-1) + (1-alpha) * delta_q_des
-  double alpha = exp(- m_dt * frequency);
+  double alpha = exp(- m_dt * 2 * M_PI * frequency);
   Vector output = alpha * previous_signal + signal * (1 - alpha);
   return output;
 }
@@ -215,9 +215,9 @@ DEFINE_SIGNAL_OUT_FUNCTION(delta_q, dynamicgraph::Vector) {
   getProfiler().start(PROFILE_HIPFLEXIBILITYCOMPENSATION_DELTAQ_COMPUTATION);
 
   const Vector &tau = m_tauSIN(iter);
-  const double &K_r = m_K_rSIN(iter);
-  const double &K_l = m_K_lSIN(iter);
-
+  double K_r = m_K_rSIN(iter);
+  double K_l = m_K_lSIN(iter);
+  
   if(s.size() != tau.size())
     s.setZero(tau.size());
 
@@ -234,7 +234,6 @@ DEFINE_SIGNAL_OUT_FUNCTION(delta_q, dynamicgraph::Vector) {
     }
   }
   // Low pass filter
-  // rateLimiter(s, m_previous_delta_q, s);
   s = lowPassFilter(m_angularLowPassFilterFrequency, s, m_previous_delta_q);
   m_previous_delta_q = s;
   
