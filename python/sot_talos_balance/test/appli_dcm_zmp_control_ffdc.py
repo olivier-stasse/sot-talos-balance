@@ -356,7 +356,7 @@ robot.taskComH.feature.selec.value = '100'
 robot.taskCom = MetaTaskKineCom(robot.dynamic)
 plug(robot.com_admittance_control.comRef,robot.taskCom.featureDes.errorIN)
 plug(robot.com_admittance_control.dcomRef,robot.taskCom.featureDes.errordotIN)
-robot.taskCom.task.controlGain.value = 0
+robot.taskCom.task.controlGain.value = 100.
 robot.taskCom.task.setWithDerivative(True)
 robot.taskCom.feature.selec.value = '011'
 
