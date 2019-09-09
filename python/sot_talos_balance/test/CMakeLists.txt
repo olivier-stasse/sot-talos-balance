@@ -5,6 +5,8 @@ SET(${PROJECT_NAME}_SIMULATION_FILES
   appli_dcm_zmp_control.py
   test_dcm_zmp_control_distribute.py
   appli_dcm_zmp_control_distribute.py
+  test_dcm_zmp_control_ffdc.py
+  appli_dcm_zmp_control_ffdc.py
   test_ffSubscriber.py
   test_ffSubscriber.py
   appli_ffSubscriber.py
