@@ -41,15 +41,16 @@ cd python/sot_talos_balance/test
 Then, you can just run the chosen test. For instance:
 
 ```
-python test_dcmZmpControl_estimator.py
+python test_dcm_zmp_control.py
 ```
+This will launch a test routine executing a sinusoid and raising the foot.
 
 ## Run the test with your own recorded movements
 
 The test that needs to be run in order o execute your own prerecorded movement is
 
 ```
-python test_dcmZmpControl_file.py [testfolder]
+python test_dcm_zmp_control.py [testfolder]
 ```
 
 where `[testfolder]` contains the following files:
@@ -76,12 +77,11 @@ and the waist
 Pay attention that the lines of each file should *not* have trailing whitespace.
 Actually, the velocity and acceleration information are only really needed for the CoM. For all other quantities, these values are not really employed, but they are needed due to how nd-trajectory-generator is implemented. You can set this quantities arbitrarily to zero.
 
+If you are running a simulation, folder `[testfolder]` can be anyways in your computer.
+If you are running an experiment on the robot, folder `[testfolder]` must be installed somewhere on the robot itself.
 
-Folder `[testfolder]` needs to be installed in
-```
-/opt/openrobots/share/sot_talos_balance/data
-```
-If you want to add a new motion, you either put it there or in
+A quick-and-dirty way of installing new motions in the robot is putting them in sot-talos-balance.
+In this case, you have to put it in
 ```
 [sot-talos-balance-repo]/ros/sot_talos_balance/data
 ```
@@ -89,8 +89,20 @@ This way, when executing (see <a href="md_doc_installation.html">the installatio
 ```
 make install
 ```
-it will automatically be copied to the install location.
+it will automatically be copied to
+```
+/opt/openrobots/share/sot_talos_balance/data
+```
+which will then be copied to the robot when you update sot-talos-balance on it.
 
+If you which, you can access the motions in sot-talos-balance without specifying the full path, by doing
+```
+python test_dcm_zmp_control.py -0 [testfolder]
+```
+which will automatically look in
+```
+/opt/openrobots/share/sot_talos_balance/data/[testfolder]
+```
 
 ## Interacting with the dynamic graph
 
