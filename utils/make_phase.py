@@ -17,7 +17,7 @@ DSP = 20
 SSP = 780
 LP  = DSP/2
 UP  = LP
-steps = 8
+steps = 16
 right = True
 
 t0 = ts-LP
@@ -65,22 +65,17 @@ for s in range(steps):
         rho[t,0] = rho_1
         phase[t,0] = phase_1
         t += 1
-    for i in range(DSP):
-        rho[t,:] = min_jerk(rho_1, rho_2, i, DSP).T
-        t += 1
-    for i in range(SSP):
-        rho[t,0] = rho_2
-        phase[t,0] = phase_2
-        t += 1
     if s == (steps-1):
         rho_end = 0.5
         EP = UP
     else:
-        rho_end = rho_1
+        rho_end = rho_2
         EP = DSP
     for i in range(EP):
-        rho[t,:] = min_jerk(rho_2, rho_end, i, EP).T
+        rho[t,:] = min_jerk(rho_1, rho_end, i, EP).T
         t += 1
+    rho_1, rho_2 = (rho_2, rho_1)
+    phase_1, phase_2 = (phase_2, phase_1)
 
 for i in range(t,T):
     rho[i,0] = 0.5
@@ -92,6 +87,9 @@ bias = LF[0,2]
 plt.plot(phase[:,0]*scale + bias)
 plt.plot(rho[:,0])
 plt.legend(['left','right','phase','rho'])
+leg = plt.legend(['left','right','phase','rho'])
+if leg:
+    leg.draggable()
 
 plt.show()
 
