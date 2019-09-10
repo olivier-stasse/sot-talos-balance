@@ -377,14 +377,18 @@ namespace dynamicgraph
       void NdTrajectoryGenerator::playTrajectoryFile(const std::string& fileName)
       {
         if(!m_initSucceeded)
-          return SEND_MSG("Cannot start sinusoid before initialization!",MSG_TYPE_ERROR);
+          return SEND_MSG("Cannot start trajectory before initialization!",MSG_TYPE_ERROR);
 
         for(unsigned int i=0; i<m_n; i++)
           if(m_status[i]!=JTG_STOP)
             return SEND_MSG("You cannot control component "+toString(i)+" because it is already controlled.", MSG_TYPE_ERROR);
 
         if(!m_textFileTrajGen->loadTextFile(fileName))
-          return SEND_MSG("Error while loading text file "+fileName, MSG_TYPE_ERROR);
+        {
+          std::string msg("Error while loading text file "+fileName);
+          SEND_MSG(msg, MSG_TYPE_ERROR);
+          throw std::runtime_error(msg);
+        }
 
         // check current configuration is not too far from initial trajectory configuration
         bool needToMoveToInitConf = false;
