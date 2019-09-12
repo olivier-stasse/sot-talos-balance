@@ -331,6 +331,8 @@ namespace dynamicgraph
         Aineq.block<16,6>(16,6) = m_wrenchFaceMatrix * m_contactRight.inverse().toDualActionMatrix();
 
         Aineq.block<1,6>(32,0) = - m_contactLeft.inverse().toDualActionMatrix().row(2);
+        Aineq.block<1,6>(32,6).setZero();
+        Aineq.block<1,6>(33,0).setZero();
         Aineq.block<1,6>(33,6) = - m_contactRight.inverse().toDualActionMatrix().row(2);
 
         Eigen::VectorXd & Bineq = m_Bineq2;
