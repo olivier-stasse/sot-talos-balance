@@ -228,91 +228,91 @@ BOOST_AUTO_TEST_CASE ( test_distribute )
   bool stop = distribute.m_emergencyStopSOUT(0);
   BOOST_CHECK(!stop);
 
-//# --- Wrench saturation (left) ---
-//print()
-//print("--- Wrench saturation ---")
-//print('NOTE: "predicted" wrench values are not accurate due to the foot saturation and as such they are not checked.')
-//print("CoP values are predicted under the assumption that they are at the foot border and as such they are checked.")
+  // --- Wrench saturation ---
+  std::cout << std::endl;
+  std::cout << "--- Wrench saturation ---" << std::endl;
+  std::cout << "NOTE: \"predicted\" wrench values are not accurate due to the foot saturation and as such they are not checked." << std::endl;
+  std::cout << "CoP values are predicted under the assumption that they are at the foot border and as such they are checked." << std::endl;
 
-//# --- Wrench saturation (left) ---
-//print()
-//print("--- Wrench saturation (left) ---")
-//distribute.phase.value = 1
-//distribute.phase.time = 1
+  // --- Wrench saturation (left) ---
+  std::cout << std::endl;
+  std::cout << "--- Wrench saturation (left) ---" << std::endl;
+  distribute.m_phaseSIN.setConstant(1);
+  distribute.m_phaseSIN.setTime(1);
 
-//wrenchLeft  = wrench
-//ankleWrenchLeft  = list(leftPos.actInv(pin.Force(np.matrix(wrenchLeft).T)).vector.flat)
+  wrenchLeft  = wrench;
+  ankleWrenchLeft  = leftPos.actInv(pinocchio::Force(wrenchLeft)).toVector();
 
-//print( "expected global wrench: %s" % str(wrench) )
-//print( "expected global left wrench: %s"  % str(wrenchLeft) )
-//print( "expected ankle left wrench: %s"  % str(ankleWrenchLeft) )
+  std::cout << "expected global wrench: " << wrench.transpose() << std::endl;
+  std::cout << "expected global left wrench: " << wrenchLeft.transpose() << std::endl;
+  std::cout << "expected ankle left wrench: " << ankleWrenchLeft.transpose() << std::endl;
 
-//copLeft  = [float(com[0] - leftPos.translation[0]),  distribute_conf.RIGHT_FOOT_SIZES[3], 0.]
+  copLeft << com[0] - leftPos.translation()[0], RIGHT_FOOT_SIZES[3], 0.;
 
-//print( "expected sole left CoP: %s"  % str(copLeft) )
-//print()
+  std::cout << "expected sole left CoP: " << copLeft.transpose() << std::endl;
+  std::cout << std::endl;
 
-//distribute.zmpRef.recompute(1)
+  distribute.m_zmpRefSOUT.recompute(1);
 
-//print( "resulting global wrench: %s" % str(distribute.wrenchRef.value) )
-//#assertApprox(wrench,distribute.wrenchRef.value,2)
-//print( "resulting global left wrench: %s"  % str(distribute.wrenchLeft.value) )
-//#assertApprox(wrenchLeft,distribute.wrenchLeft.value,3)
+  std::cout << "resulting global wrench: " << distribute.m_wrenchRefSOUT(1).transpose() << std::endl;
+  //BOOST_CHECK(wrench.isApprox(distribute.m_wrenchRefSOUT(1)));
+  std::cout << "resulting global left wrench: " << distribute.m_wrenchLeftSOUT(1).transpose() << std::endl;
+  //BOOST_CHECK(wrenchLeft.isApprox(distribute.m_wrenchLeftSOUT(1)));
 
-//distribute.ankleWrenchLeft.recompute(1)
+  distribute.m_ankleWrenchLeftSOUT.recompute(1);
 
-//print( "resulting ankle left wrench: %s"  % str(distribute.ankleWrenchLeft.value) )
-//#assertApprox(ankleWrenchLeft,distribute.ankleWrenchLeft.value,3)
+  std::cout << "resulting ankle left wrench: " << distribute.m_ankleWrenchLeftSOUT(1).transpose() << std::endl;
+  //BOOST_CHECK(ankleWrenchLeft.isApprox(distribute.m_ankleWrenchLeftSOUT(1)));
 
-//distribute.copLeft.recompute(1)
-//distribute.copRight.recompute(1)
+  distribute.m_copLeftSOUT.recompute(1);
+  distribute.m_copRightSOUT.recompute(1);
 
-//print( "resulting sole left CoP: %s"  % str(distribute.copLeft.value) )
-//assertApprox(copLeft,distribute.copLeft.value,3)
+  std::cout << "resulting sole left CoP: " << distribute.m_copLeftSOUT(1).transpose() << std::endl;
+  BOOST_CHECK(copLeft.isApprox(distribute.m_copLeftSOUT(1),1e-4));
 
-//distribute.emergencyStop.recompute(0)
-//stop = distribute.emergencyStop.value
-//np.testing.assert_equal(stop,0)
+  distribute.m_emergencyStopSOUT.recompute(1);
+  stop = distribute.m_emergencyStopSOUT(1);
+  BOOST_CHECK(!stop);
 
-//# --- Wrench saturation (right) ---
-//print()
-//print("--- Wrench saturation (right) ---")
-//distribute.phase.value = -1
-//distribute.phase.time = 2
+  // --- Wrench saturation (right) ---
+  std::cout << std::endl;
+  std::cout << "--- Wrench saturation (right) ---" << std::endl;
+  distribute.m_phaseSIN.setConstant(-1);
+  distribute.m_phaseSIN.setTime(2);
 
-//wrenchRight = wrench
-//ankleWrenchRight = list(rightPos.actInv(pin.Force(np.matrix(wrenchRight).T)).vector.flat)
+  wrenchRight = wrench;
+  ankleWrenchRight = rightPos.actInv(pinocchio::Force(wrenchRight)).toVector();
 
-//print( "expected global wrench: %s" % str(wrench) )
-//print( "expected global right wrench: %s" % str(wrenchRight) )
-//print( "expected ankle right wrench: %s" % str(ankleWrenchRight) )
+  std::cout << "expected global wrench: " << wrench.transpose() << std::endl;
+  std::cout << "expected global right wrench: " << wrenchRight.transpose() << std::endl;
+  std::cout << "expected ankle right wrench: " << ankleWrenchRight.transpose() << std::endl;
 
-//copRight = [float(com[0] - rightPos.translation[0]),  distribute_conf.RIGHT_FOOT_SIZES[2], 0.]
+  copRight << com[0] - rightPos.translation()[0], RIGHT_FOOT_SIZES[2], 0.;
 
-//print( "expected sole right CoP: %s" % str(copRight) )
-//print()
+  std::cout << "expected sole right CoP: " << copRight.transpose() << std::endl;
+  std::cout << std::endl;
 
-//distribute.zmpRef.recompute(2)
+  distribute.m_zmpRefSOUT.recompute(2);
 
-//print( "resulting global wrench: %s" % str(distribute.wrenchRef.value) )
-//#assertApprox(wrench,distribute.wrenchRef.value,2)
-//print( "resulting global right wrench: %s" % str(distribute.wrenchRight.value) )
-//#assertApprox(wrenchRight,distribute.wrenchRight.value,3)
+  std::cout << "resulting global wrench: " << distribute.m_wrenchRefSOUT(2).transpose() << std::endl;
+  //BOOST_CHECK(wrench.isApprox(distribute.m_wrenchRefSOUT(2)));
+  std::cout << "resulting global right wrench: " << distribute.m_wrenchRightSOUT(2).transpose() << std::endl;
+  //BOOST_CHECK(wrenchRight.isApprox(distribute.m_wrenchRightSOUT(2)));
 
-//distribute.ankleWrenchRight.recompute(2)
+  distribute.m_ankleWrenchRightSOUT.recompute(2);
 
-//print( "resulting ankle right wrench: %s" % str(distribute.ankleWrenchRight.value) )
-//#assertApprox(ankleWrenchRight,distribute.ankleWrenchRight.value,3)
+  std::cout << "resulting ankle right wrench: " << distribute.m_ankleWrenchRightSOUT(2).transpose() << std::endl;
+  //BOOST_CHECK(ankleWrenchRight.isApprox(distribute.m_ankleWrenchRightSOUT(2)));
 
-//distribute.copLeft.recompute(2)
-//distribute.copRight.recompute(2)
+  distribute.m_copLeftSOUT.recompute(2);
+  distribute.m_copRightSOUT.recompute(2);
 
-//print( "resulting sole right CoP: %s" % str(distribute.copRight.value) )
-//assertApprox(copRight,distribute.copRight.value,3)
+  std::cout << "resulting sole right CoP: " << distribute.m_copRightSOUT(2).transpose() << std::endl;
+  BOOST_CHECK(copRight.isApprox(distribute.m_copRightSOUT(2),1e-4));
 
-//distribute.emergencyStop.recompute(0)
-//stop = distribute.emergencyStop.value
-//np.testing.assert_equal(stop,0)
+  distribute.m_emergencyStopSOUT.recompute(2);
+  stop = distribute.m_emergencyStopSOUT(2);
+  BOOST_CHECK(!stop);
 
 }
 
