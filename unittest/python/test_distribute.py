@@ -137,7 +137,7 @@ distribute.emergencyStop.recompute(0)
 stop = distribute.emergencyStop.value
 np.testing.assert_equal(stop,0)
 
-# --- Wrench saturation (left) ---
+# --- Wrench saturation ---
 print()
 print("--- Wrench saturation ---")
 print('NOTE: "predicted" wrench values are not accurate due to the foot saturation and as such they are not checked.')
@@ -179,7 +179,7 @@ distribute.copRight.recompute(1)
 print( "resulting sole left CoP: %s"  % str(distribute.copLeft.value) )
 assertApprox(copLeft,distribute.copLeft.value,3)
 
-distribute.emergencyStop.recompute(0)
+distribute.emergencyStop.recompute(1)
 stop = distribute.emergencyStop.value
 np.testing.assert_equal(stop,0)
 
@@ -219,6 +219,6 @@ distribute.copRight.recompute(2)
 print( "resulting sole right CoP: %s" % str(distribute.copRight.value) )
 assertApprox(copRight,distribute.copRight.value,3)
 
-distribute.emergencyStop.recompute(0)
+distribute.emergencyStop.recompute(2)
 stop = distribute.emergencyStop.value
 np.testing.assert_equal(stop,0)
