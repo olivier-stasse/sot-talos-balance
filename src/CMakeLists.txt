@@ -1,75 +1,88 @@
 # Copyright 2018, Gepetto team, LAAS-CNRS
-#
-# This file is part of sot-talos-balance.
-# sot-talos-balance is free software: you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public License
-# as published by the Free Software Foundation, either version 3 of
-# the License, or (at your option) any later version.
-#
-# sot-talos-balance is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Lesser Public License for more details.  You should have
-# received a copy of the GNU Lesser General Public License along with
-# sot-talos-balance. If not, see <http://www.gnu.org/licenses/>.
 
 # Verbosity level
 IF (NOT (\"${CMAKE_VERBOSITY_LEVEL}\" STREQUAL \"\"))
   ADD_DEFINITIONS(-DVP_DEBUG_MODE=${CMAKE_VERBOSITY_LEVEL} -DVP_DEBUG)
 ENDIF (NOT (\"${CMAKE_VERBOSITY_LEVEL}\" STREQUAL \"\"))
 
-# The main include dir
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
-IF(BUILD_PYTHON_INTERFACE)
-  LINK_DIRECTORIES(${PYTHON_LIBRARY_DIRS})
-ENDIF(BUILD_PYTHON_INTERFACE)
-
-#define DEBUG=2 if we're building in debug mode (what for?)
-IF("${CMAKE_BUILD_TYPE}" STREQUAL DEBUG)
-  ADD_DEFINITIONS(-DDEBUG=2)
-ENDIF ("${CMAKE_BUILD_TYPE}" STREQUAL DEBUG)
-
 IF(UNIX)
   ADD_DEFINITIONS(-pthread)
 ENDIF(UNIX)
 
+SET(${LIBRARY_NAME}_SOURCES
+  utils/statistics.cpp
+  robot/robot-wrapper.cpp
+  sdk_qualisys/Network.cpp
+  sdk_qualisys/RTPacket.cpp
+  sdk_qualisys/RTProtocol.cpp
+  sdk_qualisys/Markup.cpp
+  )
+
+ADD_LIBRARY(${LIBRARY_NAME} SHARED ${${LIBRARY_NAME}_SOURCES})
+
+SET_TARGET_PROPERTIES(${LIBRARY_NAME}
+  PROPERTIES
+  SOVERSION ${PROJECT_VERSION}
+  INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
+
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} dynamic-graph)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} sot-core)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} pinocchio)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} parametric-curves)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} eigen-quadprog)
+
+IF(UNIX)
+  TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${CMAKE_DL_LIBS})
+  IF(NOT APPLE)
+    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} pthread)
+  ENDIF(NOT APPLE)
+ENDIF(UNIX)
+
+TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${Boost_LIBRARIES})
+
+IF (NOT INSTALL_PYTHON_INTERFACE_ONLY)
+  INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
+
+
+
 #This project will create many plugins as shared libraries, listed here
 SET(plugins
-    example
-    boolean-identity
-    round-double-to-int
-    int-identity
-    pose-quaternion-to-matrix-homo
-    euler-to-quat
-    quat-to-euler
-    state-transformation
-    simple-reference-frame
-    dummy-walking-pattern-generator
-    simple-zmp-estimator
-    simple-distribute-wrench
-    simple-pid
-    simple-pidd
-    simple-controller-6d
-    distribute-wrench
-    dcm-com-controller
-    dcm-controller
-    dummy-dcm-estimator
-    com-admittance-controller
-    simple-admittance-controller
-    coupled-admittance-controller
-    admittance-controller-end-effector
-    ankle-admittance-controller
-    foot-force-difference-controller
-    joint-position-controller
-    nd-trajectory-generator
-    talos-base-estimator
-    talos-control-manager
-    dcm-estimator
-    qualisys-client
-    ft-calibration
-    ft-wrist-calibration
-    ankle-joint-selector
-    saturation
+  example
+  boolean-identity
+  round-double-to-int
+  int-identity
+  pose-quaternion-to-matrix-homo
+  euler-to-quat
+  quat-to-euler
+  state-transformation
+  simple-reference-frame
+  dummy-walking-pattern-generator
+  simple-zmp-estimator
+  simple-distribute-wrench
+  simple-pid
+  simple-pidd
+  simple-controller-6d
+  distribute-wrench
+  dcm-com-controller
+  dcm-controller
+  dummy-dcm-estimator
+  com-admittance-controller
+  simple-admittance-controller
+  coupled-admittance-controller
+  admittance-controller-end-effector
+  ankle-admittance-controller
+  foot-force-difference-controller
+  joint-position-controller
+  nd-trajectory-generator
+  talos-base-estimator
+  talos-control-manager
+  dcm-estimator
+  qualisys-client
+  ft-calibration
+  ft-wrist-calibration
+  ankle-joint-selector
+  saturation
   )
 
 #set(ADDITIONAL_feature-task_LIBS feature-generic task)
@@ -102,7 +115,6 @@ FOREACH(plugin ${plugins})
 
   ADD_DEPENDENCIES(${LIBRARY_NAME} ${SOTTALOSBALANCE_LIB_NAME})
 
-
   IF(ADDITIONAL_${LIBRARY_NAME}_LIBS)
     ADD_DEPENDENCIES(${LIBRARY_NAME} ${ADDITIONAL_${LIBRARY_NAME}_LIBS})
     TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${ADDITIONAL_${LIBRARY_NAME}_LIBS})
@@ -111,11 +123,10 @@ FOREACH(plugin ${plugins})
   # Linux dynamic loading library flags
   IF(UNIX)
     TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${CMAKE_DL_LIBS})
+    IF(NOT APPLE)
+      TARGET_LINK_LIBRARIES(${LIBRARY_NAME} dl pthread)
+    ENDIF(NOT APPLE)
   ENDIF(UNIX)
-
-  IF(UNIX AND NOT APPLE)
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} dl pthread)
-  ENDIF(UNIX AND NOT APPLE)
 
   PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} dynamic-graph)
   PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} sot-core)
@@ -146,5 +157,5 @@ IF(BUILD_PYTHON_INTERFACE)
   INSTALL(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/${SOTTALOSBALANCE_PYNAME}/__init__.py
     DESTINATION ${PYTHON_SITELIB}/${SOTTALOSBALANCE_PYNAME}
-  )
+    )
 ENDIF(BUILD_PYTHON_INTERFACE)

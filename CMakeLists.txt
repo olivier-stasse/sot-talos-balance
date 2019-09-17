@@ -1,17 +1,5 @@
 # Copyright 2018, Gepetto team, LAAS-CNRS
 #
-# This file is part of sot-talos-balance.
-# sot-talos-balance is free software: you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public License
-# as published by the Free Software Foundation, either version 3 of
-# the License, or (at your option) any later version.
-#
-# sot-talos-balance is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Lesser Public License for more details.  You should have
-# received a copy of the GNU Lesser General Public License along with
-# sot-talos-balance. If not, see <http://www.gnu.org/licenses/>.
 
 set(CMAKE_CXX_STANDARD 11)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
@@ -34,22 +22,12 @@ SET(DOXYGEN_USE_MATHJAX YES)
 
 # Disable -Werror on Unix for now.
 SET(CXX_DISABLE_WERROR True)
-#add_compile_options(-std=c++11) # CMake 2.8.12 or newer
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 SET(PKG_CONFIG_ADDITIONAL_VARIABLES
   ${PKG_CONFIG_ADDITIONAL_VARIABLES}
   plugindirname
   plugindir
   )
-
-OPTION (INSTALL_PYTHON_INTERFACE_ONLY "Install *ONLY* the python binding" OFF)
-
-IF(INSTALL_PYTHON_INTERFACE_ONLY)
-  SET(INSTALL_DOCUMENTATION OFF CACHE BOOL "documentation is not in python interface")
-  SET(INSTALL_GENERATED_HEADERS OFF CACHE BOOL "headers are not in python interface")
-  SET(INSTALL_PKG_CONFIG_FILE OFF CACHE BOOL ".pc is not in python interface")
-ENDIF(INSTALL_PYTHON_INTERFACE_ONLY)
 
 SETUP_PROJECT()
 
@@ -73,14 +51,12 @@ SET(BOOST_COMPONENTS thread filesystem program_options unit_test_framework syste
 
 OPTION (BUILD_ROS_PACKAGES "Build ros packages" ON)
 OPTION (BUILD_PYTHON_INTERFACE "Build the python bindings" ON)
+OPTION (INSTALL_PYTHON_INTERFACE_ONLY "Install *ONLY* the python binding" OFF)
 OPTION (BUILD_TEST "Build tests" ON)
 
 # name of the python module
 IF(BUILD_PYTHON_INTERFACE)
   SET(SOTTALOSBALANCE_PYNAME sot_talos_balance)
-ENDIF(BUILD_PYTHON_INTERFACE)
-
-IF(BUILD_PYTHON_INTERFACE)
   FINDPYTHON()
   SET(BOOST_COMPONENTS ${BOOST_COMPONENTS} python)
   ADD_REQUIRED_DEPENDENCY("dynamic-graph-python >= 3.2.0")
@@ -102,67 +78,6 @@ ADD_OPTIONAL_DEPENDENCY("talos_data")
 
 SET(SOTTALOSBALANCE_LIB_NAME ${PROJECT_NAME})
 SET(LIBRARY_NAME ${SOTTALOSBALANCE_LIB_NAME})
-
-IF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
-  SET(${LIBRARY_NAME}_HEADERS
-    include/sot/talos_balance/utils/commands-helper.hh
-    include/sot/talos_balance/utils/statistics.hh
-    include/sot/talos_balance/math/fwd.hh
-    include/sot/talos_balance/robot/fwd.hh
-    include/sot/talos_balance/robot/robot-wrapper.hh
-    include/sot/talos_balance/sdk_qualisys/Network.h
-    include/sot/talos_balance/sdk_qualisys/RTPacket.h
-    include/sot/talos_balance/sdk_qualisys/RTProtocol.h
-    include/sot/talos_balance/sdk_qualisys/Markup.h
-  )
-
-  INSTALL(FILES ${${LIBRARY_NAME}_HEADERS}
-    DESTINATION include/${CUSTOM_HEADER_DIR}
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_WRITE)
-ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
-
-SET(${LIBRARY_NAME}_SOURCES
-    src/utils/statistics.cpp
-    src/robot/robot-wrapper.cpp
-    src/sdk_qualisys/Network.cpp
-    src/sdk_qualisys/RTPacket.cpp
-    src/sdk_qualisys/RTProtocol.cpp
-    src/sdk_qualisys/Markup.cpp
-)
-
-ADD_LIBRARY(${LIBRARY_NAME} SHARED ${${LIBRARY_NAME}_SOURCES})
-
-SET_TARGET_PROPERTIES(${LIBRARY_NAME}
-  PROPERTIES
-  SOVERSION ${PROJECT_VERSION}
-  INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
-
-PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} dynamic-graph)
-PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} sot-core)
-PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} pinocchio)
-PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} parametric-curves)
-PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} eigen-quadprog)
-
-
-IF(BUILD_PYTHON_INTERFACE)
-  PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} dynamic-graph-python)
-ENDIF(BUILD_PYTHON_INTERFACE)
-
-
-IF(UNIX)
-  TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${CMAKE_DL_LIBS})
-ENDIF(UNIX)
-
-IF(UNIX AND NOT APPLE)
-  TARGET_LINK_LIBRARIES(${LIBRARY_NAME} pthread)
-ENDIF(UNIX AND NOT APPLE)
-
-TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${Boost_LIBRARIES})
-
-IF (NOT INSTALL_PYTHON_INTERFACE_ONLY)
-  INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
-
 
 MACRO(DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE MODULENAME SUBMODULENAME LIBRARYNAME TARGETNAME)
 
@@ -259,6 +174,10 @@ MACRO(SOT_TALOS_BALANCE_PYTHON_MODULE SUBMODULENAME LIBRARYNAME TARGETNAME)
   DYNAMIC_GRAPH_CUSTOM_PYTHON_MODULE("${SOTTALOSBALANCE_PYNAME}"
     "${SUBMODULENAME}" "${LIBRARYNAME}" "${TARGETNAME}")
 ENDMACRO(SOT_TALOS_BALANCE_PYTHON_MODULE)
+
+IF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
+  ADD_SUBDIRECTORY(include/${CUSTOM_HEADER_DIR})
+ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
 
 IF(BUILD_PYTHON_INTERFACE)
   ADD_SUBDIRECTORY(python/${SOTTALOSBALANCE_PYNAME})
