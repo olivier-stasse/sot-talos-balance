@@ -32,7 +32,7 @@ SET(TEST_test_distribute_EXT_LIBS
 #test paths and names (without .cpp extension)
 SET (tests
   dummy
-  #test_distribute
+  test_distribute
   )
 
 #IF(UNIX)
