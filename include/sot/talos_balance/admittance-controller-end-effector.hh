@@ -29,6 +29,7 @@
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
 
+#include <pinocchio/fwd.hpp>
 #include <dynamic-graph/signal-helper.h>
 #include <map>
 #include "boost/assign.hpp"
