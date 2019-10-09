@@ -96,7 +96,7 @@ class HIPFLEXIBILITYCOMPENSATION_EXPORT HipFlexibilityCompensation
   /// \brief Set the value of the limiter for the the rate limiter of delta_q.
   void setRateLimiter(const double& rate);
   /// \brief Compute the low pass filter of a signal given a frequency and the previous signal.
-  dynamicgraph::Vector lowPassFilter(const double& frequency, dynamicgraph::Vector& signal, dynamicgraph::Vector& previous_signal);
+  dynamicgraph::Vector lowPassFilter(const double& frequency, const dynamicgraph::Vector& signal, dynamicgraph::Vector& previous_signal);
   /// \brief Compute the limiter of a signal given the previous signal (based on first derivative).
   void rateLimiter(const dynamicgraph::Vector& signal, dynamicgraph::Vector& previous_signal, dynamicgraph::Vector& output);
 

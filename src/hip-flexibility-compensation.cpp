@@ -164,7 +164,7 @@ void HipFlexibilityCompensation::setRateLimiter(const double& rate) {
   m_rate_limiter = rate;
 }
 
-Vector HipFlexibilityCompensation::lowPassFilter(const double& frequency, Vector& signal, Vector& previous_signal){
+Vector HipFlexibilityCompensation::lowPassFilter(const double& frequency, const Vector& signal, Vector& previous_signal){
   // delta_q = alpha * previous_delta_q(-1) + (1-alpha) * delta_q_des
   double alpha = exp(- m_dt * 2 * M_PI * frequency);
   std::cout << "alpha : " << alpha << std::endl;
@@ -234,9 +234,9 @@ DEFINE_SIGNAL_OUT_FUNCTION(tau_filt, dynamicgraph::Vector) {
     s = tau;
   } else {
     // Low pass filter  
-    s = lowPassFilter(m_torqueLowPassFilterFrequency, s, m_previous_tau);     
+    s = lowPassFilter(m_torqueLowPassFilterFrequency, tau, m_previous_tau);     
   }
-  m_previous_tau = s;  
+  m_previous_tau = tau;  
   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUFILT_COMPUTATION);
 
   return s;
@@ -317,7 +317,7 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
     rateLimiter(delta_q, m_previous_delta_q, limitedSignal);
     s = q_des + limitedSignal;
   }
-  m_previous_delta_q = limitedSignal;
+  m_previous_delta_q = delta_q;
 
   // tempSignal[1] = tempSignal[1] - K_d * tau_dot[1];  
   // tempSignal[7] = tempSignal[7] - K_d * tau_dot[7];
