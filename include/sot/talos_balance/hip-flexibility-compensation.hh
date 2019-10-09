@@ -69,14 +69,16 @@ class HIPFLEXIBILITYCOMPENSATION_EXPORT HipFlexibilityCompensation
   /// \brief Right flexibility correction for the angular computation
   DECLARE_SIGNAL_IN(K_r, double);
   /// \brief Derivative gain (double) for the error 
-  DECLARE_SIGNAL_IN(K_d, double);
+  // DECLARE_SIGNAL_IN(K_d, double);
 
-  /// \brief  Euler derivative of the signal tau -> torque derivative
-  DECLARE_SIGNAL_OUT(tau_dot, dynamicgraph::Vector);  
+  // /// \brief  Euler derivative of the signal tau -> torque derivative
+  // DECLARE_SIGNAL_OUT(tau_dot, dynamicgraph::Vector);  
+  /// \brief  Low pass filter of the signal tau
+  DECLARE_SIGNAL_OUT(tau_filt, dynamicgraph::Vector); 
   /// \brief  Angular correction of the flexibility 
   DECLARE_SIGNAL_OUT(delta_q, dynamicgraph::Vector);
-  /// \brief  Corrected desired joint configuration of the robot with flexibilityjoint configuration
-  /// q_cmd = q_des + delta_q + K_d * tau_dot
+  /// \brief  Corrected desired joint configuration of the robot with flexibility joint configuration
+  /// q_cmd = q_des + RateLimiter(delta_q) 
   DECLARE_SIGNAL_OUT(q_cmd, dynamicgraph::Vector);
 
   /* --- COMMANDS --- */
@@ -91,10 +93,12 @@ class HIPFLEXIBILITYCOMPENSATION_EXPORT HipFlexibilityCompensation
   void setTorqueLowPassFilterFrequency(const double& frequency);
   /// \brief Set the value of the saturation for the angular correction computation.
   void setAngularSaturation(const double& saturation);
+  /// \brief Set the value of the limiter for the the rate limiter of delta_q.
+  void setRateLimiter(const double& rate);
   /// \brief Compute the low pass filter of a signal given a frequency and the previous signal.
   dynamicgraph::Vector lowPassFilter(const double& frequency, dynamicgraph::Vector& signal, dynamicgraph::Vector& previous_signal);
   /// \brief Compute the limiter of a signal given the previous signal (based on first derivative).
-  void rateLimiter(dynamicgraph::Vector& signal, dynamicgraph::Vector& previous_signal, dynamicgraph::Vector& output);
+  void rateLimiter(const dynamicgraph::Vector& signal, dynamicgraph::Vector& previous_signal, dynamicgraph::Vector& output);
 
 
  protected:
@@ -104,10 +108,11 @@ class HIPFLEXIBILITYCOMPENSATION_EXPORT HipFlexibilityCompensation
   double m_angularLowPassFilterFrequency;
   double m_torqueLowPassFilterFrequency;
   double m_delta_q_saturation;
+  double m_rate_limiter;
   dynamicgraph::Vector m_previous_delta_q;
   dynamicgraph::Vector m_previous_tau;
-  dynamicgraph::Vector m_previous_tau_dot;
-  dynamicgraph::Vector m_previous_q;
+  // dynamicgraph::Vector m_previous_tau_dot;
+  // dynamicgraph::Vector m_previous_q;
 
   RobotUtilShrPtr m_robot_util;
 

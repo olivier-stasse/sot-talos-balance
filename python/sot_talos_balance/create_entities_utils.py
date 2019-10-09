@@ -38,7 +38,7 @@ from sot_talos_balance.distribute_wrench import DistributeWrench
 from sot_talos_balance.simple_reference_frame import SimpleReferenceFrame
 from sot_talos_balance.state_transformation import StateTransformation
 from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator
-from sot_talos_balance.ankle_joint_selector import AnkleJointSelector
+# from sot_talos_balance.ankle_joint_selector import AnkleJointSelector
 from sot_talos_balance.qualisys_client import QualisysClient
 from sot_talos_balance.hip_flexibility_compensation import HipFlexibilityCompensation
 
@@ -218,9 +218,9 @@ def create_hip_flexibility_compensation(robot, robot_name='robot'):
     hipComp = HipFlexibilityCompensation("hipFlexCompensation")
     # K = 1.02753655126 in mm/Nm
     # For a lever arm of 1 m/rad -> K = 973.201390037 in Nm/rad
-    hipComp.K_l.value = 973.201390037  
-    hipComp.K_r.value = 973.201390037 
-    hipComp.K_d.value = 0.0 
+    hipComp.K_l.value = float("inf") #973.201390037  
+    hipComp.K_r.value = float("inf") #973.201390037 
+    # hipComp.K_d.value = 0.0 
     hipComp.q_des.value = robot.halfSitting[6:]
     plug(robot.device.ptorque, hipComp.tau)
     hipComp.init(timeStep, robot_name)

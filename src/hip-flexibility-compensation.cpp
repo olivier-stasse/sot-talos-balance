@@ -31,8 +31,8 @@ namespace dg = ::dynamicgraph;
 using namespace dg;
 using namespace dg::command;
 
-#define PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUDOT_COMPUTATION \
-  "HipFlexibilityCompensation: Torque derivative computation   "
+#define PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUFILT_COMPUTATION \
+  "HipFlexibilityCompensation: Torque filter computation   "
 #define PROFILE_HIPFLEXIBILITYCOMPENSATION_DELTAQ_COMPUTATION \
   "HipFlexibilityCompensation: Angular correction computation   "
 #define PROFILE_HIPFLEXIBILITYCOMPENSATION_QCMD_COMPUTATION \
@@ -40,9 +40,9 @@ using namespace dg::command;
 
 #define JOINT_DES_SIGNALS m_q_desSIN
 
-#define INPUT_SIGNALS m_tauSIN << m_K_rSIN << m_K_lSIN << m_K_dSIN
+#define INPUT_SIGNALS m_tauSIN << m_K_rSIN << m_K_lSIN //<< m_K_dSIN
 
-#define OUTPUT_SIGNALS m_tau_dotSOUT << m_delta_qSOUT << m_q_cmdSOUT
+#define OUTPUT_SIGNALS m_tau_filtSOUT << m_delta_qSOUT << m_q_cmdSOUT
 
 /// Define EntityClassName here rather than in the header file
 /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -61,14 +61,16 @@ HipFlexibilityCompensation::HipFlexibilityCompensation(const std::string& name)
   , CONSTRUCT_SIGNAL_IN(tau, dynamicgraph::Vector)
   , CONSTRUCT_SIGNAL_IN(K_l, double)
   , CONSTRUCT_SIGNAL_IN(K_r, double)
-  , CONSTRUCT_SIGNAL_IN(K_d, double)
-  , CONSTRUCT_SIGNAL_OUT(tau_dot, dynamicgraph::Vector, m_tauSIN)
-  , CONSTRUCT_SIGNAL_OUT(delta_q, dynamicgraph::Vector, INPUT_SIGNALS) 
-  , CONSTRUCT_SIGNAL_OUT(q_cmd, dynamicgraph::Vector, m_K_dSIN << JOINT_DES_SIGNALS << m_tau_dotSOUT << m_delta_qSOUT)
+  // , CONSTRUCT_SIGNAL_IN(K_d, double)
+  // , CONSTRUCT_SIGNAL_OUT(tau_dot, dynamicgraph::Vector, m_tauSIN)
+  , CONSTRUCT_SIGNAL_OUT(tau_filt, dynamicgraph::Vector, m_tauSIN)
+  , CONSTRUCT_SIGNAL_OUT(delta_q, dynamicgraph::Vector, INPUT_SIGNALS << m_tau_filtSOUT) 
+  , CONSTRUCT_SIGNAL_OUT(q_cmd, dynamicgraph::Vector, JOINT_DES_SIGNALS << m_delta_qSOUT) //m_K_dSIN 
   , m_initSucceeded(false) 
-  , m_angularLowPassFilterFrequency(5)
-  , m_torqueLowPassFilterFrequency(10)
-  , m_delta_q_saturation(0.052){
+  , m_angularLowPassFilterFrequency(1)
+  , m_torqueLowPassFilterFrequency(1)
+  , m_delta_q_saturation(0.0034)
+  , m_rate_limiter(1.0){
 
   Entity::signalRegistration( JOINT_DES_SIGNALS << INPUT_SIGNALS << OUTPUT_SIGNALS );
 
@@ -91,6 +93,10 @@ HipFlexibilityCompensation::HipFlexibilityCompensation(const std::string& name)
                                      &HipFlexibilityCompensation::setAngularSaturation,
                                      docCommandVoid1("Set the saturation for the angular correction computation.",
                                                      "Value of the saturation")));
+  addCommand("setRateLimiter", makeCommandVoid1(*this, 
+                                     &HipFlexibilityCompensation::setRateLimiter,
+                                     docCommandVoid1("Set the rate for the rate limiter of delta_q.",
+                                                     "Value of the limiter")));
 
   addCommand("getAngularLowPassFilterFrequency", makeDirectGetter(*this, &m_angularLowPassFilterFrequency,
              docDirectGetter("Get the current value of the angular LowPassFilter frequency.", "frequency (double)")));
@@ -100,6 +106,9 @@ HipFlexibilityCompensation::HipFlexibilityCompensation(const std::string& name)
   
   addCommand("getAngularSaturation", makeDirectGetter(*this, &m_delta_q_saturation,
              docDirectGetter("Get the current value of the Angular Saturation.", "saturation (double)")));
+
+  addCommand("getRateLimiter", makeDirectGetter(*this, &m_rate_limiter,
+             docDirectGetter("Get the current value of the rate limiter.", "rate (double)")));
 }
 
 /* --- COMMANDS ---------------------------------------------------------- */
@@ -113,8 +122,8 @@ void HipFlexibilityCompensation::init(const double &dt, const std::string& robot
     return SEND_MSG("Init failed: signal K_r is not plugged", MSG_TYPE_ERROR);
   if (!m_K_lSIN.isPlugged())
     return SEND_MSG("Init failed: signal K_l is not plugged", MSG_TYPE_ERROR);
-  if (!m_K_dSIN.isPlugged())
-    return SEND_MSG("Init failed: signal K_d is not plugged", MSG_TYPE_ERROR);
+  // if (!m_K_dSIN.isPlugged())
+  //   return SEND_MSG("Init failed: signal K_d is not plugged", MSG_TYPE_ERROR);
 
   m_dt = dt;
   std::string robotName_nonconst(robotName);
@@ -132,11 +141,11 @@ void HipFlexibilityCompensation::init(const double &dt, const std::string& robot
   m_previous_delta_q.resize(q_des.size());
   m_previous_delta_q.setZero();
   m_previous_tau.resize(tau.size());
-  m_previous_tau_dot.resize(tau.size());
   m_previous_tau.setZero();
-  m_previous_tau_dot.setZero();  
-  m_previous_q.resize(q_des.size());
-  m_previous_q.setZero();
+  // m_previous_tau_dot.resize(tau.size());
+  // m_previous_tau_dot.setZero();  
+  // m_previous_q.resize(q_des.size());
+  // m_previous_q.setZero();
 }
 
 void HipFlexibilityCompensation::setAngularLowPassFilterFrequency(const double& frequency) {
@@ -151,24 +160,26 @@ void HipFlexibilityCompensation::setAngularSaturation(const double& saturation) 
   m_delta_q_saturation = saturation;
 }
 
+void HipFlexibilityCompensation::setRateLimiter(const double& rate) {
+  m_rate_limiter = rate;
+}
+
 Vector HipFlexibilityCompensation::lowPassFilter(const double& frequency, Vector& signal, Vector& previous_signal){
   // delta_q = alpha * previous_delta_q(-1) + (1-alpha) * delta_q_des
   double alpha = exp(- m_dt * 2 * M_PI * frequency);
+  std::cout << "alpha : " << alpha << std::endl;
   Vector output = alpha * previous_signal + signal * (1 - alpha);
   return output;
 }
 
-void HipFlexibilityCompensation::rateLimiter(Vector& signal, Vector& previous_signal, Vector& output){
-  Vector rate = (signal - previous_signal)/m_dt;
-  //Rising slew rate 
-  double R = 1.0;
-  // Falling slew rate
-  double F = -R;
+void HipFlexibilityCompensation::rateLimiter(const Vector& signal, Vector& previous_signal, Vector& output){
+  Vector rate = (signal - previous_signal)/m_dt;  
+  // Falling slew rate = - Rising slew rate  = - m_rate_limiter
   for (unsigned int i=0; i<signal.size(); i++){
-    if (rate[i] > R){
-      output[i] = m_dt * R + previous_signal[i];
-    } else if (rate[i] < F){
-      output[i] = m_dt * F + previous_signal[i];
+    if (rate[i] > m_rate_limiter){
+      output[i] = m_dt * m_rate_limiter + previous_signal[i];
+    } else if (rate[i] < -m_rate_limiter){
+      output[i] = m_dt * (-m_rate_limiter) + previous_signal[i];
     } else {
       output[i] = signal[i];
     }
@@ -178,30 +189,55 @@ void HipFlexibilityCompensation::rateLimiter(Vector& signal, Vector& previous_si
 /* --- SIGNALS ------------------------------------------------------- */
 /* ------------------------------------------------------------------- */
 
-DEFINE_SIGNAL_OUT_FUNCTION(tau_dot, dynamicgraph::Vector) {
+// DEFINE_SIGNAL_OUT_FUNCTION(tau_dot, dynamicgraph::Vector) {
+//   if (!m_initSucceeded) {
+//     SEND_WARNING_STREAM_MSG("Cannot compute signal tau_dot before initialization!");
+//     return s;
+//   }
+
+//   getProfiler().start(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUDOT_COMPUTATION);
+
+//   const Vector& tau = m_tauSIN(iter);
+
+//   if(s.size() != tau.size())
+//     s.resize(tau.size());
+
+//   if (iter < 5){
+//     s.setZero();
+//     m_previous_tau_dot = s;
+//   } else {    
+//     s = (tau - m_previous_tau)/m_dt;    
+//     // Low pass filter  
+//     s = lowPassFilter(m_torqueLowPassFilterFrequency, s, m_previous_tau_dot);
+//   }     
+//   m_previous_tau_dot = s;
+//   m_previous_tau = tau;  
+//   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUDOT_COMPUTATION);
+
+//   return s;
+// }
+// 
+DEFINE_SIGNAL_OUT_FUNCTION(tau_filt, dynamicgraph::Vector) {
   if (!m_initSucceeded) {
-    SEND_WARNING_STREAM_MSG("Cannot compute signal tau_dot before initialization!");
+    SEND_WARNING_STREAM_MSG("Cannot compute signal tau_filt before initialization!");
     return s;
   }
 
-  getProfiler().start(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUDOT_COMPUTATION);
+  getProfiler().start(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUFILT_COMPUTATION);
 
   const Vector& tau = m_tauSIN(iter);
 
   if(s.size() != tau.size())
     s.resize(tau.size());
-
+  
   if (iter < 5){
-    s.setZero();
-    m_previous_tau_dot = s;
-  } else {    
-    s = (tau - m_previous_tau)/m_dt;    
+    s = tau;
+  } else {
     // Low pass filter  
-    s = lowPassFilter(m_torqueLowPassFilterFrequency, s, m_previous_tau_dot);
-  }     
-  m_previous_tau_dot = s;
-  m_previous_tau = tau;  
-  getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUDOT_COMPUTATION);
+    s = lowPassFilter(m_torqueLowPassFilterFrequency, s, m_previous_tau);     
+  }
+  m_previous_tau = s;  
+  getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUFILT_COMPUTATION);
 
   return s;
 }
@@ -214,7 +250,7 @@ DEFINE_SIGNAL_OUT_FUNCTION(delta_q, dynamicgraph::Vector) {
 
   getProfiler().start(PROFILE_HIPFLEXIBILITYCOMPENSATION_DELTAQ_COMPUTATION);
 
-  const Vector &tau = m_tauSIN(iter);
+  const Vector &tau = m_tau_filtSOUT(iter);
   double K_r = m_K_rSIN(iter);
   double K_l = m_K_lSIN(iter);
   
@@ -233,9 +269,9 @@ DEFINE_SIGNAL_OUT_FUNCTION(delta_q, dynamicgraph::Vector) {
       s[i] = 0.0; //tau[i]/inf; // no flexibility for other joints
     }
   }
-  // Low pass filter
-  s = lowPassFilter(m_angularLowPassFilterFrequency, s, m_previous_delta_q);
-  m_previous_delta_q = s;
+  // // Low pass filter
+  // s = lowPassFilter(m_angularLowPassFilterFrequency, s, m_previous_delta_q);
+  // m_previous_delta_q = s;
   
   // Angular Saturation
   // left hip
@@ -266,24 +302,27 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
   getProfiler().start(PROFILE_HIPFLEXIBILITYCOMPENSATION_QCMD_COMPUTATION);
 
   const Vector &q_des = m_q_desSIN(iter);
-  const double &K_d = m_K_dSIN(iter);
-  const Vector &tau_dot = m_tau_dotSOUT(iter);
+  // const double &K_d = m_K_dSIN(iter);
+  // const Vector &tau_dot = m_tau_dotSOUT(iter);
   const Vector &delta_q = m_delta_qSOUT(iter);
 
   if(s.size() != q_des.size())
     s.resize(q_des.size());
 
-  Vector derivativeGain(q_des.size());
-  derivativeGain.setZero();
-  derivativeGain[1] = K_d;
-  derivativeGain[7] = K_d;
-  Vector tauDotHead = tau_dot.head(q_des.size());
-  Vector tempSignal = q_des + delta_q - m_dt * derivativeGain.cwiseProduct(tauDotHead);
-  rateLimiter(tempSignal, m_previous_q, s);
-  m_previous_q = s;
+  Vector limitedSignal;
+  limitedSignal.resize(delta_q.size());
+  if (iter < 5){
+    s = q_des;
+  } else {
+    rateLimiter(delta_q, m_previous_delta_q, limitedSignal);
+    s = q_des + limitedSignal;
+  }
+  m_previous_delta_q = limitedSignal;
+
+  // tempSignal[1] = tempSignal[1] - K_d * tau_dot[1];  
+  // tempSignal[7] = tempSignal[7] - K_d * tau_dot[7];
 
   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_QCMD_COMPUTATION);
-
   return s;
 }
 

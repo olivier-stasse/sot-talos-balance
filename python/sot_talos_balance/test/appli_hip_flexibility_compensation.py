@@ -63,13 +63,13 @@ create_topic(robot.publisher, robot.hipComp, 'delta_q', robot=robot, data_type='
 create_topic(robot.publisher, robot.hipComp, 'q_cmd', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.hipComp, 'q_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.hipComp, 'tau', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.hipComp, 'tau_dot', robot=robot, data_type='vector')
+create_topic(robot.publisher, robot.hipComp, 'tau_filt', robot=robot, data_type='vector')
 
-# # --- ROS SUBSCRIBER
-robot.subscriber = RosSubscribe("hip_compens_subscriber")
-robot.subscriber.add("vector", "delta_q", "/sot/hip_compens/delta_q")
-robot.subscriber.add("vector", "q_cmd", "/sot/hip_compens/q_cmd")
-robot.subscriber.add("vector", "q_des", "/sot/hip_compens/q_des")
-robot.subscriber.add("vector", "tau", "/sot/hip_compens/tau")
-robot.subscriber.add("vector", "tau_dot", "/sot/hip_compens/tau_dot")
+# # # --- ROS SUBSCRIBER
+# robot.subscriber = RosSubscribe("hip_compens_subscriber")
+# robot.subscriber.add("vector", "delta_q", "/sot/hip_compens/delta_q")
+# robot.subscriber.add("vector", "q_cmd", "/sot/hip_compens/q_cmd")
+# robot.subscriber.add("vector", "q_des", "/sot/hip_compens/q_des")
+# robot.subscriber.add("vector", "tau", "/sot/hip_compens/tau")
+# robot.subscriber.add("vector", "tau_filt", "/sot/hip_compens/tau_filt")
 
