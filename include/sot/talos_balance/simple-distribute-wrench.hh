@@ -78,15 +78,18 @@ namespace dynamicgraph {
 
         DECLARE_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(ankleWrenchLeft, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(surfaceWrenchLeft, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(copLeft, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(ankleWrenchRight, dynamicgraph::Vector);
+        DECLARE_SIGNAL_OUT(surfaceWrenchRight, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(copRight, dynamicgraph::Vector);
 
         DECLARE_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(zmpRef, dynamicgraph::Vector);
         DECLARE_SIGNAL_OUT(emergencyStop, bool);
 
+      public:
         /* --- COMMANDS --- */
         /* --- ENTITY INHERITANCE --- */
         virtual void display( std::ostream& os ) const;
@@ -111,8 +114,8 @@ namespace dynamicgraph {
         Eigen::Matrix<double,6,1> m_wrenchLeft;
         Eigen::Matrix<double,6,1> m_wrenchRight;
 
-        bool distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho);
-        bool saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase);
+        void distributeWrench(const Eigen::VectorXd & wrenchDes, const double rho);
+        void saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase);
 
         bool m_emergency_stop_triggered;
       }; // class SimpleDistributeWrench

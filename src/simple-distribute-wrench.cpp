@@ -69,9 +69,11 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_INNER(wrenches, int, m_wrenchDesSIN << m_rhoSIN << m_phaseSIN << m_kinematics_computationsSINNER)
                       , CONSTRUCT_SIGNAL_OUT(wrenchLeft, dynamicgraph::Vector, m_wrenchesSINNER)
                       , CONSTRUCT_SIGNAL_OUT(ankleWrenchLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(surfaceWrenchLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
                       , CONSTRUCT_SIGNAL_OUT(copLeft, dynamicgraph::Vector, m_wrenchLeftSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRight, dynamicgraph::Vector, m_wrenchesSINNER)
                       , CONSTRUCT_SIGNAL_OUT(ankleWrenchRight, dynamicgraph::Vector, m_wrenchRightSOUT)
+                      , CONSTRUCT_SIGNAL_OUT(surfaceWrenchRight, dynamicgraph::Vector, m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(copRight, dynamicgraph::Vector, m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(wrenchRef, dynamicgraph::Vector, m_wrenchLeftSOUT << m_wrenchRightSOUT)
                       , CONSTRUCT_SIGNAL_OUT(zmpRef, dynamicgraph::Vector, m_wrenchRefSOUT)
@@ -196,7 +198,7 @@ namespace dynamicgraph
         return s;
       }
 
-      bool SimpleDistributeWrench::distributeWrench(const Eigen::VectorXd & wrenchDes,  const double rho)
+      void SimpleDistributeWrench::distributeWrench(const Eigen::VectorXd & wrenchDes,  const double rho)
       {
         Eigen::Vector3d forceLeft = wrenchDes.head<3>()/2;
         Eigen::Vector3d forceRight = forceLeft;
@@ -213,15 +215,13 @@ namespace dynamicgraph
         m_wrenchLeft << forceLeft, tauLeft;
         m_wrenchRight << forceRight, tauRight;
 
-        bool success = true;
+        const bool success = true;
 
         m_emergency_stop_triggered = !success;
-
-        return success;
       }
 
-      bool SimpleDistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase) {
-        bool success = true;
+      void SimpleDistributeWrench::saturateWrench(const Eigen::VectorXd & wrenchDes, const int phase) {
+        const bool success = true;
 
         m_emergency_stop_triggered = !success;
 
@@ -235,8 +235,6 @@ namespace dynamicgraph
           m_wrenchRight  = result;
           m_wrenchLeft.setZero(6);
         }
-
-        return success;
       }
 
       DEFINE_SIGNAL_INNER_FUNCTION(wrenches, int)
@@ -256,22 +254,20 @@ namespace dynamicgraph
 
         getProfiler().start(PROFILE_SIMPLE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS);
 
-        bool success;
-
         if(phase==0)
         {
           const double & rho = m_rhoSIN(iter);
 
-          success = distributeWrench(wrenchDes, rho);
+          distributeWrench(wrenchDes, rho);
         }
         else
         {
-          success = saturateWrench(wrenchDes, phase);
+          saturateWrench(wrenchDes, phase);
         }
 
         getProfiler().stop(PROFILE_SIMPLE_DISTRIBUTE_WRENCH_WRENCHES_COMPUTATIONS);
 
-        if(!success)
+        if(m_emergency_stop_triggered)
         {
           SEND_WARNING_STREAM_MSG("Error in wrench distribution!");
           return s;
@@ -290,7 +286,8 @@ namespace dynamicgraph
         if(s.size()!=6)
           s.resize(6);
 
-        m_wrenchesSINNER(iter);
+        const int & dummy = m_wrenchesSINNER(iter);
+        (void) dummy;
         s = m_wrenchLeft;
         return s;
       }
@@ -305,7 +302,8 @@ namespace dynamicgraph
         if(s.size()!=6)
           s.resize(6);
 
-        m_wrenchesSINNER(iter);
+        const int & dummy = m_wrenchesSINNER(iter);
+        (void) dummy;
         s = m_wrenchRight;
         return s;
       }
@@ -344,6 +342,40 @@ namespace dynamicgraph
         return s;
       }
 
+      DEFINE_SIGNAL_OUT_FUNCTION(surfaceWrenchLeft, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal surfaceWrenchLeft before initialization!");
+          return s;
+        }
+        if(s.size()!=6)
+          s.resize(6);
+
+        const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
+
+        s = m_contactLeft.actInv(pinocchio::Force(wrenchLeft)).toVector();
+
+        return s;
+      }
+
+      DEFINE_SIGNAL_OUT_FUNCTION(surfaceWrenchRight, dynamicgraph::Vector)
+      {
+        if(!m_initSucceeded)
+        {
+          SEND_WARNING_STREAM_MSG("Cannot compute signal surfaceWrenchRight before initialization!");
+          return s;
+        }
+        if(s.size()!=6)
+          s.resize(6);
+
+        const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
+
+        s = m_contactRight.actInv(pinocchio::Force(wrenchRight)).toVector();
+
+        return s;
+      }
+
       DEFINE_SIGNAL_OUT_FUNCTION(copLeft, dynamicgraph::Vector)
       {
         if(!m_initSucceeded)
@@ -355,6 +387,12 @@ namespace dynamicgraph
           s.resize(3);
 
         const Eigen::VectorXd & wrenchLeft  = m_wrenchLeftSOUT(iter);
+
+        if(m_emergency_stop_triggered)
+        {
+          s.setZero(3);
+          return s;
+        }
 
         s = computeCoP(wrenchLeft, m_contactLeft);
 
@@ -372,6 +410,12 @@ namespace dynamicgraph
           s.resize(3);
 
         const Eigen::VectorXd & wrenchRight  = m_wrenchRightSOUT(iter);
+
+        if(m_emergency_stop_triggered)
+        {
+          s.setZero(3);
+          return s;
+        }
 
         s = computeCoP(wrenchRight, m_contactRight);
 
@@ -407,6 +451,12 @@ namespace dynamicgraph
           s.resize(3);
 
         const Eigen::VectorXd & wrenchRef  = m_wrenchRefSOUT(iter);
+
+        if(m_emergency_stop_triggered)
+        {
+          s.setZero(3);
+          return s;
+        }
 
         //const double fx = wrenchRef[0];
         //const double fy = wrenchRef[1];
