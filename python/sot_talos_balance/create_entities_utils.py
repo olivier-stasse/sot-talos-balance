@@ -40,6 +40,7 @@ from sot_talos_balance.state_transformation import StateTransformation
 from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator
 from sot_talos_balance.ankle_joint_selector import AnkleJointSelector
 from sot_talos_balance.qualisys_client import QualisysClient
+from sot_talos_balance.hip_flexibility_compensation import HipFlexibilityCompensation
 
 # python
 from sot_talos_balance.utils.filter_utils import *
@@ -212,6 +213,22 @@ def create_joint_admittance_controller(joint, Kp, dt, robot, filter=False):
     controller.setPosition([robot.device.state.value[joint+6]])
     return controller
 
+def create_hip_flexibility_compensation(robot, conf, robot_name='robot'):
+    timeStep = robot.timeStep
+    hipComp = HipFlexibilityCompensation("hipFlexCompensation")
+    hipComp.K_l.value = conf.flexibility_left  
+    hipComp.K_r.value = conf.flexibility_right
+    # WARNING q_des value set to halfSitting 
+    # TO BE CHANGED
+    hipComp.q_des.value = robot.halfSitting[6:]
+    plug(robot.device.ptorque, hipComp.tau)
+    hipComp.init(timeStep, robot_name)
+
+    hipComp.setAngularSaturation(conf.angular_saturation)
+    hipComp.setRateLimiter(conf.rate_limiter)
+    hipComp.setTorqueLowPassFilterFrequency(conf.torque_low_pass_freq)
+    return hipComp
+    
 def create_ankle_admittance_controller(gains, robot, side, name):
     controller = AnkleAdmittanceController(name)
 
@@ -235,8 +252,6 @@ def create_ankle_admittance_controller(gains, robot, side, name):
     controller.init()
 
     return controller
-
-
 
 
 def create_device_filters(robot, dt):

@@ -50,6 +50,7 @@ SET(${PROJECT_NAME}_TALOS_PYTHON_FILES
   joint_torque_controller_conf.py
   joint_torque_controller_sim_conf.py
   parameter_server_conf.py
+  hip_flexibility_compensation_conf.py
   )
 
 FOREACH(python ${${PROJECT_NAME}_TALOS_PYTHON_FILES})
