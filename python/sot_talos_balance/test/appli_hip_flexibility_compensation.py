@@ -1,12 +1,6 @@
 import sot_talos_balance.talos.parameter_server_conf as paramServerConfig
-import sot_talos_balance.talos.control_manager_conf as controlManagerConfig
-import sot_talos_balance.talos.base_estimator_conf as baseEstimatorConf
-import sot_talos_balance.talos.ft_wrist_calibration_conf as forceConf
+import sot_talos_balance.talos.hip_flexibility_compensation_conf as hipFlexCompConfig
 from sot_talos_balance.create_entities_utils import *
-from dynamic_graph import plug
-from dynamic_graph.ros import RosSubscribe, RosPublish
-import numpy as np
-import math
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep
@@ -14,6 +8,8 @@ dt = robot.timeStep
 # --- EXPERIMENTAL SET UP ------------------------------------------------------
 
 device = 'simu'
+# WARNING : The device control type is set to NO INTEGRATION 
+# The control HAS TO BE in POSITION
 robot.device.setControlInputType("noInteg")
 N_JOINTS = 32
 robot_name = "robot"
@@ -29,31 +25,20 @@ robot.halfSitting += [0.25847, 0.173046, -0.0002, -0.525366, 0., 0., 0.1, -0.005
 robot.halfSitting += [-0.25847, -0.173046, 0.0002, -0.525366, 0., 0., 0.1, -0.005]  # Right Arm
 robot.halfSitting += [0.,  0.]  # Head
 robot.device.set(robot.halfSitting)
-robot.device.control.value = robot.halfSitting
 
 # --- CREATE ENTITIES ----------------------------------------------------------
 
 robot.param_server = create_parameter_server(paramServerConfig, robot.timeStep)
 
-# robot.controlManager = create_ctrl_manager(controlManagerConfig, robot.timeStep)
-# robot.controlManager.addCtrlMode('pos')
-# robot.controlManager.setCtrlMode('all', 'pos')
-
-# # --- Position Controller ----------------------------------------------------------------
-
-# robot.traj_gen = create_joint_trajectory_generator(dt, robot)
-
-
 # --- HIP TASK ----------------------------------------------------------------
 
-robot.hipComp = create_hip_flexibility_compensation(robot, robot_name)
+robot.hipComp = create_hip_flexibility_compensation(robot, hipFlexCompConfig, robot_name)
 
 
 # --- PLUG CONTROL ----------------------------------------------------------------
-# Plug control to device through control manager
-# plug(robot.hipComp.q_cmd, robot.controlManager.ctrl_pos)
-# plug(robot.controlManager.u_safe, robot.device.control)
-# plug(robot.hipComp.q_cmd, robot.device.control)
+# WARNING : Set the control to halfSitting position ! 
+# Plug the hip_flexibility_compensation in the test file
+robot.device.control.value = robot.halfSitting
 
 
 # # --- ROS PUBLISHER ----------------------------------------------------------
@@ -64,12 +49,4 @@ create_topic(robot.publisher, robot.hipComp, 'q_cmd', robot=robot, data_type='ve
 create_topic(robot.publisher, robot.hipComp, 'q_des', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.hipComp, 'tau', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.hipComp, 'tau_filt', robot=robot, data_type='vector')
-
-# # # --- ROS SUBSCRIBER
-# robot.subscriber = RosSubscribe("hip_compens_subscriber")
-# robot.subscriber.add("vector", "delta_q", "/sot/hip_compens/delta_q")
-# robot.subscriber.add("vector", "q_cmd", "/sot/hip_compens/q_cmd")
-# robot.subscriber.add("vector", "q_des", "/sot/hip_compens/q_des")
-# robot.subscriber.add("vector", "tau", "/sot/hip_compens/tau")
-# robot.subscriber.add("vector", "tau_filt", "/sot/hip_compens/tau_filt")
 

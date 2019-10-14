@@ -61,16 +61,13 @@ HipFlexibilityCompensation::HipFlexibilityCompensation(const std::string& name)
   , CONSTRUCT_SIGNAL_IN(tau, dynamicgraph::Vector)
   , CONSTRUCT_SIGNAL_IN(K_l, double)
   , CONSTRUCT_SIGNAL_IN(K_r, double)
-  // , CONSTRUCT_SIGNAL_IN(K_d, double)
-  // , CONSTRUCT_SIGNAL_OUT(tau_dot, dynamicgraph::Vector, m_tauSIN)
   , CONSTRUCT_SIGNAL_OUT(tau_filt, dynamicgraph::Vector, m_tauSIN)
   , CONSTRUCT_SIGNAL_OUT(delta_q, dynamicgraph::Vector, INPUT_SIGNALS << m_tau_filtSOUT) 
-  , CONSTRUCT_SIGNAL_OUT(q_cmd, dynamicgraph::Vector, JOINT_DES_SIGNALS << m_delta_qSOUT) //m_K_dSIN 
+  , CONSTRUCT_SIGNAL_OUT(q_cmd, dynamicgraph::Vector, JOINT_DES_SIGNALS << m_delta_qSOUT) 
   , m_initSucceeded(false) 
-  , m_angularLowPassFilterFrequency(1)
   , m_torqueLowPassFilterFrequency(1)
-  , m_delta_q_saturation(0.0034)
-  , m_rate_limiter(1.0){
+  , m_delta_q_saturation(0.01)
+  , m_rate_limiter(0.003){
 
   Entity::signalRegistration( JOINT_DES_SIGNALS << INPUT_SIGNALS << OUTPUT_SIGNALS );
 
@@ -81,13 +78,9 @@ HipFlexibilityCompensation::HipFlexibilityCompensation(const std::string& name)
                                                       "Robot time step",
                                                       "Robot name")));
 
-  addCommand("setAngularLowPassFilterFrequency", makeCommandVoid1(*this, 
-                                                 &HipFlexibilityCompensation::setAngularLowPassFilterFrequency,
-                                                 docCommandVoid1("Set the LowPassFilter frequency for the angular correction computation.",
-                                                                 "Value of the frequency")));
   addCommand("setTorqueLowPassFilterFrequency", makeCommandVoid1(*this, 
                                                 &HipFlexibilityCompensation::setTorqueLowPassFilterFrequency,
-                                                docCommandVoid1("Set the LowPassFilter frequency for the torque derivative computation.",
+                                                docCommandVoid1("Set the LowPassFilter frequency for the torque computation.",
                                                                 "Value of the frequency")));
   addCommand("setAngularSaturation", makeCommandVoid1(*this, 
                                      &HipFlexibilityCompensation::setAngularSaturation,
@@ -97,9 +90,6 @@ HipFlexibilityCompensation::HipFlexibilityCompensation(const std::string& name)
                                      &HipFlexibilityCompensation::setRateLimiter,
                                      docCommandVoid1("Set the rate for the rate limiter of delta_q.",
                                                      "Value of the limiter")));
-
-  addCommand("getAngularLowPassFilterFrequency", makeDirectGetter(*this, &m_angularLowPassFilterFrequency,
-             docDirectGetter("Get the current value of the angular LowPassFilter frequency.", "frequency (double)")));
 
   addCommand("getTorqueLowPassFilterFrequency", makeDirectGetter(*this, &m_torqueLowPassFilterFrequency,
              docDirectGetter("Get the current value of the torque LowPassFilter frequency.", "frequency (double)")));
@@ -122,8 +112,6 @@ void HipFlexibilityCompensation::init(const double &dt, const std::string& robot
     return SEND_MSG("Init failed: signal K_r is not plugged", MSG_TYPE_ERROR);
   if (!m_K_lSIN.isPlugged())
     return SEND_MSG("Init failed: signal K_l is not plugged", MSG_TYPE_ERROR);
-  // if (!m_K_dSIN.isPlugged())
-  //   return SEND_MSG("Init failed: signal K_d is not plugged", MSG_TYPE_ERROR);
 
   m_dt = dt;
   std::string robotName_nonconst(robotName);
@@ -142,14 +130,6 @@ void HipFlexibilityCompensation::init(const double &dt, const std::string& robot
   m_previous_delta_q.setZero();
   m_previous_tau.resize(tau.size());
   m_previous_tau.setZero();
-  // m_previous_tau_dot.resize(tau.size());
-  // m_previous_tau_dot.setZero();  
-  // m_previous_q.resize(q_des.size());
-  // m_previous_q.setZero();
-}
-
-void HipFlexibilityCompensation::setAngularLowPassFilterFrequency(const double& frequency) {
-  m_angularLowPassFilterFrequency = frequency;
 }
 
 void HipFlexibilityCompensation::setTorqueLowPassFilterFrequency(const double& frequency) {
@@ -167,13 +147,12 @@ void HipFlexibilityCompensation::setRateLimiter(const double& rate) {
 Vector HipFlexibilityCompensation::lowPassFilter(const double& frequency, const Vector& signal, Vector& previous_signal){
   // delta_q = alpha * previous_delta_q(-1) + (1-alpha) * delta_q_des
   double alpha = exp(- m_dt * 2 * M_PI * frequency);
-  std::cout << "alpha : " << alpha << std::endl;
   Vector output = alpha * previous_signal + signal * (1 - alpha);
   return output;
 }
 
 void HipFlexibilityCompensation::rateLimiter(const Vector& signal, Vector& previous_signal, Vector& output){
-  Vector rate = (signal - previous_signal)/m_dt;  
+  Vector rate = (signal - previous_signal)/m_dt; 
   // Falling slew rate = - Rising slew rate  = - m_rate_limiter
   for (unsigned int i=0; i<signal.size(); i++){
     if (rate[i] > m_rate_limiter){
@@ -189,34 +168,6 @@ void HipFlexibilityCompensation::rateLimiter(const Vector& signal, Vector& previ
 /* --- SIGNALS ------------------------------------------------------- */
 /* ------------------------------------------------------------------- */
 
-// DEFINE_SIGNAL_OUT_FUNCTION(tau_dot, dynamicgraph::Vector) {
-//   if (!m_initSucceeded) {
-//     SEND_WARNING_STREAM_MSG("Cannot compute signal tau_dot before initialization!");
-//     return s;
-//   }
-
-//   getProfiler().start(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUDOT_COMPUTATION);
-
-//   const Vector& tau = m_tauSIN(iter);
-
-//   if(s.size() != tau.size())
-//     s.resize(tau.size());
-
-//   if (iter < 5){
-//     s.setZero();
-//     m_previous_tau_dot = s;
-//   } else {    
-//     s = (tau - m_previous_tau)/m_dt;    
-//     // Low pass filter  
-//     s = lowPassFilter(m_torqueLowPassFilterFrequency, s, m_previous_tau_dot);
-//   }     
-//   m_previous_tau_dot = s;
-//   m_previous_tau = tau;  
-//   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUDOT_COMPUTATION);
-
-//   return s;
-// }
-// 
 DEFINE_SIGNAL_OUT_FUNCTION(tau_filt, dynamicgraph::Vector) {
   if (!m_initSucceeded) {
     SEND_WARNING_STREAM_MSG("Cannot compute signal tau_filt before initialization!");
@@ -265,13 +216,9 @@ DEFINE_SIGNAL_OUT_FUNCTION(delta_q, dynamicgraph::Vector) {
       s[i] = tau[i]/K_r; // torque/flexibility of right hip (roll) 
     }
     else {
-      // double inf = std::numeric_limits<double>::infinity();
-      s[i] = 0.0; //tau[i]/inf; // no flexibility for other joints
+      s[i] = 0.0;  // no flexibility for other joints
     }
   }
-  // // Low pass filter
-  // s = lowPassFilter(m_angularLowPassFilterFrequency, s, m_previous_delta_q);
-  // m_previous_delta_q = s;
   
   // Angular Saturation
   // left hip
@@ -302,8 +249,6 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
   getProfiler().start(PROFILE_HIPFLEXIBILITYCOMPENSATION_QCMD_COMPUTATION);
 
   const Vector &q_des = m_q_desSIN(iter);
-  // const double &K_d = m_K_dSIN(iter);
-  // const Vector &tau_dot = m_tau_dotSOUT(iter);
   const Vector &delta_q = m_delta_qSOUT(iter);
 
   if(s.size() != q_des.size())
@@ -311,16 +256,14 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
 
   Vector limitedSignal;
   limitedSignal.resize(delta_q.size());
+  rateLimiter(delta_q, m_previous_delta_q, limitedSignal);
+  m_previous_delta_q = limitedSignal;
+  
   if (iter < 5){
     s = q_des;
-  } else {
-    rateLimiter(delta_q, m_previous_delta_q, limitedSignal);
+  } else {    
     s = q_des + limitedSignal;
   }
-  m_previous_delta_q = delta_q;
-
-  // tempSignal[1] = tempSignal[1] - K_d * tau_dot[1];  
-  // tempSignal[7] = tempSignal[7] - K_d * tau_dot[7];
 
   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_QCMD_COMPUTATION);
   return s;

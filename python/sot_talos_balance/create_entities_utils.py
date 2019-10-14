@@ -213,17 +213,20 @@ def create_joint_admittance_controller(joint, Kp, dt, robot, filter=False):
     controller.setPosition([robot.device.state.value[joint+6]])
     return controller
 
-def create_hip_flexibility_compensation(robot, robot_name='robot'):
+def create_hip_flexibility_compensation(robot, conf, robot_name='robot'):
     timeStep = robot.timeStep
     hipComp = HipFlexibilityCompensation("hipFlexCompensation")
-    # K = 1.02753655126 in mm/Nm
-    # For a lever arm of 1 m/rad -> K = 973.201390037 in Nm/rad
-    hipComp.K_l.value = float("inf") #973.201390037  
-    hipComp.K_r.value = float("inf") #973.201390037 
-    # hipComp.K_d.value = 0.0 
+    hipComp.K_l.value = conf.flexibility_left  
+    hipComp.K_r.value = conf.flexibility_right
+    # WARNING q_des value set to halfSitting 
+    # TO BE CHANGED
     hipComp.q_des.value = robot.halfSitting[6:]
     plug(robot.device.ptorque, hipComp.tau)
     hipComp.init(timeStep, robot_name)
+
+    hipComp.setAngularSaturation(conf.angular_saturation)
+    hipComp.setRateLimiter(conf.rate_limiter)
+    hipComp.setTorqueLowPassFilterFrequency(conf.torque_low_pass_freq)
     return hipComp
     
 def create_ankle_admittance_controller(gains, robot, side, name):

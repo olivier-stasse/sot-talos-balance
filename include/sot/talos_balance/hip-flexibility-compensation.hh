@@ -71,8 +71,6 @@ class HIPFLEXIBILITYCOMPENSATION_EXPORT HipFlexibilityCompensation
   /// \brief Derivative gain (double) for the error 
   // DECLARE_SIGNAL_IN(K_d, double);
 
-  // /// \brief  Euler derivative of the signal tau -> torque derivative
-  // DECLARE_SIGNAL_OUT(tau_dot, dynamicgraph::Vector);  
   /// \brief  Low pass filter of the signal tau
   DECLARE_SIGNAL_OUT(tau_filt, dynamicgraph::Vector); 
   /// \brief  Angular correction of the flexibility 
@@ -87,9 +85,7 @@ class HIPFLEXIBILITYCOMPENSATION_EXPORT HipFlexibilityCompensation
 
   /// \brief Initialize the entity
   void init(const double &dt, const std::string& robotName);
-  /// \brief Set the LowPassFilter frequency for the angular correction computation.
-  void setAngularLowPassFilterFrequency(const double& frequency);
-  /// \brief Set the LowPassFilter frequency for the torque derivative computation.
+  /// \brief Set the LowPassFilter frequency for the torque computation.
   void setTorqueLowPassFilterFrequency(const double& frequency);
   /// \brief Set the value of the saturation for the angular correction computation.
   void setAngularSaturation(const double& saturation);
@@ -105,14 +101,11 @@ class HIPFLEXIBILITYCOMPENSATION_EXPORT HipFlexibilityCompensation
   bool m_initSucceeded;  /// true if the entity has been successfully initialized
   // time step of the robot
   double m_dt;
-  double m_angularLowPassFilterFrequency;
   double m_torqueLowPassFilterFrequency;
   double m_delta_q_saturation;
   double m_rate_limiter;
   dynamicgraph::Vector m_previous_delta_q;
   dynamicgraph::Vector m_previous_tau;
-  // dynamicgraph::Vector m_previous_tau_dot;
-  // dynamicgraph::Vector m_previous_q;
 
   RobotUtilShrPtr m_robot_util;
 
