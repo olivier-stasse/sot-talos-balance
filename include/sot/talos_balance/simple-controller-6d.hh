@@ -72,6 +72,7 @@ namespace dynamicgraph {
 
         DECLARE_SIGNAL_IN(x, MatrixHomogeneous);
         DECLARE_SIGNAL_IN(x_des, MatrixHomogeneous);
+        DECLARE_SIGNAL_IN(v_des, dynamicgraph::Vector);
 
         DECLARE_SIGNAL_OUT(v_ref, dynamicgraph::Vector);
 

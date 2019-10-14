@@ -36,7 +36,7 @@ namespace dynamicgraph
 //Size to be aligned                                     "-------------------------------------------------------"
 #define PROFILE_SIMPLE_CONTROLLER_6D_DX_REF_COMPUTATION  "SimpleController6d: v_ref computation                 "
 
-#define INPUT_SIGNALS m_KpSIN << m_xSIN << m_x_desSIN
+#define INPUT_SIGNALS m_KpSIN << m_xSIN << m_x_desSIN << m_v_desSIN
 
 #define OUTPUT_SIGNALS m_v_refSOUT
 
@@ -56,6 +56,7 @@ namespace dynamicgraph
                       , CONSTRUCT_SIGNAL_IN(Kp, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(x, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_IN(x_des, dynamicgraph::Vector)
+                      , CONSTRUCT_SIGNAL_IN(v_des, dynamicgraph::Vector)
                       , CONSTRUCT_SIGNAL_OUT(v_ref, dynamicgraph::Vector, INPUT_SIGNALS)
                       , m_initSucceeded(false)
       {
@@ -91,6 +92,8 @@ namespace dynamicgraph
           SEND_WARNING_STREAM_MSG("Cannot compute signal v_ref before initialization!");
           return s;
         }
+        if(s.size()!=6)
+          s.resize(6);
 
         getProfiler().start(PROFILE_SIMPLE_CONTROLLER_6D_DX_REF_COMPUTATION);
         
@@ -118,7 +121,13 @@ namespace dynamicgraph
 
         dv_ref.tail<3>() = x.linear().transpose() * L.inverse() * Kp.tail<3>().cwiseProduct(e_O);
 
-        s = dv_ref;
+        if(m_v_desSIN.isPlugged()) {
+          const dynamicgraph::Vector & v_des = m_v_desSIN(iter);
+          s = v_des + dv_ref;
+        }
+        else {
+          s = dv_ref;
+        }
 
         getProfiler().stop(PROFILE_SIMPLE_CONTROLLER_6D_DX_REF_COMPUTATION);
 
