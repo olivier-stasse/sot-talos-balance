@@ -46,7 +46,7 @@ namespace dynamicgraph
 
 #define INNER_SIGNALS m_kinematics_computations << m_wrenches
 
-#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_ankleWrenchLeftSOUT << m_copLeftSOUT << m_wrenchRightSOUT << m_ankleWrenchRightSOUT << m_copRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
+#define OUTPUT_SIGNALS m_wrenchLeftSOUT << m_ankleWrenchLeftSOUT << m_surfaceWrenchLeftSOUT << m_copLeftSOUT << m_wrenchRightSOUT << m_ankleWrenchRightSOUT << m_surfaceWrenchRightSOUT << m_copRightSOUT << m_wrenchRefSOUT << m_zmpRefSOUT << m_emergencyStopSOUT
 
       /// Define EntityClassName here rather than in the header file
       /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
