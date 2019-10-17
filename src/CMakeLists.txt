@@ -57,6 +57,7 @@ SET(plugins
   quat-to-euler
   state-transformation
   simple-reference-frame
+  simple-state-integrator
   dummy-walking-pattern-generator
   simple-zmp-estimator
   simple-distribute-wrench
