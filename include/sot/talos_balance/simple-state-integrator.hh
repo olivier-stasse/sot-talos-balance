@@ -65,9 +65,9 @@ class SIMPLE_STATE_INTEGRATOR_EXPORT SimpleStateIntegrator
   ///@{
   /// Position of the robot wrt pinocchio.
   Eigen::VectorXd state_;
+  /// Velocity of the robot wrt pinocchio.
+  Eigen::VectorXd velocity_;
   ///@}
-
-  bool sanityCheck_;
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -81,9 +81,11 @@ class SIMPLE_STATE_INTEGRATOR_EXPORT SimpleStateIntegrator
   DECLARE_SIGNAL_IN(control, ::dynamicgraph::Vector);
 
   DECLARE_SIGNAL_OUT(state, ::dynamicgraph::Vector);
+  DECLARE_SIGNAL_OUT(velocity, ::dynamicgraph::Vector);
 
  public:
   void setState(const ::dynamicgraph::Vector& st);
+  void setVelocity(const ::dynamicgraph::Vector& vel);
 
   /* --- COMMANDS --- */
   /* --- ENTITY INHERITANCE --- */

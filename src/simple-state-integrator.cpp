@@ -40,7 +40,7 @@ using namespace dg::command;
 
 #define INPUT_SIGNALS     m_controlSIN
 
-#define OUTPUT_SIGNALS m_stateSOUT
+#define OUTPUT_SIGNALS m_stateSOUT << m_velocitySOUT
 
 /// Define EntityClassName here rather than in the header file
 /// so that it can be used by the macros DEFINE_SIGNAL_**_FUNCTION.
@@ -57,6 +57,7 @@ SimpleStateIntegrator::SimpleStateIntegrator(const std::string& name)
                 : Entity(name)
                 , CONSTRUCT_SIGNAL_IN(control, dynamicgraph::Vector)
                 , CONSTRUCT_SIGNAL_OUT(state, dynamicgraph::Vector, INPUT_SIGNALS)
+                , CONSTRUCT_SIGNAL_OUT(velocity, dynamicgraph::Vector, NULL)
 {
   Entity::signalRegistration( INPUT_SIGNALS << OUTPUT_SIGNALS );
 
@@ -78,6 +79,13 @@ SimpleStateIntegrator::SimpleStateIntegrator(const std::string& name)
       "\n";
   addCommand("setState",
              new command::Setter<SimpleStateIntegrator, Vector>(*this, &SimpleStateIntegrator::setState, docstring));
+
+  docstring =
+      "\n"
+      "    Set velocity vector value\n"
+      "\n";
+  addCommand("setVelocity",
+             new command::Setter<SimpleStateIntegrator, Vector>(*this, &SimpleStateIntegrator::setVelocity, docstring));
 }
 
 void SimpleStateIntegrator::init(const double& step) {
@@ -86,6 +94,10 @@ void SimpleStateIntegrator::init(const double& step) {
 
 void SimpleStateIntegrator::setState(const dg::Vector& st) {
   state_ = st;
+}
+
+void SimpleStateIntegrator::setVelocity(const dg::Vector& vel) {
+  velocity_ = vel;
 }
 
 /* ------------------------------------------------------------------- */
@@ -134,6 +146,9 @@ void SimpleStateIntegrator::rotationMatrixToEuler(const Eigen::Matrix3d& rotatio
 
 DEFINE_SIGNAL_OUT_FUNCTION(state, dynamicgraph::Vector)
 {
+  m_velocitySOUT.setConstant(velocity_);
+  m_velocitySOUT.setTime(iter+1);
+
   const dynamicgraph::Vector & control = m_controlSIN(iter);
 
   const size_t sz = control.size();
@@ -141,12 +156,22 @@ DEFINE_SIGNAL_OUT_FUNCTION(state, dynamicgraph::Vector)
     s.resize(sz);
   if((size_t)(state_.size())!=sz)
     throw std::runtime_error("Mismatching state and control size");
+  if((size_t)(velocity_.size())!=sz)
+    throw std::runtime_error("Mismatching velocity and control size");
+
+  velocity_ = control;
 
   integrateRollPitchYaw(state_, control, timestep_);
   state_.tail(sz-6) += control.tail(sz-6) * timestep_;
 
   s = state_;
 
+  return s;
+}
+
+DEFINE_SIGNAL_OUT_FUNCTION(velocity, dynamicgraph::Vector)
+{
+  s = velocity_;
   return s;
 }
 
