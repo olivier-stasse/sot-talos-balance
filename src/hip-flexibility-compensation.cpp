@@ -251,6 +251,8 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
   const Vector &q_des = m_q_desSIN(iter);
   const Vector &delta_q = m_delta_qSOUT(iter);
 
+  assert( (q_des.size()==delta_q.size()) || (q_des.size()==delta_q.size()+6) );
+
   if(s.size() != q_des.size())
     s.resize(q_des.size());
 
@@ -261,8 +263,9 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
   
   if (iter < 5){
     s = q_des;
-  } else {    
-    s = q_des + limitedSignal;
+  } else {
+    s = q_des;
+    s.tail(limitedSignal.size()) += limitedSignal;
   }
 
   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_QCMD_COMPUTATION);
