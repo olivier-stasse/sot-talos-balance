@@ -218,9 +218,7 @@ def create_hip_flexibility_compensation(robot, conf, robot_name='robot'):
     hipComp = HipFlexibilityCompensation("hipFlexCompensation")
     hipComp.K_l.value = conf.flexibility_left  
     hipComp.K_r.value = conf.flexibility_right
-    # WARNING q_des value set to halfSitting 
-    # TO BE CHANGED
-    hipComp.q_des.value = robot.halfSitting[6:]
+    hipComp.q_des.value = robot.dynamic.getDimension() * [0.]
     plug(robot.device.ptorque, hipComp.tau)
     hipComp.init(timeStep, robot_name)
 
