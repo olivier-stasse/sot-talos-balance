@@ -22,7 +22,7 @@
 /* --------------------------------------------------------------------- */
 
 #if defined (WIN32)
-#  if defined (position_controller_EXPORTS)
+#  if defined (simple_state_integrator_EXPORTS)
 #    define SIMPLE_STATE_INTEGRATOR_EXPORT __declspec(dllexport)
 #  else
 #    define SIMPLE_STATE_INTEGRATOR_EXPORT __declspec(dllimport)
