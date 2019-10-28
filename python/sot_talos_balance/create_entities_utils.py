@@ -41,6 +41,7 @@ from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatter
 from sot_talos_balance.ankle_joint_selector import AnkleJointSelector
 from sot_talos_balance.qualisys_client import QualisysClient
 from sot_talos_balance.hip_flexibility_compensation import HipFlexibilityCompensation
+from sot_talos_balance.simple_state_integrator import SimpleStateIntegrator
 
 # python
 from sot_talos_balance.utils.filter_utils import *

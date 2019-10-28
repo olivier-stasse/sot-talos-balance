@@ -308,7 +308,6 @@ robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 
 # --- State integrator
-from sot_talos_balance.simple_state_integrator import SimpleStateIntegrator
 robot.integrate = SimpleStateIntegrator("integrate")
 robot.integrate.init(dt)
 robot.integrate.setState(robot.device.state.value)
