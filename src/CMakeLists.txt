@@ -49,6 +49,7 @@ ENDIF(NOT INSTALL_PYTHON_INTERFACE_ONLY)
 #This project will create many plugins as shared libraries, listed here
 SET(plugins
   example
+  delay
   boolean-identity
   round-double-to-int
   int-identity
