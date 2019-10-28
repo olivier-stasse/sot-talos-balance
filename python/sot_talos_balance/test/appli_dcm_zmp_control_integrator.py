@@ -311,7 +311,6 @@ robot.integrate = SimpleStateIntegrator("integrate")
 robot.integrate.init(dt)
 robot.integrate.setState(robot.device.state.value)
 robot.integrate.setVelocity(robot.dynamic.getDimension() * [0.])
-plug(robot.integrate.velocity, robot.vselec.sin)
 
 # --- Plug SOT control to device through control manager and state integrator
 plug(robot.sot.control,robot.cm.ctrl_sot_input)
@@ -327,12 +326,21 @@ robot.sot.push(robot.keepWaist.task.name)
 # robot.sot.push(robot.taskPos.name)
 # robot.device.control.recompute(0) # this crashes as it employs joint sensors which are not ready yet
 
+# --- Delay
+robot.delay_vel = DelayVector("delay_vel")
+robot.delay_vel.setMemory(robot.dynamic.getDimension() * [0.])
+robot.device.before.addSignal(robot.delay_vel.name+'.current')
+plug(robot.cm.u_safe, robot.delay_vel.sin)
+
+# --- Plug integrator instead of device
+plug(robot.delay_vel.previous, robot.vselec.sin)
+
 # --- Fix robot.dynamic inputs
-plug(robot.integrate.velocity,robot.dynamic.velocity)
+plug(robot.delay_vel.previous,robot.dynamic.velocity)
 from dynamic_graph.sot.core import Derivator_of_Vector
 robot.dvdt = Derivator_of_Vector("dv_dt")
 robot.dvdt.dt.value = dt
-plug(robot.integrate.velocity,robot.dvdt.sin)
+plug(robot.delay_vel.previous,robot.dvdt.sin)
 plug(robot.dvdt.sout,robot.dynamic.acceleration)
 
 # -------------------------- PLOTS --------------------------
