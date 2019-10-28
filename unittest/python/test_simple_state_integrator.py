@@ -11,6 +11,7 @@ initstate = [0.]*9
 integrator = SimpleStateIntegrator("integrator")
 integrator.init(dt)
 integrator.setState(initstate)
+integrator.setVelocity([0.]*9)
 t = 0
 
 integrator.control.value = [0.]*9
