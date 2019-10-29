@@ -40,11 +40,17 @@ robot.dynamic.WT.recompute(0)
 
 # -------------------------- DESIRED TRAJECTORY --------------------------
 
-from rospkg import RosPack
-rospack = RosPack()
+folder = None
+if test_folder is not None:
+    if sot_talos_balance_folder:
+        from rospkg import RosPack
+        rospack = RosPack()
 
-data_folder = rospack.get_path('sot_talos_balance')+"/data/"
-folder = data_folder + test_folder + '/'
+        folder = rospack.get_path('sot_talos_balance')+"/data/" + test_folder
+    else:
+        folder = test_folder
+    if folder[-1] != '/':
+        folder += '/'
 
 # --- Trajectory generators
 
@@ -55,7 +61,6 @@ robot.triggerTrajGen.sin.value = 0
 # --- CoM
 robot.comTrajGen = create_com_trajectory_generator(dt, robot)
 robot.comTrajGen.x.recompute(0) # trigger computation of initial value
-robot.comTrajGen.playTrajectoryFile(folder+'CoM.dat')
 plug(robot.triggerTrajGen.sout, robot.comTrajGen.trigger)
 
 # --- Left foot
@@ -64,7 +69,6 @@ robot.lfTrajGen.x.recompute(0) # trigger computation of initial value
 
 robot.lfToMatrix = PoseRollPitchYawToMatrixHomo('lf2m')
 plug(robot.lfTrajGen.x, robot.lfToMatrix.sin)
-robot.lfTrajGen.playTrajectoryFile(folder+'LeftFoot.dat')
 plug(robot.triggerTrajGen.sout, robot.lfTrajGen.trigger)
 
 # --- Right foot
@@ -73,13 +77,11 @@ robot.rfTrajGen.x.recompute(0) # trigger computation of initial value
 
 robot.rfToMatrix = PoseRollPitchYawToMatrixHomo('rf2m')
 plug(robot.rfTrajGen.x, robot.rfToMatrix.sin)
-robot.rfTrajGen.playTrajectoryFile(folder+'RightFoot.dat')
 plug(robot.triggerTrajGen.sout, robot.rfTrajGen.trigger)
 
 # --- ZMP
 robot.zmpTrajGen = create_zmp_trajectory_generator(dt,robot)
 robot.zmpTrajGen.x.recompute(0) # trigger computation of initial value
-robot.zmpTrajGen.playTrajectoryFile(folder+'ZMP.dat')
 plug(robot.triggerTrajGen.sout, robot.zmpTrajGen.trigger)
 
 # --- Waist
@@ -96,27 +98,29 @@ plug(robot.waistTrajGen.x, robot.waistMix.signal("sin2"))
 
 robot.waistToMatrix = PoseRollPitchYawToMatrixHomo('w2m')
 plug(robot.waistMix.sout, robot.waistToMatrix.sin)
-robot.waistTrajGen.playTrajectoryFile(folder+'WaistOrientation.dat')
 plug(robot.triggerTrajGen.sout, robot.waistTrajGen.trigger)
+
+# --- Load files
+if folder is not None:
+    robot.comTrajGen.playTrajectoryFile(folder+'CoM.dat')
+    robot.lfTrajGen.playTrajectoryFile(folder+'LeftFoot.dat')
+    robot.rfTrajGen.playTrajectoryFile(folder+'RightFoot.dat')
+    robot.zmpTrajGen.playTrajectoryFile(folder+'ZMP.dat')
+    robot.waistTrajGen.playTrajectoryFile(folder+'WaistOrientation.dat')
 
 # --- Interface with controller entities
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
 wp.init()
 wp.omega.value = omega
-#wp.waist.value = robot.dynamic.WT.value          # wait receives a full homogeneous matrix, but only the rotational part is controlled
-#wp.footLeft.value = robot.dynamic.LF.value
-#wp.footRight.value = robot.dynamic.RF.value
-#wp.com.value  = robot.dynamic.com.value
-#wp.vcom.value = [0.]*3
-#wp.acom.value = [0.]*3
 plug(robot.waistToMatrix.sout, wp.waist)
 plug(robot.lfToMatrix.sout, wp.footLeft)
 plug(robot.rfToMatrix.sout, wp.footRight)
 plug(robot.comTrajGen.x, wp.com)
 plug(robot.comTrajGen.dx, wp.vcom)
 plug(robot.comTrajGen.ddx, wp.acom)
-#plug(robot.zmpTrajGen.x, wp.zmp)
+#if folder is not None:
+#    plug(robot.zmpTrajGen.x, wp.zmp)
 
 robot.wp = wp
 
@@ -152,27 +156,9 @@ q = list(robot.dynamic.position.value)
 robot.taskUpperBody.feature.state.value = q
 robot.taskUpperBody.feature.posture.value = q
 
-# robotDim = robot.dynamic.getDimension() # 38
-robot.taskUpperBody.feature.selectDof(18,True)
-robot.taskUpperBody.feature.selectDof(19,True)
-robot.taskUpperBody.feature.selectDof(20,True)
-robot.taskUpperBody.feature.selectDof(21,True)
-robot.taskUpperBody.feature.selectDof(22,True)
-robot.taskUpperBody.feature.selectDof(23,True)
-robot.taskUpperBody.feature.selectDof(24,True)
-robot.taskUpperBody.feature.selectDof(25,True)
-robot.taskUpperBody.feature.selectDof(26,True)
-robot.taskUpperBody.feature.selectDof(27,True)
-robot.taskUpperBody.feature.selectDof(28,True)
-robot.taskUpperBody.feature.selectDof(29,True)
-robot.taskUpperBody.feature.selectDof(30,True)
-robot.taskUpperBody.feature.selectDof(31,True)
-robot.taskUpperBody.feature.selectDof(32,True)
-robot.taskUpperBody.feature.selectDof(33,True)
-robot.taskUpperBody.feature.selectDof(34,True)
-robot.taskUpperBody.feature.selectDof(35,True)
-robot.taskUpperBody.feature.selectDof(36,True)
-robot.taskUpperBody.feature.selectDof(37,True)
+robotDim = robot.dynamic.getDimension() # 38
+for i in range(18, robotDim):
+    robot.taskUpperBody.feature.selectDof(i,True)
 
 robot.taskUpperBody.controlGain.value = 100.0
 robot.taskUpperBody.add(robot.taskUpperBody.feature.name)
@@ -192,7 +178,7 @@ robot.contactRF.gain.setConstant(300)
 plug(robot.wp.footRightDes, robot.contactRF.featureDes.position) #.errorIN?
 locals()['contactRF'] = robot.contactRF
 
-# --- COM height
+# --- COM
 robot.taskCom = MetaTaskKineCom(robot.dynamic)
 plug(robot.wp.comDes,robot.taskCom.featureDes.errorIN)
 robot.taskCom.task.controlGain.value = 100.
