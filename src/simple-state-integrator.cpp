@@ -119,7 +119,7 @@ void SimpleStateIntegrator::integrateRollPitchYaw(Vector& state, const Vector& c
          * AngleAxisd(state(4), Vector3d::UnitY())
          * AngleAxisd(state(3), Vector3d::UnitX());
 
-  SE3().integrate (qin, control * dt, qout);
+  SE3().integrate (qin, control.head<6>() * dt, qout);
 
   Matrix3d rotationMatrix = QuaternionMapd(qout.tail<4>().data()).toRotationMatrix();
   // Create the Euler angles in good range : [-pi:pi]x[-pi/2:pi/2]x[-pi:pi]
