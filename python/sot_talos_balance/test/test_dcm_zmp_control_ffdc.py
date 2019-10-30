@@ -20,6 +20,7 @@ runCommandClient('robot.com_admittance_control.setState(robot.wp.comDes.value,[0
 runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
 runCommandClient('robot.dcm_control.resetDcmIntegralError()')
 runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
+runCommandClient('robot.dcm_control.Kz.value = Kz_dcm')
 
 raw_input("Wait before activating foot force difference control")
 runCommandClient('robot.ffdc.dfzAdmittance.value = dfzAdmittance')
