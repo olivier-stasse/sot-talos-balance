@@ -18,6 +18,7 @@ runCommandClient('robot.com_admittance_control.setState(robot.wp.comDes.value,[0
 runCommandClient('robot.com_admittance_control.Kp.value = Kp_adm')
 runCommandClient('robot.dcm_control.resetDcmIntegralError()')
 runCommandClient('robot.dcm_control.Ki.value = Ki_dcm')
+runCommandClient('robot.dcm_control.Kz.value = Kz_dcm')
 
 if test_folder is not None:
     c = ask_for_confirmation('Execute trajectory?')
