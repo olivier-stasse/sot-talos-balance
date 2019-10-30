@@ -250,7 +250,7 @@ Ki_dcm = [1.0,1.0,1.0] # this value is employed later
 Kz_dcm = [0.0,0.0,0.0] # this value is employed later
 
 # --- Distribute wrench
-distribute = create_distribute_wrench(distribute_conf)
+distribute = create_simple_distribute_wrench()
 plug(robot.e2q.quaternion, distribute.q)
 plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
 plug(robot.wp.rhoDes, distribute.rho)
@@ -281,7 +281,7 @@ vdcFrequency = -1.
 vdcDamping = 0.
 
 gainSwing  = 300.
-gainStance = 1.
+gainStance = 300.
 gainDouble = 1.
 
 controller = FootForceDifferenceController("footController")
