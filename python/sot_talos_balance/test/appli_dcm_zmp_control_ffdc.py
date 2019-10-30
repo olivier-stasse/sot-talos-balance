@@ -279,6 +279,7 @@ Kp_adm = [15.0,15.0,0.0] # this value is employed later
 dfzAdmittance = -1e-4
 vdcFrequency = -1.
 vdcDamping = 0.
+swingAdmittance = [0.]*3
 
 gainSwing  = 300.
 gainStance = 300.
@@ -302,6 +303,8 @@ plug(robot.wp.footRightDes,  controller.posRightDes)
 plug(robot.wp.footLeftDes, controller.posLeftDes)
 plug(robot.dynamic.RF, controller.posRight)
 plug(robot.dynamic.LF, controller.posLeft)
+
+controller.swingAdmittance.value = swingAdmittance
 
 controller.gainSwing.value  = gainSwing
 controller.gainStance.value = gainStance
