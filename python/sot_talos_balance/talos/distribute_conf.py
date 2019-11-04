@@ -1,4 +1,4 @@
-from base_estimator_conf import *  # noqa
+from .base_estimator_conf import *  # noqa
 
 # overwrite foot sizes
 RIGHT_FOOT_SIZES = (0.100, -0.100, 0.06, -0.06)  # pos x, neg x, pos y, neg y size

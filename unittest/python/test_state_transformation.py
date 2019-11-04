@@ -5,9 +5,9 @@ from rospkg import RosPack
 
 import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
-from sot_talos_balance.create_entities_utils import (DcmEstimator, EulerToQuat, SimpleReferenceFrame,
-                                                     StateTransformation, TalosBaseEstimator, create_parameter_server,
-                                                     plug)
+from sot_talos_balance.create_entities_utils import (DcmEstimator, SimpleReferenceFrame, StateTransformation,
+                                                     TalosBaseEstimator, create_parameter_server, plug)
+from sot_talos_balance.euler_to_quat import EulerToQuat
 
 # --- General ---
 print("--- General ---")
