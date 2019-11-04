@@ -1,19 +1,19 @@
 # Copyright 2018, Gepetto team, LAAS-CNRS
 #
 
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 set(CMAKE_CXX_STANDARD 11)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+SET(PROJECT_NAMESPACE loco-3d)
+SET(PROJECT_NAME sot-talos-balance)
+SET(PROJECT_DESCRIPTION "Collection of dynamic-graph entities aimed at implementing balance control on talos.")
+SET(PROJECT_URL "https://gepgitlab.laas.fr/${PROJECT_NAMESPACE}/${PROJECT_NAME}")
 
 INCLUDE(cmake/base.cmake)
 INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/eigen.cmake)
 INCLUDE(cmake/python.cmake)
 INCLUDE(cmake/test.cmake)
-
-SET(PROJECT_NAMESPACE loco-3d)
-SET(PROJECT_NAME sot-talos-balance)
-SET(PROJECT_DESCRIPTION "Collection of dynamic-graph entities aimed at implementing balance control on talos.")
-SET(PROJECT_URL "https://gepgitlab.laas.fr/${PROJECT_NAMESPACE}/${PROJECT_NAME}")
 
 # So that generated headers are in same place as standard ones
 SET(CUSTOM_HEADER_DIR "sot/talos_balance")
@@ -29,7 +29,8 @@ SET(PKG_CONFIG_ADDITIONAL_VARIABLES
   plugindir
   )
 
-SETUP_PROJECT()
+CMAKE_POLICY(SET CMP0048 OLD)
+PROJECT(${PROJECT_NAME} CXX)
 
 IF(WIN32)
   SET(LINK copy_if_different)
@@ -190,5 +191,3 @@ IF(BUILD_ROS_PACKAGES AND NOT INSTALL_PYTHON_INTERFACE_ONLY)
 ENDIF(BUILD_ROS_PACKAGES AND NOT INSTALL_PYTHON_INTERFACE_ONLY)
 
 ADD_SUBDIRECTORY(unittest)
-
-SETUP_PROJECT_FINALIZE()
