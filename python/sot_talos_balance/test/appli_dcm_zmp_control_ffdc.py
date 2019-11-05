@@ -276,8 +276,8 @@ Kp_adm = [15.0,15.0,0.0] # this value is employed later
 
 # --- Foot force difference control
 
-dfzAdmittance = -1e-4
-vdcFrequency = -1.
+dfzAdmittance = 1e-4
+vdcFrequency = 1.
 vdcDamping = 0.
 swingAdmittance = [0.]*3
 

@@ -68,7 +68,7 @@ else:
     if c:
         print("Putting the robot in position...")
         runCommandClient('robot.comTrajGen.move(1,-0.08,10.0)')
-        runCommandClient('robot.rhoTrajGen.move(0,0.4,10.0)')
+        runCommandClient('robot.rhoTrajGen.move(0,0.3,10.0)')
         sleep(10.0)
         print("Robot is in position!")
 
