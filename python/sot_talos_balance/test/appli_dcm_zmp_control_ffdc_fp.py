@@ -344,6 +344,7 @@ robot.contactLF = MetaTaskPose('contactLF',robot.dynamic,'LF',robot.OperationalP
 plug(robot.ffdc.gainLeft,robot.contactLF.task.controlGain)
 plug(robot.wp.footLeftDes, robot.contactLF.feature.faMfbDes)
 plug(robot.ffdc.vLeft, robot.contactLF.feature.faNufafbDes)
+robot.device.before.addSignal(robot.contactLF.feature.name+'.faNufafbDes') # temporary hack to force recomputation
 robot.contactLF.task.setWithDerivative(True)
 locals()['contactLF'] = robot.contactLF
 
@@ -351,6 +352,7 @@ robot.contactRF = MetaTaskPose('contactRF',robot.dynamic,'RF',robot.OperationalP
 plug(robot.ffdc.gainRight,robot.contactRF.task.controlGain)
 plug(robot.wp.footRightDes, robot.contactRF.feature.faMfbDes)
 plug(robot.ffdc.vRight, robot.contactRF.feature.faNufafbDes)
+robot.device.before.addSignal(robot.contactRF.feature.name+'.faNufafbDes') # temporary hack to force recomputation
 robot.contactRF.task.setWithDerivative(True)
 locals()['contactRF'] = robot.contactRF
 
