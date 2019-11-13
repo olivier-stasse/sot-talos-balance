@@ -1,7 +1,6 @@
 from sot_talos_balance.create_entities_utils import *
 from sot_talos_balance.round_double_to_int import RoundDoubleToInt
 from sot_talos_balance.simple_controller_6d import SimpleController6d
-from sot_talos_balance.foot_force_difference_controller import FootForceDifferenceController
 import sot_talos_balance.talos.parameter_server_conf   as param_server_conf
 import sot_talos_balance.talos.control_manager_conf    as cm_conf
 import sot_talos_balance.talos.base_estimator_conf     as base_estimator_conf
