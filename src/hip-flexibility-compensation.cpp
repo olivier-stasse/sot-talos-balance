@@ -124,9 +124,8 @@ void HipFlexibilityCompensation::init(const double &dt, const std::string& robot
   }
 
   m_initSucceeded = true;
-  const Vector& q_des = m_q_desSIN.accessCopy();
   const Vector& tau = m_tauSIN.accessCopy();
-  m_previous_delta_q.resize(q_des.size());
+  m_previous_delta_q.resize(tau.size());
   m_previous_delta_q.setZero();
   m_previous_tau.resize(tau.size());
   m_previous_tau.setZero();

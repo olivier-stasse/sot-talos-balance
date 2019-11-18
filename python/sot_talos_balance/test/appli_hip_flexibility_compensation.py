@@ -33,7 +33,7 @@ robot.param_server = create_parameter_server(paramServerConfig, robot.timeStep)
 # --- HIP TASK ----------------------------------------------------------------
 
 robot.hipComp = create_hip_flexibility_compensation(robot, hipFlexCompConfig, robot_name)
-hipComp.q_des.value = robot.halfSitting
+robot.hipComp.q_des.value = robot.halfSitting
 
 # --- PLUG CONTROL ----------------------------------------------------------------
 # WARNING : Set the control to halfSitting position ! 
