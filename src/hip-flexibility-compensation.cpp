@@ -186,7 +186,7 @@ DEFINE_SIGNAL_OUT_FUNCTION(tau_filt, dynamicgraph::Vector) {
     // Low pass filter  
     s = lowPassFilter(m_torqueLowPassFilterFrequency, tau, m_previous_tau);     
   }
-  m_previous_tau = tau;  
+  m_previous_tau = s;
   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUFILT_COMPUTATION);
 
   return s;
