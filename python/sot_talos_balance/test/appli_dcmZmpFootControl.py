@@ -2,18 +2,18 @@
 from math import sqrt
 
 import numpy as np
-from dynamic_graph import plug
-from dynamic_graph.sot.core import SOT, Derivator_of_Vector, FeaturePosture, MatrixHomoToPoseQuaternion, Task
-from dynamic_graph.sot.core.matrix_util import matrixToTuple
-from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
-from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
-from dynamic_graph.tracer_real_time import TracerRealTime
 
 import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
 import sot_talos_balance.talos.control_manager_conf as cm_conf
 import sot_talos_balance.talos.distribute_conf as distribute_conf
 import sot_talos_balance.talos.ft_calibration_conf as ft_conf
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
+from dynamic_graph import plug
+from dynamic_graph.sot.core import SOT, Derivator_of_Vector, FeaturePosture, MatrixHomoToPoseQuaternion, Task
+from dynamic_graph.sot.core.matrix_util import matrixToTuple
+from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
+from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
+from dynamic_graph.tracer_real_time import TracerRealTime
 from sot_talos_balance.create_entities_utils import *
 from sot_talos_balance.foot_force_difference_controller import FootForceDifferenceController
 from sot_talos_balance.round_double_to_int import RoundDoubleToInt

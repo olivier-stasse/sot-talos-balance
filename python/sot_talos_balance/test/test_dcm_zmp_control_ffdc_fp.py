@@ -5,15 +5,15 @@ from time import sleep
 from sot_talos_balance.utils.run_test_utils import (ask_for_confirmation, get_file_folder, run_ft_calibration,
                                                     run_test, runCommandClient)
 
+test_folder, sot_talos_balance_folder = get_file_folder(argv)
+
 try:
     # Python 2
     input = raw_input  # noqa
 except NameError:
     pass
 
-test_folder, sot_talos_balance_folder = get_file_folder(argv)
-
-run_test('appli_dcm_zmp_control_ffdc.py')
+run_test('appli_dcm_zmp_control_ffdc_fp.py')
 
 run_ft_calibration('robot.ftc')
 

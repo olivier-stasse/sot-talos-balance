@@ -2,18 +2,18 @@
 from math import sqrt
 
 import numpy as np
-from dynamic_graph import plug
-from dynamic_graph.sot.core import SOT, Derivator_of_Vector, FeaturePosture, MatrixHomoToPoseQuaternion, Task
-from dynamic_graph.sot.core.matrix_util import matrixToTuple
-from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
-from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
-from dynamic_graph.tracer_real_time import TracerRealTime
 
 import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
 import sot_talos_balance.talos.control_manager_conf as cm_conf
 import sot_talos_balance.talos.distribute_conf as distribute_conf
 import sot_talos_balance.talos.ft_calibration_conf as ft_conf
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
+from dynamic_graph import plug
+from dynamic_graph.sot.core import SOT, Derivator_of_Vector, FeaturePosture, MatrixHomoToPoseQuaternion, Task
+from dynamic_graph.sot.core.matrix_util import matrixToTuple
+from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
+from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
+from dynamic_graph.tracer_real_time import TracerRealTime
 from sot_talos_balance.create_entities_utils import *
 from sot_talos_balance.round_double_to_int import RoundDoubleToInt
 
@@ -219,12 +219,14 @@ robot.zmp_estimator = zmp_estimator
 # --- DCM controller
 Kp_dcm = [8.0] * 3
 Ki_dcm = [0.0, 0.0, 0.0]  # zero (to be set later)
+Kz_dcm = [0.] * 3
 gamma_dcm = 0.2
 
 dcm_controller = DcmController("dcmCtrl")
 
 dcm_controller.Kp.value = Kp_dcm
 dcm_controller.Ki.value = Ki_dcm
+dcm_controller.Kz.value = Kz_dcm
 dcm_controller.decayFactor.value = gamma_dcm
 dcm_controller.mass.value = mass
 plug(robot.wp.omegaDes, dcm_controller.omega)
@@ -235,11 +237,15 @@ plug(robot.estimator.dcm, dcm_controller.dcm)
 plug(robot.wp.zmpDes, dcm_controller.zmpDes)
 plug(robot.wp.dcmDes, dcm_controller.dcmDes)
 
+plug(robot.zmp_estimator.zmp, dcm_controller.zmp)
+
 dcm_controller.init(dt)
 
 robot.dcm_control = dcm_controller
 
 Ki_dcm = [1.0, 1.0, 1.0]  # this value is employed later
+
+Kz_dcm = [0.0, 0.0, 0.0]  # this value is employed later
 
 # --- Distribute wrench
 distribute = create_distribute_wrench(distribute_conf)

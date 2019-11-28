@@ -106,6 +106,7 @@ class HIPFLEXIBILITYCOMPENSATION_EXPORT HipFlexibilityCompensation
   double m_rate_limiter;
   dynamicgraph::Vector m_previous_delta_q;
   dynamicgraph::Vector m_previous_tau;
+  dynamicgraph::Vector m_limitedSignal;
 
   RobotUtilShrPtr m_robot_util;
 

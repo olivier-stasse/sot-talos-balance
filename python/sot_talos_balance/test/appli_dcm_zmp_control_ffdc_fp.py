@@ -15,7 +15,7 @@ from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineC
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 from dynamic_graph.tracer_real_time import TracerRealTime
 from sot_talos_balance.create_entities_utils import *
-from sot_talos_balance.foot_force_difference_controller import FootForceDifferenceController
+from sot_talos_balance.meta_task_pose import MetaTaskPose
 from sot_talos_balance.round_double_to_int import RoundDoubleToInt
 
 cm_conf.CTRL_MAX = 1000.0  # temporary hack
@@ -338,19 +338,19 @@ plug(robot.dynamic.position, robot.taskUpperBody.feature.state)
 
 # --- CONTACTS
 #define contactLF and contactRF
-robot.contactLF = MetaTaskKine6d('contactLF', robot.dynamic, 'LF', robot.OperationalPointsMap['left-ankle'])
-robot.contactLF.feature.frame('desired')
+robot.contactLF = MetaTaskPose('contactLF', robot.dynamic, 'LF', robot.OperationalPointsMap['left-ankle'])
 plug(robot.ffdc.gainLeft, robot.contactLF.task.controlGain)
-plug(robot.wp.footLeftDes, robot.contactLF.featureDes.position)  #.errorIN?
-plug(robot.ffdc.vLeft, robot.contactLF.featureDes.velocity)
+plug(robot.wp.footLeftDes, robot.contactLF.feature.faMfbDes)
+plug(robot.ffdc.vLeft, robot.contactLF.feature.faNufafbDes)
+robot.device.before.addSignal(robot.contactLF.feature.name + '.faNufafbDes')  # temporary hack to force recomputation
 robot.contactLF.task.setWithDerivative(True)
 locals()['contactLF'] = robot.contactLF
 
-robot.contactRF = MetaTaskKine6d('contactRF', robot.dynamic, 'RF', robot.OperationalPointsMap['right-ankle'])
-robot.contactRF.feature.frame('desired')
+robot.contactRF = MetaTaskPose('contactRF', robot.dynamic, 'RF', robot.OperationalPointsMap['right-ankle'])
 plug(robot.ffdc.gainRight, robot.contactRF.task.controlGain)
-plug(robot.wp.footRightDes, robot.contactRF.featureDes.position)  #.errorIN?
-plug(robot.ffdc.vRight, robot.contactRF.featureDes.velocity)
+plug(robot.wp.footRightDes, robot.contactRF.feature.faMfbDes)
+plug(robot.ffdc.vRight, robot.contactRF.feature.faNufafbDes)
+robot.device.before.addSignal(robot.contactRF.feature.name + '.faNufafbDes')  # temporary hack to force recomputation
 robot.contactRF.task.setWithDerivative(True)
 locals()['contactRF'] = robot.contactRF
 

@@ -5,7 +5,6 @@ import numpy as np
 
 import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
 import sot_talos_balance.talos.control_manager_conf as cm_conf
-import sot_talos_balance.talos.distribute_conf as distribute_conf
 import sot_talos_balance.talos.ft_calibration_conf as ft_conf
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
 from dynamic_graph import plug
@@ -15,13 +14,12 @@ from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineC
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 from dynamic_graph.tracer_real_time import TracerRealTime
 from sot_talos_balance.create_entities_utils import *
-from sot_talos_balance.foot_force_difference_controller import FootForceDifferenceController
-from sot_talos_balance.round_double_to_int import RoundDoubleToInt
 
-cm_conf.CTRL_MAX = 1000.0  # temporary hack
+cm_conf.CTRL_MAX = 10.0  # temporary hack
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep
+robot.device.setControlInputType("noInteg")
 
 # --- Pendulum parameters
 robot_name = 'robot'
@@ -105,24 +103,6 @@ robot.waistToMatrix = PoseRollPitchYawToMatrixHomo('w2m')
 plug(robot.waistMix.sout, robot.waistToMatrix.sin)
 plug(robot.triggerTrajGen.sout, robot.waistTrajGen.trigger)
 
-# --- Rho
-robot.rhoTrajGen = create_scalar_trajectory_generator(dt, 0.5, 'rhoTrajGen')
-robot.rhoTrajGen.x.recompute(0)  # trigger computation of initial value
-robot.rhoScalar = Component_of_vector("rho_scalar")
-robot.rhoScalar.setIndex(0)
-plug(robot.rhoTrajGen.x, robot.rhoScalar.sin)
-plug(robot.triggerTrajGen.sout, robot.rhoTrajGen.trigger)
-
-# --- Phase
-robot.phaseTrajGen = create_scalar_trajectory_generator(dt, 0., 'phaseTrajGen')
-robot.phaseTrajGen.x.recompute(0)  # trigger computation of initial value
-robot.phaseScalar = Component_of_vector("phase_scalar")
-robot.phaseScalar.setIndex(0)
-plug(robot.phaseTrajGen.x, robot.phaseScalar.sin)
-robot.phaseInt = RoundDoubleToInt("phase_int")
-plug(robot.phaseScalar.sout, robot.phaseInt.sin)
-plug(robot.triggerTrajGen.sout, robot.phaseTrajGen.trigger)
-
 # --- Load files
 if folder is not None:
     robot.comTrajGen.playTrajectoryFile(folder + 'CoM.dat')
@@ -130,16 +110,12 @@ if folder is not None:
     robot.rfTrajGen.playTrajectoryFile(folder + 'RightFoot.dat')
     robot.zmpTrajGen.playTrajectoryFile(folder + 'ZMP.dat')
     robot.waistTrajGen.playTrajectoryFile(folder + 'WaistOrientation.dat')
-    robot.rhoTrajGen.playTrajectoryFile(folder + 'Rho.dat')
-    robot.phaseTrajGen.playTrajectoryFile(folder + 'Phase.dat')
 
 # --- Interface with controller entities
 
 wp = DummyWalkingPatternGenerator('dummy_wp')
 wp.init()
 wp.omega.value = omega
-plug(robot.rhoScalar.sout, wp.rho)
-plug(robot.phaseInt.sout, wp.phase)
 plug(robot.waistToMatrix.sout, wp.waist)
 plug(robot.lfToMatrix.sout, wp.footLeft)
 plug(robot.rfToMatrix.sout, wp.footRight)
@@ -248,22 +224,13 @@ Ki_dcm = [1.0, 1.0, 1.0]  # this value is employed later
 
 Kz_dcm = [0.0, 0.0, 0.0]  # this value is employed later
 
-# --- Distribute wrench
-distribute = create_simple_distribute_wrench()
-plug(robot.e2q.quaternion, distribute.q)
-plug(robot.dcm_control.wrenchRef, distribute.wrenchDes)
-plug(robot.wp.rhoDes, distribute.rho)
-plug(robot.wp.phaseDes, distribute.phase)
-distribute.init(robot_name)
-robot.distribute = distribute
-
 # --- CoM admittance controller
 Kp_adm = [0.0, 0.0, 0.0]  # zero (to be set later)
 
 com_admittance_control = ComAdmittanceController("comAdmCtrl")
 com_admittance_control.Kp.value = Kp_adm
 plug(robot.zmp_estimator.zmp, com_admittance_control.zmp)
-com_admittance_control.zmpDes.value = robot.wp.zmpDes.value  # should be plugged to robot.distribute.zmpRef
+com_admittance_control.zmpDes.value = robot.wp.zmpDes.value  # should be plugged to robot.dcm_control.zmpRef
 plug(robot.wp.acomDes, com_admittance_control.ddcomDes)
 
 com_admittance_control.init(dt)
@@ -273,50 +240,11 @@ robot.com_admittance_control = com_admittance_control
 
 Kp_adm = [15.0, 15.0, 0.0]  # this value is employed later
 
-# --- Foot force difference control
-
-dfzAdmittance = 1e-4
-vdcFrequency = 1.
-vdcDamping = 0.
-swingAdmittance = [0.] * 3
-
-gainSwing = 300.
-gainStance = 300.
-gainDouble = 1.
-
-controller = FootForceDifferenceController("footController")
-controller.init()
-plug(robot.wp.phaseDes, controller.phase)
-
-controller.dfzAdmittance.value = 0.
-
-plug(robot.ftc.right_foot_force_out, controller.wrenchRight)
-plug(robot.ftc.left_foot_force_out, controller.wrenchLeft)
-plug(robot.distribute.surfaceWrenchRight, controller.wrenchRightDes)
-plug(robot.distribute.surfaceWrenchLeft, controller.wrenchLeftDes)
-
-controller.vdcFrequency.value = 0.
-controller.vdcDamping.value = 0.
-
-plug(robot.wp.footRightDes, controller.posRightDes)
-plug(robot.wp.footLeftDes, controller.posLeftDes)
-plug(robot.dynamic.RF, controller.posRight)
-plug(robot.dynamic.LF, controller.posLeft)
-
-controller.swingAdmittance.value = swingAdmittance
-
-controller.gainSwing.value = gainSwing
-controller.gainStance.value = gainStance
-controller.gainDouble.value = gainDouble
-
-robot.ffdc = controller
-
 # --- Control Manager
 robot.cm = create_ctrl_manager(cm_conf, dt, robot_name='robot')
 robot.cm.addCtrlMode('sot_input')
 robot.cm.setCtrlMode('all', 'sot_input')
 robot.cm.addEmergencyStopSIN('zmp')
-robot.cm.addEmergencyStopSIN('distribute')
 
 # -------------------------- SOT CONTROL --------------------------
 
@@ -340,18 +268,14 @@ plug(robot.dynamic.position, robot.taskUpperBody.feature.state)
 #define contactLF and contactRF
 robot.contactLF = MetaTaskKine6d('contactLF', robot.dynamic, 'LF', robot.OperationalPointsMap['left-ankle'])
 robot.contactLF.feature.frame('desired')
-plug(robot.ffdc.gainLeft, robot.contactLF.task.controlGain)
+robot.contactLF.gain.setConstant(300)
 plug(robot.wp.footLeftDes, robot.contactLF.featureDes.position)  #.errorIN?
-plug(robot.ffdc.vLeft, robot.contactLF.featureDes.velocity)
-robot.contactLF.task.setWithDerivative(True)
 locals()['contactLF'] = robot.contactLF
 
 robot.contactRF = MetaTaskKine6d('contactRF', robot.dynamic, 'RF', robot.OperationalPointsMap['right-ankle'])
 robot.contactRF.feature.frame('desired')
-plug(robot.ffdc.gainRight, robot.contactRF.task.controlGain)
+robot.contactRF.gain.setConstant(300)
 plug(robot.wp.footRightDes, robot.contactRF.featureDes.position)  #.errorIN?
-plug(robot.ffdc.vRight, robot.contactRF.featureDes.velocity)
-robot.contactRF.task.setWithDerivative(True)
 locals()['contactRF'] = robot.contactRF
 
 # --- COM height
@@ -380,9 +304,16 @@ locals()['keepWaist'] = robot.keepWaist
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 
-# --- Plug SOT control to device through control manager
+# --- State integrator
+robot.integrate = SimpleStateIntegrator("integrate")
+robot.integrate.init(dt)
+robot.integrate.setState(robot.device.state.value)
+robot.integrate.setVelocity(robot.dynamic.getDimension() * [0.])
+
+# --- Plug SOT control to device through control manager and state integrator
 plug(robot.sot.control, robot.cm.ctrl_sot_input)
-plug(robot.cm.u_safe, robot.device.control)
+plug(robot.cm.u_safe, robot.integrate.control)
+plug(robot.integrate.state, robot.device.control)
 
 robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
@@ -393,11 +324,20 @@ robot.sot.push(robot.keepWaist.task.name)
 # robot.sot.push(robot.taskPos.name)
 # robot.device.control.recompute(0) # this crashes as it employs joint sensors which are not ready yet
 
+# --- Delay
+robot.delay_vel = DelayVector("delay_vel")
+robot.delay_vel.setMemory(robot.dynamic.getDimension() * [0.])
+robot.device.before.addSignal(robot.delay_vel.name + '.current')
+plug(robot.cm.u_safe, robot.delay_vel.sin)
+
+# --- Plug integrator instead of device
+plug(robot.delay_vel.previous, robot.vselec.sin)
+
 # --- Fix robot.dynamic inputs
-plug(robot.device.velocity, robot.dynamic.velocity)
+plug(robot.delay_vel.previous, robot.dynamic.velocity)
 robot.dvdt = Derivator_of_Vector("dv_dt")
 robot.dvdt.dt.value = dt
-plug(robot.device.velocity, robot.dvdt.sin)
+plug(robot.delay_vel.previous, robot.dvdt.sin)
 plug(robot.dvdt.sout, robot.dynamic.acceleration)
 
 # -------------------------- PLOTS --------------------------
@@ -424,22 +364,11 @@ create_topic(robot.publisher, robot.dynamic, 'com', robot=robot, data_type='vect
 create_topic(robot.publisher, robot.dcm_control, 'dcmDes', robot=robot, data_type='vector')  # desired DCM
 create_topic(robot.publisher, robot.estimator, 'dcm', robot=robot, data_type='vector')  # estimated DCM
 
-create_topic(robot.publisher, robot.dcm_control, 'zmpDes', robot=robot, data_type='vector')  # desired ZMP
+create_topic(robot.publisher, robot.zmpTrajGen, 'x', robot=robot, data_type='vector')  # generated ZMP
+create_topic(robot.publisher, robot.wp, 'zmpDes', robot=robot, data_type='vector')  # desired ZMP
 create_topic(robot.publisher, robot.dynamic, 'zmp', robot=robot, data_type='vector')  # SOT ZMP
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot=robot, data_type='vector')  # estimated ZMP
 create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot=robot, data_type='vector')  # reference ZMP
-
-create_topic(robot.publisher, robot.dcm_control, 'wrenchRef', robot=robot,
-             data_type='vector')  # unoptimized reference wrench
-create_topic(robot.publisher, robot.distribute, 'wrenchLeft', robot=robot, data_type='vector')  # reference left wrench
-create_topic(robot.publisher, robot.distribute, 'wrenchRight', robot=robot,
-             data_type='vector')  # reference right wrench
-create_topic(robot.publisher, robot.distribute, 'surfaceWrenchLeft', robot=robot,
-             data_type='vector')  # reference surface left wrench
-create_topic(robot.publisher, robot.distribute, 'surfaceWrenchRight', robot=robot,
-             data_type='vector')  # reference surface right wrench
-create_topic(robot.publisher, robot.distribute, 'wrenchRef', robot=robot,
-             data_type='vector')  # optimized reference wrench
 
 #create_topic(robot.publisher, robot.device, 'forceLLEG', robot = robot, data_type='vector')               # measured left wrench
 #create_topic(robot.publisher, robot.device, 'forceRLEG', robot = robot, data_type='vector')               # measured right wrench
@@ -459,9 +388,6 @@ create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot=robot,
 
 create_topic(robot.publisher, robot.dynamic, 'LF', robot=robot, data_type='matrixHomo')  # left foot
 create_topic(robot.publisher, robot.dynamic, 'RF', robot=robot, data_type='matrixHomo')  # right foot
-
-create_topic(robot.publisher, robot.zmp_estimator, 'copRight', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.zmp_estimator, 'copLeft', robot=robot, data_type='vector')
 
 ## --- TRACER
 #robot.tracer = TracerRealTime("com_tracer")
@@ -484,11 +410,6 @@ create_topic(robot.publisher, robot.zmp_estimator, 'copLeft', robot=robot, data_
 #addTrace(robot.tracer, robot.dynamic, 'zmp')                    # SOT ZMP
 #addTrace(robot.tracer, robot.zmp_estimator, 'zmp')              # estimated ZMP
 #addTrace(robot.tracer, robot.dcm_control, 'zmpRef')             # reference ZMP
-
-#addTrace(robot.tracer, robot.dcm_control, 'wrenchRef')          # unoptimized reference wrench
-#addTrace(robot.tracer, robot.distribute, 'wrenchLeft')          # reference left wrench
-#addTrace(robot.tracer, robot.distribute, 'wrenchRight')         # reference right wrench
-#addTrace(robot.tracer, robot.distribute, 'wrenchRef')           # optimized reference wrench
 
 #addTrace(robot.tracer, robot.ftc, 'left_foot_force_out')        # calibrated left wrench
 #addTrace(robot.tracer,  robot.ftc, 'right_foot_force_out')      # calibrated right wrench

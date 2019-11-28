@@ -1,12 +1,12 @@
 from time import sleep
 
 import numpy as np
+
 from dynamic_graph import plug
 from dynamic_graph.sot.core.madgwickahrs import MadgwickAHRS
 from dynamic_graph.sot.core.operator import Mix_of_vector, Selec_of_vector
 from dynamic_graph.sot.core.parameter_server import ParameterServer
 from dynamic_graph.tracer_real_time import TracerRealTime
-
 from sot_talos_balance.admittance_controller_end_effector import AdmittanceControllerEndEffector
 from sot_talos_balance.ankle_admittance_controller import AnkleAdmittanceController
 from sot_talos_balance.ankle_joint_selector import AnkleJointSelector  # noqa
@@ -33,6 +33,7 @@ from sot_talos_balance.state_transformation import StateTransformation  # noqa
 from sot_talos_balance.talos_base_estimator import TalosBaseEstimator
 from sot_talos_balance.talos_control_manager import TalosControlManager
 from sot_talos_balance.utils import filter_utils
+# python
 from sot_talos_balance.utils.sot_utils import Bunch
 
 N_JOINTS = 32
@@ -217,9 +218,7 @@ def create_hip_flexibility_compensation(robot, conf, robot_name='robot'):
     hipComp = HipFlexibilityCompensation("hipFlexCompensation")
     hipComp.K_l.value = conf.flexibility_left
     hipComp.K_r.value = conf.flexibility_right
-    # WARNING q_des value set to halfSitting
-    # TO BE CHANGED
-    hipComp.q_des.value = robot.halfSitting[6:]
+    hipComp.q_des.value = robot.dynamic.getDimension() * [0.]
     plug(robot.device.ptorque, hipComp.tau)
     hipComp.init(timeStep, robot_name)
 
@@ -254,9 +253,9 @@ def create_ankle_admittance_controller(gains, robot, side, name):
 
 
 def create_device_filters(robot, dt):
-    #    robot.pselec = Selec_of_vector("pselec")
-    #    robot.pselec.selec(6, 6+N_JOINTS)
-    #    plug(robot.device.state, robot.pselec.sin)
+    robot.pselec = Selec_of_vector("pselec")
+    robot.pselec.selec(6, 6 + N_JOINTS)
+    plug(robot.device.state, robot.pselec.sin)
 
     robot.vselec = Selec_of_vector("vselec")
     robot.vselec.selec(6, 6 + N_JOINTS)

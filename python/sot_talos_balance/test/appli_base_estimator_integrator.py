@@ -13,11 +13,11 @@ from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 from dynamic_graph.tracer_real_time import TracerRealTime
-from rospkg import RosPack
 from sot_talos_balance.create_entities_utils import *
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep
+robot.device.setControlInputType("noInteg")
 
 # --- Pendulum parameters
 robot_name = 'robot'
@@ -195,8 +195,15 @@ locals()['keepWaist'] = robot.keepWaist
 robot.sot = SOT('sot')
 robot.sot.setSize(robot.dynamic.getDimension())
 
-# --- Plug SOT control to device
-plug(robot.sot.control, robot.device.control)
+# --- State integrator
+robot.integrate = SimpleStateIntegrator("integrate")
+robot.integrate.init(dt)
+robot.integrate.setState(robot.device.state.value)
+robot.integrate.setVelocity(robot.dynamic.getDimension() * [0.])
+
+# --- Plug SOT control to device through state integrator
+plug(robot.sot.control, robot.integrate.control)
+plug(robot.integrate.state, robot.device.control)
 
 robot.sot.push(robot.taskUpperBody.name)
 robot.sot.push(robot.contactRF.task.name)
@@ -204,11 +211,20 @@ robot.sot.push(robot.contactLF.task.name)
 robot.sot.push(robot.taskCom.task.name)
 robot.sot.push(robot.keepWaist.task.name)
 
+# --- Delay
+robot.delay_vel = DelayVector("delay_vel")
+robot.delay_vel.setMemory(robot.dynamic.getDimension() * [0.])
+robot.device.before.addSignal(robot.delay_vel.name + '.current')
+plug(robot.sot.control, robot.delay_vel.sin)
+
+# --- Plug integrator instead of device
+plug(robot.delay_vel.previous, robot.vselec.sin)
+
 # --- Fix robot.dynamic inputs
-plug(robot.device.velocity, robot.dynamic.velocity)
+plug(robot.delay_vel.previous, robot.dynamic.velocity)
 robot.dvdt = Derivator_of_Vector("dv_dt")
 robot.dvdt.dt.value = dt
-plug(robot.device.velocity, robot.dvdt.sin)
+plug(robot.delay_vel.previous, robot.dvdt.sin)
 plug(robot.dvdt.sout, robot.dynamic.acceleration)
 
 # -------------------------- PLOTS --------------------------

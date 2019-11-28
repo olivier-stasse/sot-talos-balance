@@ -124,9 +124,8 @@ void HipFlexibilityCompensation::init(const double &dt, const std::string& robot
   }
 
   m_initSucceeded = true;
-  const Vector& q_des = m_q_desSIN.accessCopy();
   const Vector& tau = m_tauSIN.accessCopy();
-  m_previous_delta_q.resize(q_des.size());
+  m_previous_delta_q.resize(tau.size());
   m_previous_delta_q.setZero();
   m_previous_tau.resize(tau.size());
   m_previous_tau.setZero();
@@ -187,7 +186,7 @@ DEFINE_SIGNAL_OUT_FUNCTION(tau_filt, dynamicgraph::Vector) {
     // Low pass filter  
     s = lowPassFilter(m_torqueLowPassFilterFrequency, tau, m_previous_tau);     
   }
-  m_previous_tau = tau;  
+  m_previous_tau = s;
   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_TAUFILT_COMPUTATION);
 
   return s;
@@ -251,18 +250,21 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
   const Vector &q_des = m_q_desSIN(iter);
   const Vector &delta_q = m_delta_qSOUT(iter);
 
+  assert( (q_des.size()==delta_q.size()) || (q_des.size()==delta_q.size()+6) );
+
   if(s.size() != q_des.size())
     s.resize(q_des.size());
 
-  Vector limitedSignal;
-  limitedSignal.resize(delta_q.size());
-  rateLimiter(delta_q, m_previous_delta_q, limitedSignal);
-  m_previous_delta_q = limitedSignal;
+  if(m_limitedSignal.size() != delta_q.size())
+    m_limitedSignal.resize(delta_q.size());
+  rateLimiter(delta_q, m_previous_delta_q, m_limitedSignal);
+  m_previous_delta_q = m_limitedSignal;
   
   if (iter < 5){
     s = q_des;
-  } else {    
-    s = q_des + limitedSignal;
+  } else {
+    s = q_des;
+    s.tail(m_limitedSignal.size()) += m_limitedSignal;
   }
 
   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_QCMD_COMPUTATION);
