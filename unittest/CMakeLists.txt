@@ -26,7 +26,7 @@ SET(TEST_test_distribute_LIBS
   )
 
 SET(TEST_test_distribute_EXT_LIBS
-  sot-core ${CMAKE_INSTALL_PREFIX}/lib/plugin/parameter-server.so
+  sot-core::sot-core ${CMAKE_INSTALL_PREFIX}/lib/plugin/parameter-server.so
   )
 
 #test paths and names (without .cpp extension)
@@ -80,14 +80,16 @@ FOREACH(test ${tests})
     TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} ${CMAKE_DL_LIBS})
   ENDIF(UNIX)
 
-  PKG_CONFIG_USE_DEPENDENCY(${EXECUTABLE_NAME} dynamic-graph)
+  TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} dynamic-graph::dynamic-graph)
   PKG_CONFIG_USE_DEPENDENCY(${EXECUTABLE_NAME} pinocchio)
   IF(BUILD_PYTHON_INTERFACE)
-    PKG_CONFIG_USE_DEPENDENCY(${EXECUTABLE_NAME} dynamic-graph-python)
+    TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME}
+      dynamic-graph-python::dynamic-graph-python)
   ENDIF(BUILD_PYTHON_INTERFACE)
 
   # Link against Boost.
-  TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} ${Boost_LIBRARIES} ${Boost_SYSTEM_LIBRARY})
+  TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME}
+    ${Boost_LIBRARIES} ${Boost_SYSTEM_LIBRARY})
   ADD_TEST(${test} ${EXECUTABLE_NAME})
 
   IF (UNIX)
