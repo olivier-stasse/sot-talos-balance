@@ -1,43 +1,59 @@
+from sot_talos_balance.talos_control_manager import TalosControlManager
+from sot_talos_balance.example import Example
+from dynamic_graph.sot.core.parameter_server import ParameterServer
+from dynamic_graph.tracer_real_time import TracerRealTime
 from time import sleep
+from sot_talos_balance.talos_base_estimator import TalosBaseEstimator
+from dynamic_graph.sot.core.madgwickahrs import MadgwickAHRS
+from sot_talos_balance.dcm_estimator import DcmEstimator
+from sot_talos_balance.ft_calibration import FtCalibration
+from sot_talos_balance.ft_wrist_calibration import FtWristCalibration
+
+from sot_talos_balance.euler_to_quat import EulerToQuat
+from sot_talos_balance.quat_to_euler import QuatToEuler
+from sot_talos_balance.pose_quaternion_to_matrix_homo import PoseQuaternionToMatrixHomo
+
+from dynamic_graph.sot.core.operator import Mix_of_vector
+from dynamic_graph.sot.core.operator import Selec_of_vector
+from dynamic_graph.sot.core.operator import Component_of_vector
+from dynamic_graph.sot.core.operator import MatrixHomoToPoseQuaternion
+from dynamic_graph.sot.core.operator import PoseRollPitchYawToMatrixHomo
+from dynamic_graph.sot.core.operator import MatrixHomoToPoseRollPitchYaw
+from sot_talos_balance.boolean_identity import BooleanIdentity
+from sot_talos_balance.int_identity import IntIdentity
+from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
+from sot_talos_balance.simple_pid import SimplePID
+from sot_talos_balance.simple_pidd import SimplePIDD
+from sot_talos_balance.joint_position_controller import JointPositionController
+from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController
+from sot_talos_balance.admittance_controller_end_effector import AdmittanceControllerEndEffector
+from sot_talos_balance.ankle_admittance_controller import AnkleAdmittanceController
+from sot_talos_balance.foot_force_difference_controller import FootForceDifferenceController
+from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
+from sot_talos_balance.com_admittance_controller import ComAdmittanceController
+from sot_talos_balance.dcm_controller import DcmController
+from sot_talos_balance.dcm_com_controller import DcmComController
+from sot_talos_balance.simple_zmp_estimator import SimpleZmpEstimator
+from sot_talos_balance.simple_distribute_wrench import SimpleDistributeWrench
+from sot_talos_balance.distribute_wrench import DistributeWrench
+from sot_talos_balance.simple_reference_frame import SimpleReferenceFrame
+from sot_talos_balance.state_transformation import StateTransformation
+from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator
+from sot_talos_balance.ankle_joint_selector import AnkleJointSelector
+from sot_talos_balance.qualisys_client import QualisysClient
+from sot_talos_balance.hip_flexibility_compensation import HipFlexibilityCompensation
+from sot_talos_balance.simple_state_integrator import SimpleStateIntegrator
+from sot_talos_balance.delay import DelayVector
+
+# python
+from sot_talos_balance.utils import filter_utils
+from sot_talos_balance.utils.sot_utils import Bunch
+
+from dynamic_graph import plug
 
 import numpy as np
 
-from dynamic_graph import plug
-from dynamic_graph.sot.core.madgwickahrs import MadgwickAHRS
-from dynamic_graph.sot.core.operator import Mix_of_vector, Selec_of_vector
-from dynamic_graph.sot.core.parameter_server import ParameterServer
-from dynamic_graph.tracer_real_time import TracerRealTime
-from sot_talos_balance.admittance_controller_end_effector import AdmittanceControllerEndEffector
-from sot_talos_balance.ankle_admittance_controller import AnkleAdmittanceController
-from sot_talos_balance.ankle_joint_selector import AnkleJointSelector  # noqa
-from sot_talos_balance.com_admittance_controller import ComAdmittanceController
-from sot_talos_balance.dcm_com_controller import DcmComController
-from sot_talos_balance.dcm_controller import DcmController
-from sot_talos_balance.dcm_estimator import DcmEstimator
-from sot_talos_balance.distribute_wrench import DistributeWrench
-from sot_talos_balance.dummy_dcm_estimator import DummyDcmEstimator
-from sot_talos_balance.dummy_walking_pattern_generator import DummyWalkingPatternGenerator  # noqa
-from sot_talos_balance.euler_to_quat import EulerToQuat  # noqa
-from sot_talos_balance.example import Example
-from sot_talos_balance.ft_calibration import FtCalibration
-from sot_talos_balance.ft_wrist_calibration import FtWristCalibration
-from sot_talos_balance.hip_flexibility_compensation import HipFlexibilityCompensation
-from sot_talos_balance.joint_position_controller import JointPositionController
-from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
-from sot_talos_balance.qualisys_client import QualisysClient
-from sot_talos_balance.simple_admittance_controller import SimpleAdmittanceController
-from sot_talos_balance.simple_distribute_wrench import SimpleDistributeWrench
-from sot_talos_balance.simple_reference_frame import SimpleReferenceFrame  # noqa
-from sot_talos_balance.simple_zmp_estimator import SimpleZmpEstimator
-from sot_talos_balance.state_transformation import StateTransformation  # noqa
-from sot_talos_balance.talos_base_estimator import TalosBaseEstimator
-from sot_talos_balance.talos_control_manager import TalosControlManager
-from sot_talos_balance.utils import filter_utils
-# python
-from sot_talos_balance.utils.sot_utils import Bunch
-
 N_JOINTS = 32
-
 
 def create_qualisys_client(address):
     mocap = QualisysClient('mocap')
