@@ -381,10 +381,8 @@ create_topic(robot.publisher, robot.waistTrajGen, 'x', robot=robot, data_type='v
 create_topic(robot.publisher, robot.lfTrajGen, 'x', robot=robot, data_type='vector')  # desired left foot pose
 create_topic(robot.publisher, robot.rfTrajGen, 'x', robot=robot, data_type='vector')  # desired right foot pose
 
-create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot=robot,
-             data_type='vector')  # calibrated left wrench
-create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot=robot,
-             data_type='vector')  # calibrated right wrench
+create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot=robot, data_type='vector')  # calibrated left wrench
+create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot=robot, data_type='vector')  # calibrated right wrench
 
 create_topic(robot.publisher, robot.dynamic, 'LF', robot=robot, data_type='matrixHomo')  # left foot
 create_topic(robot.publisher, robot.dynamic, 'RF', robot=robot, data_type='matrixHomo')  # right foot

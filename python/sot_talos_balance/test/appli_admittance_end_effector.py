@@ -130,10 +130,8 @@ create_topic(robot.publisher, robot.controller, 'force', robot=robot, data_type=
 create_topic(robot.publisher, robot.controller, 'dq', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.controller, 'w_dq', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.controller, 'w_forceDes', robot=robot, data_type='vector')
-create_topic(robot.publisher, robot.forceCalibrator, 'leftWristForceOut', robot=robot,
-             data_type='vector')  # calibrated left wrench
-create_topic(robot.publisher, robot.forceCalibrator, 'rightWristForceOut', robot=robot,
-             data_type='vector')  # calibrated right wrench
+create_topic(robot.publisher, robot.forceCalibrator, 'leftWristForceOut', robot=robot, data_type='vector')  # calibrated left wrench
+create_topic(robot.publisher, robot.forceCalibrator, 'rightWristForceOut', robot=robot, data_type='vector')  # calibrated right wrench
 
 # # --- ROS SUBSCRIBER
 robot.subscriber = RosSubscribe("end_effector_subscriber")

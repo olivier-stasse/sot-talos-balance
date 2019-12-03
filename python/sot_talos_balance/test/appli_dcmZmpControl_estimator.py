@@ -389,10 +389,8 @@ create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot=robot, data_typ
 #create_topic(robot.publisher, robot.device_filters.ft_LF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered left wrench
 #create_topic(robot.publisher, robot.device_filters.ft_RF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered right wrench
 
-create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot=robot,
-             data_type='vector')  # calibrated left wrench
-create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot=robot,
-             data_type='vector')  # calibrated right wrench
+create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot=robot, data_type='vector')  # calibrated left wrench
+create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot=robot, data_type='vector')  # calibrated right wrench
 
 # --- TRACER
 robot.tracer = TracerRealTime("com_tracer")

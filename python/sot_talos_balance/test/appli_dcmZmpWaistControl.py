@@ -347,8 +347,7 @@ create_topic(robot.publisher, robot.dynamic, 'zmp', robot=robot, data_type='vect
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot=robot, data_type='vector')  # estimated ZMP
 create_topic(robot.publisher, robot.dcm_control, 'zmpRef', robot=robot, data_type='vector')  # reference ZMP
 
-create_topic(robot.publisher, robot.dcm_control, 'wrenchRef', robot=robot,
-             data_type='vector')  # unoptimized reference wrench
+create_topic(robot.publisher, robot.dcm_control, 'wrenchRef', robot=robot, data_type='vector')  # unoptimized reference wrench
 
 #create_topic(robot.publisher, robot.device, 'forceLLEG', robot = robot, data_type='vector')               # measured left wrench
 #create_topic(robot.publisher, robot.device, 'forceRLEG', robot = robot, data_type='vector')               # measured right wrench
@@ -356,10 +355,8 @@ create_topic(robot.publisher, robot.dcm_control, 'wrenchRef', robot=robot,
 #create_topic(robot.publisher, robot.device_filters.ft_LF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered left wrench
 #create_topic(robot.publisher, robot.device_filters.ft_RF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered right wrench
 
-create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot=robot,
-             data_type='vector')  # calibrated left wrench
-create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot=robot,
-             data_type='vector')  # calibrated right wrench
+create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot=robot, data_type='vector')  # calibrated left wrench
+create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot=robot, data_type='vector')  # calibrated right wrench
 
 create_topic(robot.publisher, robot.zmp_estimator, 'copRight', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.zmp_estimator, 'copLeft', robot=robot, data_type='vector')

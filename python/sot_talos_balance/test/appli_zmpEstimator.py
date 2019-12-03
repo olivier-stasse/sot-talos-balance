@@ -99,8 +99,7 @@ plug(robot.dvdt.sout, robot.dynamic.acceleration)
 robot.publisher = create_rospublish(robot, 'robot_publisher')
 
 create_topic(robot.publisher, robot.zmp_estimator, 'zmp', robot=robot, data_type='vector')  # estimated ZMP
-create_topic(robot.publisher, robot.zmp_estimator, 'emergencyStop', robot=robot,
-             data_type='boolean')  # ZMP emergency stop
+create_topic(robot.publisher, robot.zmp_estimator, 'emergencyStop', robot=robot, data_type='boolean')  # ZMP emergency stop
 create_topic(robot.publisher, robot.dynamic, 'com', robot=robot, data_type='vector')  # SOT CoM
 create_topic(robot.publisher, robot.dynamic, 'zmp', robot=robot, data_type='vector')  # SOT ZMP
 create_topic(robot.publisher, robot.device, 'forceLLEG', robot=robot, data_type='vector')  # force on left foot
@@ -112,10 +111,8 @@ create_topic(robot.publisher, robot.device, 'forceRLEG', robot=robot, data_type=
 #create_topic(robot.publisher, robot.device_filters.ft_LF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered left wrench
 #create_topic(robot.publisher, robot.device_filters.ft_RF_filter, 'x_filtered', robot = robot, data_type='vector') # filtered right wrench
 
-create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot=robot,
-             data_type='vector')  # calibrated left wrench
-create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot=robot,
-             data_type='vector')  # calibrated right wrench
+create_topic(robot.publisher, robot.ftc, 'left_foot_force_out', robot=robot, data_type='vector')  # calibrated left wrench
+create_topic(robot.publisher, robot.ftc, 'right_foot_force_out', robot=robot, data_type='vector')  # calibrated right wrench
 
 # --- TRACER
 robot.tracer = TracerRealTime("zmp_tracer")

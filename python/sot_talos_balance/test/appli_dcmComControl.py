@@ -5,9 +5,7 @@ from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
 from dynamic_graph.tracer_real_time import TracerRealTime
 
-from sot_talos_balance.create_entities_utils import (addTrace, create_com_admittance_controller,
-                                                     create_dcm_com_controller, create_dummy_dcm_estimator,
-                                                     dump_tracer)
+from sot_talos_balance.create_entities_utils import *
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep
