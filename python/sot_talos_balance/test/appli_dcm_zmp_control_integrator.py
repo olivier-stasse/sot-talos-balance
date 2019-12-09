@@ -108,7 +108,7 @@ if folder is not None:
     robot.comTrajGen.playTrajectoryFile(folder + 'CoM.dat')
     robot.lfTrajGen.playTrajectoryFile(folder + 'LeftFoot.dat')
     robot.rfTrajGen.playTrajectoryFile(folder + 'RightFoot.dat')
-    robot.zmpTrajGen.playTrajectoryFile(folder + 'ZMP.dat')
+    # robot.zmpTrajGen.playTrajectoryFile(folder + 'ZMP.dat')
     robot.waistTrajGen.playTrajectoryFile(folder + 'WaistOrientation.dat')
 
 # --- Interface with controller entities

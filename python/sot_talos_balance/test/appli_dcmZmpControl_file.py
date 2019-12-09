@@ -81,7 +81,7 @@ plug(robot.triggerTrajGen.sout, robot.rfTrajGen.trigger)
 # --- ZMP
 robot.zmpTrajGen = create_zmp_trajectory_generator(dt, robot)
 robot.zmpTrajGen.x.recompute(0)  # trigger computation of initial value
-robot.zmpTrajGen.playTrajectoryFile(folder + 'ZMP.dat')
+# robot.zmpTrajGen.playTrajectoryFile(folder + 'ZMP.dat')
 plug(robot.triggerTrajGen.sout, robot.zmpTrajGen.trigger)
 
 # --- Waist
