@@ -80,8 +80,8 @@ estimator = SimpleZmpEstimator("ciao2")
 
 model = pin.buildSampleModelHumanoid()
 data = model.createData()
-rightId = model.getFrameId('rlegeffector_body')
-leftId = model.getFrameId('llegeffector_body')
+rightId = model.getFrameId('rleg_effector_body')
+leftId = model.getFrameId('lleg_effector_body')
 
 q = pin.neutral(model)
 q[:3] = np.matrix([1.0, 0.0, 0.0]).T  # displace freeflyer along x for testing
