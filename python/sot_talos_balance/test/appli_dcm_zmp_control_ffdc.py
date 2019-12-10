@@ -218,7 +218,7 @@ robot.zmp_estimator = zmp_estimator
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [8.0] * 3
+Kp_dcm = [5.0] * 3
 Ki_dcm = [0.0, 0.0, 0.0]  # zero (to be set later)
 Kz_dcm = [0.] * 3
 gamma_dcm = 0.2
@@ -246,7 +246,7 @@ robot.dcm_control = dcm_controller
 
 Ki_dcm = [1.0, 1.0, 1.0]  # this value is employed later
 
-Kz_dcm = [0.0, 0.0, 0.0]  # this value is employed later
+Kz_dcm = [1.0, 1.0, 0.0]  # this value is employed later
 
 # --- Distribute wrench
 distribute = create_simple_distribute_wrench()
@@ -282,7 +282,7 @@ swingAdmittance = [0.] * 3
 
 gainSwing = 300.
 gainStance = 300.
-gainDouble = 1.
+gainDouble = 300.
 
 controller = FootForceDifferenceController("footController")
 controller.init()

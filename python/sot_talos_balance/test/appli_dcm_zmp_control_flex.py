@@ -16,7 +16,7 @@ from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
 from dynamic_graph.tracer_real_time import TracerRealTime
 from sot_talos_balance.create_entities_utils import *
 
-cm_conf.CTRL_MAX = 10.0  # temporary hack
+cm_conf.CTRL_MAX = 1000.0  # temporary hack
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep
@@ -200,7 +200,7 @@ robot.zmp_estimator = zmp_estimator
 # -------------------------- ADMITTANCE CONTROL --------------------------
 
 # --- DCM controller
-Kp_dcm = [8.0] * 3
+Kp_dcm = [5.0] * 3
 Ki_dcm = [0.0, 0.0, 0.0]  # zero (to be set later)
 Kz_dcm = [0.] * 3
 gamma_dcm = 0.2
@@ -228,7 +228,7 @@ robot.dcm_control = dcm_controller
 
 Ki_dcm = [1.0, 1.0, 1.0]  # this value is employed later
 
-Kz_dcm = [0.0, 0.0, 0.0]  # this value is employed later
+Kz_dcm = [1.0, 1.0, 1.0]  # this value is employed later
 
 # --- CoM admittance controller
 Kp_adm = [0.0, 0.0, 0.0]  # zero (to be set later)
