@@ -13,10 +13,10 @@ except NameError:
 
 test_folder, sot_talos_balance_folder = get_file_folder(argv)
 
-c = ask_for_confirmation('Compensate flexibility?')
-if c:
+flexi = ask_for_confirmation('Compensate flexibility?')
+if flexi:
     print('Compensating flexibility')
-    runCommandClient('flexi = True')
+    runCommandClient('flexi = False')
 else:
     print('Not compensating flexibility')
     runCommandClient('flexi = False')
@@ -24,6 +24,12 @@ else:
 run_test('appli_dcm_zmp_control_flex.py')
 
 run_ft_calibration('robot.ftc')
+
+if flexi:
+    input("Wait before activating flexibility")
+    cmd_l = 'robot.hipComp.K_l.value = hipFlexCompConfig.flexibility_left'
+    cmd_r = 'robot.hipComp.K_r.value = hipFlexCompConfig.flexibility_right'
+    runCommandClient(cmd_l + '; ' + cmd_r)
 
 input("Wait before running the test")
 
