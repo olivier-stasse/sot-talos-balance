@@ -104,6 +104,16 @@ robot.waistToMatrix = PoseRollPitchYawToMatrixHomo('w2m')
 plug(robot.waistMix.sout, robot.waistToMatrix.sin)
 plug(robot.triggerTrajGen.sout, robot.waistTrajGen.trigger)
 
+# --- Phase
+robot.phaseTrajGen = create_scalar_trajectory_generator(dt, 0., 'phaseTrajGen')
+robot.phaseTrajGen.x.recompute(0)  # trigger computation of initial value
+robot.phaseScalar = Component_of_vector("phase_scalar")
+robot.phaseScalar.setIndex(0)
+plug(robot.phaseTrajGen.x, robot.phaseScalar.sin)
+robot.phaseInt = RoundDoubleToInt("phase_int")
+plug(robot.phaseScalar.sout, robot.phaseInt.sin)
+plug(robot.triggerTrajGen.sout, robot.phaseTrajGen.trigger)
+
 # --- Load files
 if folder is not None:
     robot.comTrajGen.playTrajectoryFile(folder + 'CoM.dat')
@@ -111,6 +121,7 @@ if folder is not None:
     robot.rfTrajGen.playTrajectoryFile(folder + 'RightFoot.dat')
     # robot.zmpTrajGen.playTrajectoryFile(folder + 'ZMP.dat')
     robot.waistTrajGen.playTrajectoryFile(folder + 'WaistOrientation.dat')
+    robot.phaseTrajGen.playTrajectoryFile(folder + 'Phase.dat')
 
 # --- Interface with controller entities
 
@@ -314,6 +325,7 @@ robot.integrate.setVelocity(robot.dynamic.getDimension() * [0.])
 # --- Hip flexibility compensation --------------------------------
 
 robot.hipComp = create_hip_flexibility_compensation(robot, hipFlexCompConfig, robot_name)
+plug(robot.phaseInt.sout, robot.hipComp.phase)
 if not flexi:
     robot.hipComp.K_l.value = float('inf')  #disable
     robot.hipComp.K_r.value = float('inf')  #disable

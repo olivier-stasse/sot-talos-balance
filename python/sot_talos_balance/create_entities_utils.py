@@ -44,6 +44,7 @@ from sot_talos_balance.qualisys_client import QualisysClient
 from sot_talos_balance.hip_flexibility_compensation import HipFlexibilityCompensation
 from sot_talos_balance.simple_state_integrator import SimpleStateIntegrator
 from sot_talos_balance.delay import DelayVector
+from sot_talos_balance.round_double_to_int import RoundDoubleToInt
 
 # python
 from sot_talos_balance.utils import filter_utils
