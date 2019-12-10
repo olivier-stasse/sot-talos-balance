@@ -388,26 +388,26 @@ create_topic(robot.publisher, robot.dynamic, 'LF', robot=robot, data_type='matri
 create_topic(robot.publisher, robot.dynamic, 'RF', robot=robot, data_type='matrixHomo')  # right foot
 
 ## --- TRACER
-#robot.tracer = TracerRealTime("com_tracer")
-#robot.tracer.setBufferSize(80*(2**20))
-#robot.tracer.open('/tmp','dg_','.dat')
-#robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
+robot.tracer = TracerRealTime("com_tracer")
+robot.tracer.setBufferSize(80*(2**20))
+robot.tracer.open('/tmp','dg_','.dat')
+robot.device.after.addSignal('{0}.triger'.format(robot.tracer.name))
 
-#addTrace(robot.tracer, robot.wp, 'comDes')                      # desired CoM
+addTrace(robot.tracer, robot.wp, 'comDes')                      # desired CoM
 
-#addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
+addTrace(robot.tracer, robot.cdc_estimator, 'c')                # estimated CoM
 #addTrace(robot.tracer, robot.cdc_estimator, 'dc')               # estimated CoM velocity
 
-#addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
-#addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
+addTrace(robot.tracer, robot.com_admittance_control, 'comRef')  # reference CoM
+addTrace(robot.tracer, robot.dynamic, 'com')                    # resulting SOT CoM
 
 #addTrace(robot.tracer, robot.dcm_control, 'dcmDes')             # desired DCM
 #addTrace(robot.tracer, robot.estimator, 'dcm')                  # estimated DCM
 
 #addTrace(robot.tracer, robot.dcm_control, 'zmpDes')             # desired ZMP
 #addTrace(robot.tracer, robot.dynamic, 'zmp')                    # SOT ZMP
-#addTrace(robot.tracer, robot.zmp_estimator, 'zmp')              # estimated ZMP
-#addTrace(robot.tracer, robot.dcm_control, 'zmpRef')             # reference ZMP
+addTrace(robot.tracer, robot.zmp_estimator, 'zmp')              # estimated ZMP
+addTrace(robot.tracer, robot.dcm_control, 'zmpRef')             # reference ZMP
 
 #addTrace(robot.tracer, robot.ftc, 'left_foot_force_out')        # calibrated left wrench
 #addTrace(robot.tracer,  robot.ftc, 'right_foot_force_out')      # calibrated right wrench
@@ -415,4 +415,5 @@ create_topic(robot.publisher, robot.dynamic, 'RF', robot=robot, data_type='matri
 #addTrace(robot.tracer,  robot.dynamic, 'LF')                    # left foot
 #addTrace(robot.tracer,  robot.dynamic, 'RF')                    # right foot
 
-#robot.tracer.start()
+robot.tracer.start()
+

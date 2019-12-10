@@ -106,8 +106,8 @@ else:
     else:
         print("Not raising the foot")
 
-# input("Wait before dumping the data")
+input("Wait before dumping the data")
 
-# runCommandClient('dump_tracer(robot.tracer)')
+runCommandClient('dump_tracer(robot.tracer)')
 
 print('Bye!')
