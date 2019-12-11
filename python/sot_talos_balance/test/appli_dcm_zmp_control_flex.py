@@ -60,7 +60,7 @@ if test_folder is not None:
 
 # --- General trigger
 robot.triggerTrajGen = BooleanIdentity('triggerTrajGen')
-robot.triggerTrajGen.sin.value = 0
+set_trigger(robot, False)
 
 # --- CoM
 robot.comTrajGen = create_com_trajectory_generator(dt, robot)
@@ -115,13 +115,7 @@ plug(robot.phaseScalar.sout, robot.phaseInt.sin)
 plug(robot.triggerTrajGen.sout, robot.phaseTrajGen.trigger)
 
 # --- Load files
-if folder is not None:
-    robot.comTrajGen.playTrajectoryFile(folder + 'CoM.dat')
-    robot.lfTrajGen.playTrajectoryFile(folder + 'LeftFoot.dat')
-    robot.rfTrajGen.playTrajectoryFile(folder + 'RightFoot.dat')
-    # robot.zmpTrajGen.playTrajectoryFile(folder + 'ZMP.dat')
-    robot.waistTrajGen.playTrajectoryFile(folder + 'WaistOrientation.dat')
-    robot.phaseTrajGen.playTrajectoryFile(folder + 'Phase.dat')
+load_folder(robot, folder)
 
 # --- Interface with controller entities
 

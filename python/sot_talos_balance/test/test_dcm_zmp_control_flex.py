@@ -47,7 +47,7 @@ if test_folder is not None:
     c = ask_for_confirmation('Execute trajectory?')
     if c:
         print('Executing the trajectory')
-        runCommandClient('robot.triggerTrajGen.sin.value = 1')
+        runCommandClient('set_trigger(robot, True)')
     else:
         print('Not executing the trajectory')
 else:

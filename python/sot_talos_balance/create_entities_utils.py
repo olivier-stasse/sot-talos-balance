@@ -648,3 +648,41 @@ def create_ft_wrist_calibrator(robot, endEffectorWeight, rightOC, leftOC):
     plug(robot.device_filters.ft_RH_filter.x_filtered, forceCalibrator.rightWristForceIn)
     plug(robot.device_filters.ft_LH_filter.x_filtered, forceCalibrator.leftWristForceIn)
     return forceCalibrator
+
+def set_trigger(robot, on):
+    robot.triggerTrajGen.sin.value = 1. if on else 0.
+
+def get_trigger(robot):
+    val = robot.triggerTrajGen.sin.value
+    if val==1:
+        return True
+    elif val==0:
+        return False
+    else:
+        raise RuntimeError("Bad trigger")
+
+def load_folder(robot, folder, zmp=False):
+    if get_trigger(robot):
+        print("Warning: trigger is still active. Not loading folder")
+        return
+    if folder is not None:
+        robot.comTrajGen.playTrajectoryFile(folder + 'CoM.dat')
+        robot.lfTrajGen.playTrajectoryFile(folder + 'LeftFoot.dat')
+        robot.rfTrajGen.playTrajectoryFile(folder + 'RightFoot.dat')
+        if zmp:
+            robot.zmpTrajGen.playTrajectoryFile(folder + 'ZMP.dat')
+        robot.waistTrajGen.playTrajectoryFile(folder + 'WaistOrientation.dat')
+        try:
+            robot.rhoTrajGen.playTrajectoryFile(folder + 'Rho.dat')
+        except AttributeError:
+            pass
+        try:
+            robot.phaseTrajGen.playTrajectoryFile(folder + 'Phase.dat')
+        except AttributeError:
+            pass
+
+def reload_folder(robot, folder, zmp=False):
+    set_trigger(robot, False)
+    load_folder(robot, folder, zmp)
+    set_trigger(robot, True)
+
