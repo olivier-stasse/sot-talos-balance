@@ -113,6 +113,13 @@ def create_config_trajectory_generator(dt, robot):
     jtg.init(dt, N_CONFIG)
     return jtg
 
+def create_torque_trajectory_generator(dt, robot):
+    N_CONFIG = N_JOINTS + 6
+    jtg = NdTrajectoryGenerator("torqueTrajGen")
+    jtg.initial_value.value = [0.] * N_CONFIG
+    jtg.trigger.value = 1.0
+    jtg.init(dt, N_CONFIG)
+    return jtg
 
 def create_com_trajectory_generator(dt, robot):
     comTrajGen = NdTrajectoryGenerator("comTrajGen")
@@ -678,6 +685,10 @@ def load_folder(robot, folder, zmp=False):
             pass
         try:
             robot.phaseTrajGen.playTrajectoryFile(folder + 'Phase.dat')
+        except AttributeError:
+            pass
+        try:
+            robot.torqueTrajGen.playTrajectoryFile(folder + 'Torques.dat')
         except AttributeError:
             pass
 
