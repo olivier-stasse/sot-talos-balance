@@ -1,15 +1,22 @@
-'''Test CoM admittance control as described in paper'''
-from sot_talos_balance.utils.run_test_utils import run_test, run_ft_calibration, runCommandClient, ask_for_confirmation
-from time import sleep
+'''Test foot sinusoid control'''
 
+from time import sleep
 from sys import argv
+
+from sot_talos_balance.utils.run_test_utils import run_test, run_ft_calibration, runCommandClient, ask_for_confirmation
+
+try:
+    # Python 2
+    input = raw_input  # noqa
+except NameError:
+    pass
 
 runCommandClient('test_folder = None')
 run_test('appli_dcm_zmp_control.py')
 
 run_ft_calibration('robot.ftc')
 
-raw_input("Wait before running the test")
+input("Wait before running the test")
 
 # Connect ZMP reference and reset controllers
 print('Connect ZMP reference')
@@ -86,10 +93,6 @@ if c:
             print("Not putting the robot back")
 else:
     print("Not raising the foot")
-
-#raw_input("Wait before dumping the data")
-
-#runCommandClient('dump_tracer(robot.tracer)')
 
 print('Bye!')
 
