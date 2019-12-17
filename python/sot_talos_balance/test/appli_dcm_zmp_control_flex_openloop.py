@@ -115,12 +115,13 @@ plug(robot.phaseScalar.sout, robot.phaseInt.sin)
 plug(robot.triggerTrajGen.sout, robot.phaseTrajGen.trigger)
 
 # --- Torque
-robot.torqueTrajGen = create_torque_trajectory_generator(dt, robot, 'WT')
+robot.torqueTrajGen = create_torque_trajectory_generator(dt, robot)
 robot.torqueTrajGen.x.recompute(0)  # trigger computation of initial value
 
 robot.torqueSelec = Selec_of_vector("torque_selec")
 robot.torqueSelec.selec(6, 38)
 plug(robot.torqueTrajGen.x, robot.torqueSelec.sin)
+plug(robot.triggerTrajGen.sout, robot.torqueTrajGen.trigger)
 
 # --- Load files
 load_folder(robot, folder)

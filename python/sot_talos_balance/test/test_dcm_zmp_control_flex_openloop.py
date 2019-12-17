@@ -21,7 +21,7 @@ else:
     print('Not compensating flexibility')
     runCommandClient('flexi = False')
 
-run_test('appli_dcm_zmp_control_flex.py')
+run_test('appli_dcm_zmp_control_flex_openloop.py')
 
 run_ft_calibration('robot.ftc')
 
