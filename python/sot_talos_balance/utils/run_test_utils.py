@@ -12,7 +12,6 @@ from time import sleep
 import rospy
 from std_srvs.srv import *
 
-from dynamic_graph_bridge.srv import *
 from dynamic_graph_bridge_msgs.srv import *
 
 try:
