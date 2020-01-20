@@ -3,7 +3,7 @@
 from time import sleep
 from sys import argv
 
-from sot_talos_balance.utils.run_test_utils import run_test, run_ft_calibration, runCommandClient, ask_for_confirmation
+from sot_talos_balance.utils.run_test_utils import run_test, run_ft_calibration, runCommandClient, ask_for_confirmation, get_file_folder
 
 try:
     # Python 2
@@ -11,8 +11,9 @@ try:
 except NameError:
     pass
 
-runCommandClient('test_folder = None')
-run_test('appli_dcm_zmp_control.py')
+test_folder, sot_talos_balance_folder = get_file_folder(argv)
+
+run_test('appli_dcm_zmp_control_bellStep.py')
 
 run_ft_calibration('robot.ftc')
 
@@ -43,7 +44,7 @@ if c:
         print("Raising the foot...")
         runCommandClient('h = robot.dynamic.LF.value[2][3]')
         runCommandClient('robot.lfTrajGen.move(2,h+0.05,10.0)')
-        sleep(10.0)
+        sleep(11.0)
         print("Foot has been raised!")
         foot_on_ground = False
         c3 = ask_for_confirmation("Move to sinusoid pose?")
@@ -51,30 +52,49 @@ if c:
             print("Go to sinusoid pose...")
             runCommandClient('robot.lfTrajGen.move(0,-0.1,10.0)')
             runCommandClient('robot.lfTrajGen.move(2,h+0.1,10.0)')
-            sleep(10.0)
+            sleep(11.0)
             print("The foot is in position!")
             c6 = ask_for_confirmation("Start sinusoid move?")
             if c6:
-                print("Start sinusoid move...")
-                runCommandClient('robot.lfTrajGen.startSinusoid(0,0.1,6.0)')
-                runCommandClient('robot.lfTrajGen.startSinusoid(2,h+0.05,3.0)')
-                print("Sinusoid started!")
+                if test_folder is not None:
+                    runCommandClient('robot.lfTotalTraj.sin2.value = [-0.1, 0.0, 0.1, 0.0, 0.0, 0.0]')
+                    sleep(2.0)
+                    print('Executing the trajectory of the file')
+                    runCommandClient('plug(robot.lfToMatrixFile.sout, wp.footLeft)')
+                    sleep(2.0)
+                    runCommandClient('robot.triggerTrajGen.sin.value = 1')
+                else:
+                    print("Executing the dummy trajectory")
+                    runCommandClient('robot.lfTrajGen.startSinusoid(0,0.15,4.0)')
+                    runCommandClient('robot.lfTrajGen.startSinusoid(2,h+0.15,2.0)')
+                    print("Sinusoid started!")
             else:
                 print("Not executing the sinusoid")
         else:
             print("Not Moving to sinusoid")
+
         c4 = ask_for_confirmation("Put the foot back?")
         if c4:
             print("Stopping the robot...")
-            runCommandClient('robot.lfTrajGen.stop(0)')
-            sleep(5.0)
-            runCommandClient('robot.lfTrajGen.stop(2)')  
-            sleep(5.0)   
+            if test_folder is not None:
+                runCommandClient('robot.triggerTrajGen.sin.value = 0')
+                sleep(2.0)
+                runCommandClient('robot.lfTrajGen.move(0,robot.lfTotalTraj.sout.value[0],5.0)')
+                runCommandClient('robot.lfTrajGen.move(1,robot.lfTotalTraj.sout.value[1],5.0)')
+                runCommandClient('robot.lfTrajGen.move(2,robot.lfTotalTraj.sout.value[2],5.0)')
+                sleep(6.0)
+                runCommandClient('plug(robot.lfToMatrix.sout, wp.footLeft)')
+                sleep(2.0)
+            else:
+                runCommandClient('robot.lfTrajGen.stop(0)')
+                sleep(5.0)
+                runCommandClient('robot.lfTrajGen.stop(2)')  
+                sleep(5.0)   
             print("Putting the robot back...")       
-            runCommandClient('robot.lfTrajGen.move(0,0,10.0)')
-            sleep(15.0)
-            runCommandClient('robot.lfTrajGen.move(2,h,10.0)')
-            sleep(15.0)
+            runCommandClient('robot.lfTrajGen.move(0,0,5.0)')
+            sleep(8.0)
+            runCommandClient('robot.lfTrajGen.move(2,h,8.0)')
+            sleep(12.0)
             print("The foot is back in position!")
             foot_on_ground = True
         else:
