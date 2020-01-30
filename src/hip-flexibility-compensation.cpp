@@ -261,7 +261,9 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
     s = q_des;
   } else {
     s = q_des;
-    s.tail(m_limitedSignal.size()) += m_limitedSignal;
+    // s.tail(m_limitedSignal.size()) += m_limitedSignal;
+    s[7] += 0.020998; // set fixed flexibility
+    s[13] -= 0.020998; // set fixed flexibility
   }
 
   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_QCMD_COMPUTATION);
