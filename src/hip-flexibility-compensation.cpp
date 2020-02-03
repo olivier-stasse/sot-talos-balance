@@ -64,7 +64,7 @@ HipFlexibilityCompensation::HipFlexibilityCompensation(const std::string& name)
   , CONSTRUCT_SIGNAL_IN(K_r, double)
   , CONSTRUCT_SIGNAL_OUT(tau_filt, dynamicgraph::Vector, m_tauSIN)
   , CONSTRUCT_SIGNAL_OUT(delta_q, dynamicgraph::Vector, INPUT_SIGNALS << m_tau_filtSOUT) 
-  , CONSTRUCT_SIGNAL_OUT(q_cmd, dynamicgraph::Vector, JOINT_DES_SIGNALS << m_delta_qSOUT) 
+  , CONSTRUCT_SIGNAL_OUT(q_cmd, dynamicgraph::Vector, JOINT_DES_SIGNALS << m_delta_qSOUT << m_phaseSIN) 
   , m_initSucceeded(false) 
   , m_torqueLowPassFilterFrequency(1)
   , m_delta_q_saturation(0.01)
@@ -246,6 +246,7 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
 
   const Vector &q_des = m_q_desSIN(iter);
   const Vector &delta_q = m_delta_qSOUT(iter);
+  const int phase = m_phaseSIN.isPlugged() ? m_phaseSIN(iter) : 1; // always active if unplugged - actual phase unrelevant
 
   assert( (q_des.size()==delta_q.size()) || (q_des.size()==delta_q.size()+6) );
 
@@ -262,8 +263,10 @@ DEFINE_SIGNAL_OUT_FUNCTION(q_cmd, dynamicgraph::Vector) {
   } else {
     s = q_des;
     // s.tail(m_limitedSignal.size()) += m_limitedSignal;
-    s[7] += 0.020998; // set fixed flexibility
-    s[13] -= 0.020998; // set fixed flexibility
+    if (phase != 0.0) {
+      s[7] += 0.020998; // set fixed flexibility
+      s[13] -= 0.020998; // set fixed flexibility
+    }
   }
 
   getProfiler().stop(PROFILE_HIPFLEXIBILITYCOMPENSATION_QCMD_COMPUTATION);
