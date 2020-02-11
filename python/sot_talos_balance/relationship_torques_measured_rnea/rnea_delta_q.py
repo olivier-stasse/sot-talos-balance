@@ -7,9 +7,9 @@ import math
 
 pin.switchToNumpyArray()
 
-control = genfromtxt('controls_48.txt', delimiter=' ')
-torque = genfromtxt('torques_20_18_48.txt', delimiter=' ')
-force = genfromtxt('forces_20_18_48.txt', delimiter=' ')
+control = genfromtxt('controls_54.txt', delimiter=' ')
+torque = genfromtxt('torques_20_18_54.txt', delimiter=' ')
+force = genfromtxt('forces_20_18_54.txt', delimiter=' ')
 
 # Add null freeflyer
 position = np.zeros((len(control), 39))
@@ -62,6 +62,23 @@ for i in range(len(acceleration)):
         velocity[i, 6:] = (position[i-1, 7:] - position[i, 7:])/0.001
         acceleration[i] = (velocity[i-1] - velocity[i])/0.001
 
+###################### Calibration Force Sensors ####################
+
+meanForces = np.zeros((4,6))
+for f in range(1000, 2000):
+    meanForces[0] += force[f,2:8]
+    meanForces[1] += force[f,8:14]
+    meanForces[2] += force[f,14:20]
+    meanForces[3] += force[f,20:26]
+meanForces = meanForces * 1e-3
+
+for f in range(len(force)):
+    force[f,2:8] -= meanForces[0] 
+    force[f,8:14] -= meanForces[1]
+    force[f,14:20] -= meanForces[2] 
+    force[f,20:26] -= meanForces[3] 
+
+
 ###################### FreeFlyer ####################################
 
 for k in range(len(position)):
@@ -113,17 +130,26 @@ for i in range(len(velocity)):
     tauWithoutVelAccFF[i] = np.squeeze(np.asarray(rNoff))
 
 
+############## Root Mean square error ##############
+
+def rmse(predictions, targets):
+    return np.sqrt(((predictions - targets) ** 2).mean())
+
 ############## Find relation RNEA - MEASURES ##############
 #
-xl = np.zeros((4,4)) # [a b Fc Fv] Fc*sign(q_dot) Fv*q_dot Fc frottement secs, Fv visqueux
+# xl = np.zeros((4,2)) # [a b] 
+xl = np.array([[ 1.20588548,  -2.78033796 ],
+               [ 0.94952097,  -12.96222896],
+               [ 1.03490801,  -6.76122458 ],
+               [ 0.98943679,   7.8162852  ]])
+rmsel = np.zeros(4)
 for i in range(4):
-    A = np.ones((len(tauWithForce[20000:130000]), 4))
+    A = np.ones((len(tauWithForce[20000:130000]), 2))
     A[:,0] = tauWithForce[20000:130000,i+6]
-    A[:,2] = np.sign(velocity[20000:130000, i+6])
-    A[:,3] = velocity[20000:130000, i+6]
     b = torque[20000:130000,i+2]
     xl[i] = np.dot(np.linalg.pinv(A[20000:130000]), b[20000:130000]) #Ax = b 
     Ax = np.dot(A, xl[i])
+    rmsel[i] = rmse(Ax, b)
     plt.figure(i)
     plt.plot(time[20000:130000],Ax, 'r', label='left_leg joint ' + str(i) + ' reconstructed rnea')
     plt.plot(time[20000:130000],b, 'b', label='left_leg joint ' + str(i) + ' measured')
@@ -131,33 +157,37 @@ for i in range(4):
     plt.title("Torque comparison left leg")
     plt.legend()
 print(xl)
+print(rmsel)
+# rmsel = [ 0.60252838  1.98547641  0.66161414  1.05223428] : no calib static -> 48
+# rmsel = [ 0.57108472  2.06281844  0.63074937  1.03549187] : Calib + Static -> 48
+# rmsel = [ 0.71895333  2.43895242  1.53974824  1.30717949] : Calib + Push -> 54
 
 # Left
-# No Fv Fc
-# [[  0.98622903  -2.20581326]-> hip yaw
-#  [  0.96435186 -11.81866614]-> hip roll
-#  [  1.07495031  -3.83410261]-> hip pitch
-#  [  0.98379592   8.58436054]] -> knee
-# Static -> 48
-# [[  9.78386914e-01  -2.10029827e+00   5.26263115e-03   2.31895864e+11]
-#  [  9.59130633e-01  -1.14287504e+01  -1.30241217e-02   3.22648256e+01]
-#  [  1.04585255e+00  -4.01311851e+00  -2.62183797e-02  -7.84503128e+00]
-#  [  9.88754810e-01   8.86594925e+00  -2.61473273e-01  -2.02688368e-01]]
-# Push -> 54
-# [[  9.49840389e-01  -2.15520328e+00   3.65554602e-02  -8.29285812e+10]
-#  [  1.01715696e+00  -1.31294836e+01  -3.04302540e-01  -6.78803738e+01]
-#  [  1.19247130e+00  -2.68289071e+00  -2.38552933e-01   1.53499829e+01]
-#  [  1.04467010e+00   8.54396941e+00  -7.05864471e-02   7.44519549e+00]]
+# No calib static -> 48
+# [[  0.97879666  -2.10031143]-> hip yaw
+#  [  0.96595697 -11.51724871]-> hip roll
+#  [  1.05060233  -3.97303081]-> hip pitch
+#  [  0.99015236   8.93334293]] -> knee
+# Calib + Static -> 48
+# [[ 1.20588548   -2.78033796 ]
+#  [ 0.94952097   -12.96222896]
+#  [ 1.03490801   -6.76122458 ]
+#  [ 0.98943679    7.8162852  ]]
 
-xr = np.zeros((4,4))
+
+# xr = np.zeros((4,2))
+xr = np.array([[0.44766947,  -0.5805577 ],
+               [0.92794379,  -6.54577756],
+               [0.24191495,  -5.34795378],
+               [1.21176435, -11.96719837]])
+rmser = np.zeros(4)
 for i in range(6, 10):
-    A = np.ones((len(tauWithForce[20000:130000]), 4))
+    A = np.ones((len(tauWithForce[20000:130000]), 2))
     A[:,0] = tauWithForce[20000:130000,i+6]
-    A[:,2] = np.sign(velocity[20000:130000, i+6])
-    A[:,3] = velocity[20000:130000, i+6]
     b = torque[20000:130000,i+2]
     xr[i-6] = np.dot(np.linalg.pinv(A[20000:130000]), b[20000:130000]) #Ax = b 
     Ax = np.dot(A, xr[i-6])
+    rmser[i-6] = rmse(Ax, b)
     plt.figure(i)
     plt.plot(time[20000:130000],Ax, 'r', label='right_leg joint ' + str(i) + ' reconstructed rnea')
     plt.plot(time[20000:130000],b, 'b', label='right_leg joint ' + str(i) + ' measured')
@@ -165,24 +195,23 @@ for i in range(6, 10):
     plt.title("Torque comparison right leg")
     plt.legend()
 print(xr)
-plt.show()
+print(rmser)
+# rmser = [ 0.46053209  3.5433265   3.61696477  5.26060387] : no calib static -> 48
+# rmser = [ 0.42935486  3.25796876  3.61012659  5.24385532] : Calib + Static -> 48
+# rmser = [ 1.03004169  1.61199206  7.36712387  4.45158222] : Calib + Push -> 54
 
 # Right
+# No calib static -> 48
 # [[  0.3349505   -0.55781495]-> hip yaw
 #  [  0.97043399  -4.47099726]-> hip roll
 #  [  0.3253965   -8.92303056]-> hip pitch
 #  [  1.14857289 -23.51207438]] -> knee
-# Static -> 48
-# [[  3.81387503e-01  -7.37925963e-01   1.06985119e-02  -3.17236865e+11]
-#  [  9.48291864e-01  -6.65899568e+00  -2.13453310e-01   1.22958638e+02]
-#  [  2.41934498e-01  -6.31912863e+00  -8.45002570e-02  -8.40635438e+01]
-#  [  1.20425656e+00  -1.87505474e+01  -1.44407555e-01   7.62156203e+02]]
+# Calib + Static -> 48
+# [[  0.44766947  -0.5805577 ]
+#  [  0.92794379  -6.54577756]
+#  [  0.24191495  -5.34795378]
+#  [  1.21176435 -11.96719837]]
 #  
-# Push -> 54
-# [[  1.04764693e+00  -3.16033329e+00   9.77669189e-03   1.24542082e+10]
-#  [  8.96989577e-01  -1.19558121e+01   1.78301531e-01  -1.26336500e+02]
-#  [  7.18607468e-01  -2.51733534e+01   4.02364202e-01   6.35250824e+01]
-#  [  1.15827669e+00  -2.52758790e+01  -2.95529773e-01   8.60979564e+01]]
 #  
 ######################## forwardDynamics ##################################
 
@@ -229,26 +258,26 @@ plt.show()
 # plt.plot(time,tauWithForce[:,3+6], 'r', label='left_leg knee')
 # plt.title("Torque comparison left leg knee")
 # plt.legend()
-# plt.figure(15)
-# plt.plot(time,force[:,0+2], 'r', label='left_foot force x')
-# plt.plot(time,force[:,1+2], 'b', label='left_foot force y')
-# plt.plot(time,force[:,2+2], 'g', label='left_foot force z')
-# plt.title("Forces left foot")
-# plt.legend()
+plt.figure(15)
+plt.plot(time,force[:,0+2], 'r', label='left_foot force x')
+plt.plot(time,force[:,1+2], 'b', label='left_foot force y')
+plt.plot(time,force[:,2+2], 'g', label='left_foot force z')
+plt.title("Forces left foot")
+plt.legend()
 
-# plt.figure(16)
-# plt.plot(time,force[:,12+2], 'r', label='left_foot force x')
-# plt.plot(time,force[:,13+2], 'b', label='left_foot force y')
-# plt.plot(time,force[:,14+2], 'g', label='left_foot force z')
-# plt.title("Forces Right foot")
-# plt.legend()
+plt.figure(16)
+plt.plot(time,force[:,12+2], 'r', label='right_foot force x')
+plt.plot(time,force[:,13+2], 'b', label='right_foot force y')
+plt.plot(time,force[:,14+2], 'g', label='right_foot force z')
+plt.title("Forces Right foot")
+plt.legend()
 
 # plt.figure(2)
-# plt.plot(time,tauWithoutForce[:,0+6], 'r', label='left_leg hip yaw')
-# plt.plot(time,tauWithoutForce[:,1+6], 'b', label='left_leg hip roll')
-# plt.plot(time,tauWithoutForce[:,2+6], 'g', label='left_leg hip pitch')
-# plt.plot(time,tauWithoutForce[:,3+6], 'c', label='left_leg knee')
-# plt.title("Torque without force left leg")
+# plt.plot(time,tauWithForce[:,0+6], 'r', label='left_leg hip yaw')
+# plt.plot(time,tauWithForce[:,1+6], 'b', label='left_leg hip roll')
+# plt.plot(time,tauWithForce[:,2+6], 'g', label='left_leg hip pitch')
+# plt.plot(time,tauWithForce[:,3+6], 'c', label='left_leg knee')
+# plt.title("Torque with force left leg")
 # plt.legend()
 
 # diff = tauWithForce - tauWithoutForce
@@ -269,4 +298,4 @@ plt.show()
 # plt.title("Torque measured left leg")
 # plt.legend()
 
-# plt.show()
+plt.show()
