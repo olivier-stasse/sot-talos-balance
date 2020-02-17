@@ -5,6 +5,9 @@ from numpy.testing import assert_almost_equal as assertApprox
 
 from sot_talos_balance.simple_state_integrator import SimpleStateIntegrator
 
+import eigenpy
+eigenpy.switchToNumpyMatrix()
+
 dt = 1e-3
 initstate = [0.]*9
 

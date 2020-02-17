@@ -6,6 +6,8 @@ from numpy.testing import assert_almost_equal as assertApprox
 
 from sot_talos_balance.simple_zmp_estimator import SimpleZmpEstimator
 
+pin.switchToNumpyMatrix()
+
 # --- Create estimator
 
 print("--- Create estimator ---")
