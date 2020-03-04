@@ -22,15 +22,11 @@ sleep(10.0)
 input("Put the drill in the hand and continue to close the hand of the robot")
 runCommandClient("robot.trajGen.move(35, -0.4, 5.0)")
 
-sleep(8.0)
+# sleep(8.0)
 
-input("Wait before pushing the taskRightHand")
+input("Wait before switching to Admittance control")
 
-runCommandClient("robot.sot.remove(robot.taskPosture.name)")
-sleep(5.0)
-runCommandClient("robot.sot.push(robot.taskRightHand.task.name)")
-sleep(2.0)
-runCommandClient("robot.sot.push(robot.taskPosture.name)")
+runCommandClient("plug(robot.sot_adm.control, robot.controlManager.ctrl_sot_input)")
 
 # robot.controller.w_forceDes.value = [.1, 0.0, 0.0, 0.0, 0.0, 0.0]
 # robot.controller.dqSaturation.value = [.1, 0.0, 0.0, 0.0, 0.0, 0.0]

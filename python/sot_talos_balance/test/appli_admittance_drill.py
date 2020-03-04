@@ -4,7 +4,7 @@ import math
 import numpy as np
 from dynamic_graph import plug
 from dynamic_graph.ros import RosPublish, RosSubscribe
-from dynamic_graph.sot.core import SOT, FeaturePosture, GainAdaptive, Task
+from dynamic_graph.sot.core import SOT, FeaturePosture, GainAdaptive, Task#, FeaturePose
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom
 from dynamic_graph.tracer_real_time import TracerRealTime
@@ -43,8 +43,10 @@ robot.positionDrill = q
 # --- Initial feet and waist
 robot.dynamic.createOpPoint('LF', robot.OperationalPointsMap['left-ankle'])
 robot.dynamic.createOpPoint('RF', robot.OperationalPointsMap['right-ankle'])
+robot.dynamic.createOpPoint('WT', robot.OperationalPointsMap['waist'])
 robot.dynamic.LF.recompute(0)
 robot.dynamic.RF.recompute(0)
+robot.dynamic.WT.recompute(0)
 
 # --- CREATE ENTITIES ----------------------------------------------------------
 
@@ -98,13 +100,44 @@ handMgrip = np.eye(4)
 handMgrip[0:3, 3] = (0.1, 0, 0)
 robot.taskRightHand.opmodif = matrixToTuple(handMgrip)
 robot.taskRightHand.feature.frame('desired')
-robot.taskRightHand.feature.selec.value = '111111'
+robot.taskRightHand.feature.selec.value = '111011'
 robot.taskRightHand.task.setWithDerivative(True)
 robot.taskRightHand.task.controlGain.value = 0
 robot.taskRightHand.feature.position.value = np.eye(4)
 robot.taskRightHand.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
 robot.taskRightHand.featureDes.position.value = np.eye(4)
-plug(robot.controller.dq, robot.taskRightHand.featureDes.velocity)
+#plug(robot.controller.dq, robot.taskRightHand.featureDes.velocity)
+
+# robot.device.createOpPoint('nom_du_signal', "nom_du_frame")
+# taskRightHand = Task('taskRightHand')
+# robot.taskRightHand.task.setWithDerivative(True)
+# robot.taskRightHand.task.controlGain.value = 1.0
+# featureRH_pos = FeaturePose('featureRH_pos')
+# featureRH_pos.selec.value = "000100"
+# featureRH_pos.position.value = np.eye(4)
+# featureRH_pos.velocity.value = [0., 0., 0., 0., 0., 0.]
+# featureRH_pos.featureDes.position.value = np.eye(4)
+# featureRH_pos.oMja.value = robot.dynamic.data.oMi[robot.dynamic.model.getJointId('universe')]
+# featureRH_pos.jaMfa.value = robot.dynamic.data.oMf[robot.dynamic.model.getFrameId('arm_right_7_joint')]
+# featureRH_pos.oMjb.value = robot.dynamic.data.oMi[robot.dynamic.model.getJointId('arm_right_7_joint')]
+# frameWristInWorld = robot.dynamic.data.oMf[robot.dynamic.model.getFrameId('arm_right_7_joint')]
+# featureRH_pos.jbMfb.value = frameWristInWorld.actInv(featureRH_pos.jaMfa)
+# featureRH_pos.jaJja.value = 
+
+# featureRH_adm = FeaturePose('featureRH_adm')
+# featureRH_pos.selec.value = "111011"
+# featureRH_pos.position.value = np.eye(4)
+# featureRH_pos.velocity.value = [0., 0., 0., 0., 0., 0.]
+# featureRH_pos.featureDes.position.value = np.eye(4)
+# taskRightHand.add(featureRH_adm)
+# taskRightHand.add(featureRH_pos)
+
+# --- SWITCH when Force detected at the hand -----------------------------------
+
+robot.switch = create_switch_admittance(robot, 1.5, endEffector)
+plug(robot.switch.sout, robot.taskRightHand.featureDes.velocity)
+robot.switch.sout.recompute(0)
+
 
 # --- BASE TASK ----------------------------------------------------------------
 
@@ -160,21 +193,32 @@ robot.taskPosture.feature.selectDof(37, True)
 
 robot.taskPosture.add(robot.taskPosture.feature.name)
 
-robot.sot = SOT('sot')
-robot.sot.setSize(robot.dynamic.getDimension())
+# --- Sot controllers ----------------------------------------------------------
+robot.sot_pos = SOT('sot_pos')
+robot.sot_pos.setSize(robot.dynamic.getDimension())
+
+robot.sot_adm = SOT('sot_adm')
+robot.sot_adm.setSize(robot.dynamic.getDimension())
 
 # Plug SOT control to device through control manager
-plug(robot.sot.control, robot.controlManager.ctrl_sot_input)
+plug(robot.sot_pos.control, robot.controlManager.ctrl_sot_input)
 plug(robot.controlManager.u_safe, robot.device.control)
 # plug(robot.sot.control, robot.device.control)
 
 # --- PUSH THE TASKS -----------------------------------------------------------
 
-robot.sot.push(robot.taskCom.task.name)
-robot.sot.push(robot.contactRF.task.name)
-robot.sot.push(robot.contactLF.task.name)
-robot.sot.push(robot.taskWaist.task.name)
-robot.sot.push(robot.taskPosture.name)
+robot.sot_pos.push(robot.taskCom.task.name)
+robot.sot_pos.push(robot.contactRF.task.name)
+robot.sot_pos.push(robot.contactLF.task.name)
+robot.sot_pos.push(robot.taskWaist.task.name)
+robot.sot_pos.push(robot.taskPosture.name)
+
+robot.sot_adm.push(robot.taskCom.task.name)
+robot.sot_adm.push(robot.contactRF.task.name)
+robot.sot_adm.push(robot.contactLF.task.name)
+robot.sot_adm.push(robot.taskWaist.task.name)
+robot.sot_adm.push(robot.taskRightHand.task.name)
+robot.sot_adm.push(robot.taskPosture.name)
 
 # # --- ROS PUBLISHER ----------------------------------------------------------
 
@@ -186,16 +230,6 @@ create_topic(robot.publisher, robot.controller, 'w_dq', robot=robot, data_type='
 create_topic(robot.publisher, robot.controller, 'w_forceDes', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.forceCalibrator, 'leftWristForceOut', robot=robot, data_type='vector')  # calibrated left wrench
 create_topic(robot.publisher, robot.forceCalibrator, 'rightWristForceOut', robot=robot, data_type='vector')  # calibrated right wrench
-
-# # --- ROS SUBSCRIBER
-robot.subscriber = RosSubscribe("end_effector_subscriber")
-robot.subscriber.add("vector", "w_force", "/sot/controller/w_force")
-robot.subscriber.add("vector", "force", "/sot/controller/force")
-robot.subscriber.add("vector", "dq", "/sot/controller/dq")
-robot.subscriber.add("vector", "w_dq", "/sot/controller/w_dq")
-robot.subscriber.add("vector", "w_forceDes", "/sot/controller/w_forceDes")
-robot.subscriber.add("vector", "leftWristForceOut", "/sot/forceCalibrator/leftWristForceOut")
-robot.subscriber.add("vector", "rightWristForceOut", "/sot/forceCalibrator/rightWristForceOut")
 
 # --- TRACER  ------------------------------------------------------------------
 
