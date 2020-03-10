@@ -4,6 +4,9 @@ import numpy as np
 
 from sot_talos_balance.round_double_to_int import RoundDoubleToInt
 
+import eigenpy
+eigenpy.switchToNumpyMatrix()
+
 rd = RoundDoubleToInt('round')
 time = 0
 

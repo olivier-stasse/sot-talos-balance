@@ -1,3 +1,4 @@
+import eigenpy
 import numpy as np
 import pinocchio as pin
 from numpy.testing import assert_almost_equal as assertApprox
@@ -8,6 +9,8 @@ import sot_talos_balance.talos.parameter_server_conf as param_server_conf
 from sot_talos_balance.create_entities_utils import (DcmEstimator, SimpleReferenceFrame, StateTransformation,
                                                      TalosBaseEstimator, create_parameter_server, plug)
 from sot_talos_balance.euler_to_quat import EulerToQuat
+
+eigenpy.switchToNumpyMatrix()
 
 # --- General ---
 print("--- General ---")

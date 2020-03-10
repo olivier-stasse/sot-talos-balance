@@ -8,6 +8,8 @@ from rospkg import RosPack
 import sot_talos_balance.talos.parameter_server_conf as parameter_server_conf
 from sot_talos_balance.create_entities_utils import Bunch, DcmEstimator, ParameterServer
 
+pin.switchToNumpyMatrix()
+
 dt = 0.001
 conf = Bunch()
 robot_name = 'robot'

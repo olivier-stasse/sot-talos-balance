@@ -8,6 +8,8 @@ import sot_talos_balance.talos.parameter_server_conf as param_server_conf
 from sot_talos_balance.create_entities_utils import (DcmEstimator, EulerToQuat, TalosBaseEstimator,
                                                      create_parameter_server, plug)
 
+pin.switchToNumpyMatrix()
+
 # --- General ---
 print("--- General ---")
 
