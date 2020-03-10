@@ -2,7 +2,7 @@
 <!--Author: Gabriele Buondonno-->
 <package>
   <name>sot_talos_balance</name>
-  <version>1.0.0</version>
+  <version>1.8.1</version>
   <description>The sot_talos_balance package</description>
 
   <maintainer email="gbuondon@laas.fr">Gabriele Buondonno</maintainer>
@@ -26,7 +26,7 @@
   <build_depend>talos_gazebo</build_depend>
 
   <run_depend>dynamic_graph_bridge</run_depend>
-  <run_depend>dynamic-graph-python</run_depend>  
+  <run_depend>dynamic-graph-python</run_depend>
   <run_depend>sot_core</run_depend>
   <run_depend>image_proc</run_depend>
   <run_depend>talos_controller_configuration</run_depend>
