@@ -4,17 +4,26 @@ import math
 import numpy as np
 from dynamic_graph import plug
 from dynamic_graph.ros import RosPublish, RosSubscribe
-from dynamic_graph.sot.core import SOT, FeaturePosture, GainAdaptive, Task#, FeaturePose
+from dynamic_graph.sot.core import SOT, FeaturePosture, GainAdaptive, Task, FeaturePose
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom
+from dynamic_graph.sot.core import GainAdaptive
+from dynamic_graph.sot.core import OpPointModifier
+from dynamic_graph.sot.core.operator import Norm_of_vector
+from dynamic_graph.sot.core.operator import CompareDouble 
+from dynamic_graph.sot.core.operator import Multiply_matrixTwist_vector
+from dynamic_graph.sot.core.operator import HomoToTwist
+from dynamic_graph.sot.core.switch import SwitchVector
+
 from dynamic_graph.tracer_real_time import TracerRealTime
 from sot_talos_balance.utils.sot_utils import go_to_position
-
+from sot_talos_balance.admittance_controller_op_point import AdmittanceControllerOpPoint
 import sot_talos_balance.talos.base_estimator_conf as baseEstimatorConf
 import sot_talos_balance.talos.control_manager_sim_conf as controlManagerConfig
 import sot_talos_balance.talos.ft_wrist_calibration_conf as forceConf
 import sot_talos_balance.talos.parameter_server_conf as paramServerConfig
 from sot_talos_balance.create_entities_utils import *
+import pinocchio as pin
 
 robot.timeStep = robot.device.getTimeStep()
 
@@ -44,9 +53,15 @@ robot.positionDrill = q
 robot.dynamic.createOpPoint('LF', robot.OperationalPointsMap['left-ankle'])
 robot.dynamic.createOpPoint('RF', robot.OperationalPointsMap['right-ankle'])
 robot.dynamic.createOpPoint('WT', robot.OperationalPointsMap['waist'])
+robot.dynamic.createOpPoint('World', "universe")
+robot.dynamic.createOpPoint('RW_joint', "arm_right_7_joint")
+robot.dynamic.createOpPoint('RW_sensor', "wrist_right_ft_link")
 robot.dynamic.LF.recompute(0)
 robot.dynamic.RF.recompute(0)
 robot.dynamic.WT.recompute(0)
+robot.dynamic.World.recompute(0)
+robot.dynamic.RW_joint.recompute(0)
+robot.dynamic.RW_sensor.recompute(0)
 
 # --- CREATE ENTITIES ----------------------------------------------------------
 
@@ -66,11 +81,114 @@ robot.e2q = EulerToQuat("e2q")
 plug(robot.baseEstimator.q, robot.e2q.euler)
 
 robot.forceCalibrator = create_ft_wrist_calibrator(robot, endEffectorWeight, rightOC, leftOC)
-robot.controller = create_end_effector_admittance_controller(robot, endEffector, "EEAdmittance")
 
 robot.controlManager = create_ctrl_manager(controlManagerConfig, robot.timeStep)
 robot.controlManager.addCtrlMode('sot_input')
 robot.controlManager.setCtrlMode('all', 'sot_input')
+
+
+# --- HAND TASKS ----------------------------------------------------------------
+
+# Hole position
+jaMfa = np.zeros((4,4)) # pose of the hole frame fa wrt world ja
+jaMfa[0,2] = -1
+jaMfa[1,1] = 1
+jaMfa[2,0] = 1
+jaMfa[0:4, 3] = [0.67, -0.382, 1.125, 1] # pose of the drill when put in position + 0.1 on the x axis 
+
+# Drill position
+jbMfb = np.eye(4) # pose of the drill (foret) fb frame wrt wrist jb
+jbMfb[0:3, 3] = [0.05, 0.0, -0.3]
+
+robot.drillOpPoint = OpPointModifier('drill')
+plug(robot.dynamic.RW_joint,  robot.drillOpPoint.positionIN)
+plug(robot.dynamic.JRW_joint, robot.drillOpPoint.jacobianIN)
+robot.drillOpPoint.setTransformation(jbMfb)
+robot.drillOpPoint.position.recompute(0)
+robot.drillOpPoint.jacobian.recompute(0)
+
+# Task position control
+robot.taskRightHandPos = Task('taskRightHandPos')
+robot.taskRightHandPos.setWithDerivative(True)
+robot.taskRightHandPos.controlGain.value = 100
+
+featureRH_pos = FeaturePose('featureRH_pos')
+featureRH_pos.selec.value = "101000"
+plug(robot.dynamic.World, featureRH_pos.oMja) # pose of joint ja (world) in the world
+plug(robot.dynamic.JWorld, featureRH_pos.jaJja) # jacobian of joint ja (world)
+plug(robot.dynamic.RW_joint, featureRH_pos.oMjb) # pose of joint jb (wrist) in the world
+plug(robot.dynamic.JRW_joint, featureRH_pos.jbJjb) # jacobian of jb (wrist)
+featureRH_pos.jaMfa.value = jaMfa # pose of the frame fa (hole) wrt ja (world)
+featureRH_pos.jbMfb.value = jbMfb # pose of the frame fb (drill) wrt jb (wrist)
+featureRH_pos.faMfbDes.value = np.eye(4)
+featureRH_pos.faNufafbDes.value = [0., 0., 0., 0., 0., 0.]
+
+# Task admittance control
+robot.taskRightHandAdm = Task('taskRightHandAdm')
+robot.taskRightHandAdm.setWithDerivative(True)
+robot.taskRightHandAdm.controlGain.value = 0
+
+featureRH_adm = FeaturePose('featureRH_adm')
+featureRH_adm.selec.value = "010111"
+plug(robot.dynamic.World, featureRH_adm.oMja) # pose of joint ja (world) in the world
+plug(robot.dynamic.JWorld, featureRH_adm.jaJja) # jacobian of joint ja (world)
+plug(robot.dynamic.RW_joint, featureRH_adm.oMjb) # pose of joint jb (wrist) in the world
+plug(robot.dynamic.JRW_joint, featureRH_adm.jbJjb) # jacobian of jb (wrist)
+featureRH_adm.jaMfa.value = jaMfa # pose of the frame fa (hole) wrt ja (world)
+featureRH_adm.jbMfb.value = jbMfb # pose of the frame fb (drill) wrt jb (wrist)
+featureRH_adm.faMfbDes.value = np.eye(4)
+featureRH_adm.faMfb.recompute(0)
+
+robot.taskRightHandPos.add('featureRH_pos')
+robot.taskRightHandAdm.add('featureRH_adm')
+
+
+# --- ADMITTANCE CONTROLLER ------------------------------------------------------
+
+admController = AdmittanceControllerOpPoint("DrillAdmittance")
+plug(robot.forceCalibrator.rightWristForceOut, admController.force) # rightWrist
+admController.Kp.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+admController.Kd.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+admController.w_forceDes.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+admController.dqSaturation.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+plug(robot.dynamic.RW_sensor, admController.sensorPose)
+plug(robot.drillOpPoint.position, admController.opPose)
+admController.init(robot.timeStep)
+robot.controller = admController
+
+# --- SWITCH when Force detected at the hand -----------------------------------
+
+# Norm of the sensor force vector
+norm = Norm_of_vector("force_norm")
+plug(robot.forceCalibrator.rightWristForceOut, norm.sin)
+# Compare norm with a threshold which returns true when force is detected
+threshold = 1.5
+compare = CompareDouble("compare_norm")
+plug(norm.sout, compare.sin2)
+compare.sin1.value = threshold
+
+# Transformation of the velocity output of the admittance controller to the right frame
+# vel_adm is the velocity desired for the drill in the drill frame
+# Here we want the velocity desired for the frame fb (drill) in the frame fa (hole)
+faMfbTwist = HomoToTwist("faMfbTwist") # Homogeneous Matrix to Twist
+plug(featureRH_adm.faMfb, faMfbTwist.sin)
+# faXfb . fbNufb = faNufb
+faNufbAdm = Multiply_matrixTwist_vector("faNufbAdm")
+plug(faMfbTwist.sout, faNufbAdm.sin1)
+plug(robot.controller.dq, faNufbAdm.sin2)
+faNufbAdm.sout.recompute(0)
+
+# Switch which activates the control when the comparison is true
+switch = SwitchVector("switch_adm")
+switch.setSignalNumber(2)
+plug(faNufbAdm.sout, switch.sin1)
+switch.sin0.value = [0., 0., 0., 0., 0., 0.]
+plug(compare.sout, switch.boolSelection)
+robot.switch = switch
+robot.switch.sout.recompute(0)
+
+plug(robot.switch.sout, featureRH_adm.faNufafbDes)
+
 
 # --- CONTACTS ----------------------------------------------------------------
 #define contactLF and contactRF
@@ -91,53 +209,6 @@ robot.taskCom = MetaTaskKineCom(robot.dynamic)
 plug(robot.comTrajGen.x, robot.taskCom.featureDes.errorIN)
 robot.taskCom.task.controlGain.value = 10.
 robot.taskCom.feature.selec.value = '011'
-
-
-# --- HAND TASK ----------------------------------------------------------------
-
-robot.taskRightHand = MetaTaskKine6d('rh', robot.dynamic, 'rh', 'arm_right_7_joint')
-handMgrip = np.eye(4)
-handMgrip[0:3, 3] = (0.1, 0, 0)
-robot.taskRightHand.opmodif = matrixToTuple(handMgrip)
-robot.taskRightHand.feature.frame('desired')
-robot.taskRightHand.feature.selec.value = '111011'
-robot.taskRightHand.task.setWithDerivative(True)
-robot.taskRightHand.task.controlGain.value = 0
-robot.taskRightHand.feature.position.value = np.eye(4)
-robot.taskRightHand.feature.velocity.value = [0., 0., 0., 0., 0., 0.]
-robot.taskRightHand.featureDes.position.value = np.eye(4)
-#plug(robot.controller.dq, robot.taskRightHand.featureDes.velocity)
-
-# robot.device.createOpPoint('nom_du_signal', "nom_du_frame")
-# taskRightHand = Task('taskRightHand')
-# robot.taskRightHand.task.setWithDerivative(True)
-# robot.taskRightHand.task.controlGain.value = 1.0
-# featureRH_pos = FeaturePose('featureRH_pos')
-# featureRH_pos.selec.value = "000100"
-# featureRH_pos.position.value = np.eye(4)
-# featureRH_pos.velocity.value = [0., 0., 0., 0., 0., 0.]
-# featureRH_pos.featureDes.position.value = np.eye(4)
-# featureRH_pos.oMja.value = robot.dynamic.data.oMi[robot.dynamic.model.getJointId('universe')]
-# featureRH_pos.jaMfa.value = robot.dynamic.data.oMf[robot.dynamic.model.getFrameId('arm_right_7_joint')]
-# featureRH_pos.oMjb.value = robot.dynamic.data.oMi[robot.dynamic.model.getJointId('arm_right_7_joint')]
-# frameWristInWorld = robot.dynamic.data.oMf[robot.dynamic.model.getFrameId('arm_right_7_joint')]
-# featureRH_pos.jbMfb.value = frameWristInWorld.actInv(featureRH_pos.jaMfa)
-# featureRH_pos.jaJja.value = 
-
-# featureRH_adm = FeaturePose('featureRH_adm')
-# featureRH_pos.selec.value = "111011"
-# featureRH_pos.position.value = np.eye(4)
-# featureRH_pos.velocity.value = [0., 0., 0., 0., 0., 0.]
-# featureRH_pos.featureDes.position.value = np.eye(4)
-# taskRightHand.add(featureRH_adm)
-# taskRightHand.add(featureRH_pos)
-
-# --- SWITCH when Force detected at the hand -----------------------------------
-
-robot.switch = create_switch_admittance(robot, 1.5, endEffector)
-plug(robot.switch.sout, robot.taskRightHand.featureDes.velocity)
-robot.switch.sout.recompute(0)
-
 
 # --- BASE TASK ----------------------------------------------------------------
 
@@ -217,12 +288,14 @@ robot.sot_adm.push(robot.taskCom.task.name)
 robot.sot_adm.push(robot.contactRF.task.name)
 robot.sot_adm.push(robot.contactLF.task.name)
 robot.sot_adm.push(robot.taskWaist.task.name)
-robot.sot_adm.push(robot.taskRightHand.task.name)
+robot.sot_adm.push(robot.taskRightHandAdm.name)
+robot.sot_adm.push(robot.taskRightHandPos.name)
 robot.sot_adm.push(robot.taskPosture.name)
 
 # # --- ROS PUBLISHER ----------------------------------------------------------
 
 robot.publisher = create_rospublish(robot, 'robot_publisher')
+create_topic(robot.publisher, robot.taskRightHandAdm, 'error', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.controller, 'w_force', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.controller, 'force', robot=robot, data_type='vector')
 create_topic(robot.publisher, robot.controller, 'dq', robot=robot, data_type='vector')
@@ -242,5 +315,6 @@ addTrace(robot.tracer, robot.controller, 'force')
 addTrace(robot.tracer, robot.controller, 'w_force')
 addTrace(robot.tracer, robot.controller, 'w_dq')
 addTrace(robot.tracer, robot.controller, 'dq')
+addTrace(robot.tracer, robot.taskRightHandAdm, 'error')
 
 robot.tracer.start()

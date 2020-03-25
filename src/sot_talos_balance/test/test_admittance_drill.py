@@ -19,8 +19,9 @@ runCommandClient("robot.comTrajGen.move(0,0.01,5.0)")
 sleep(10.0)
 
 
-input("Put the drill in the hand and continue to close the hand of the robot")
-runCommandClient("robot.trajGen.move(35, -0.4, 5.0)")
+# input("Put the drill in the hand and continue to close the hand of the robot")
+# runCommandClient("robot.trajGen.move(35, -0.4, 5.0)")
+runCommandClient("robot.trajGen.move(34, -0.02, 5.0)")
 
 # sleep(8.0)
 

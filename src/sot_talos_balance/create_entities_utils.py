@@ -19,8 +19,7 @@ from dynamic_graph.sot.core.operator import Component_of_vector
 from dynamic_graph.sot.core.operator import MatrixHomoToPoseQuaternion
 from dynamic_graph.sot.core.operator import PoseRollPitchYawToMatrixHomo
 from dynamic_graph.sot.core.operator import MatrixHomoToPoseRollPitchYaw
-from dynamic_graph.sot.core.operator import Norm_of_vector, CompareDouble
-from dynamic_graph.sot.core.switch import SwitchVector
+
 from sot_talos_balance.boolean_identity import BooleanIdentity
 from sot_talos_balance.int_identity import IntIdentity
 from sot_talos_balance.nd_trajectory_generator import NdTrajectoryGenerator
@@ -177,27 +176,6 @@ def create_pose_rpy_trajectory_generator(dt, robot, signal_name):
     trajGen.trigger.value = 1.0
     trajGen.init(dt, 6)
     return trajGen
-
-def create_switch_admittance(robot, threshold, endEffector):
-    thres = threshold
-
-    robot.norm = Norm_of_vector("force_norm")
-    if endEffector == 'rightWrist':
-        plug(robot.forceCalibrator.rightWristForceOut, robot.norm.sin)
-    elif endEffector == 'leftWrist':
-        plug(robot.forceCalibrator.leftWristForceOut, robot.norm.sin)
-
-    robot.compare = CompareDouble("compare_norm")
-    plug(robot.norm.sout, robot.compare.sin2)
-    robot.compare.sin1.value = thres
-
-    switch = SwitchVector("switch_adm")
-    switch.setSignalNumber(2)
-    plug(robot.controller.dq, switch.sin1)
-    switch.sin0.value = [0., 0., 0., 0., 0., 0.]
-    plug(robot.compare.sout, switch.boolSelection)
-    return switch
-
 
 def create_joint_controller(Kp):
     controller = JointPositionController("posctrl")

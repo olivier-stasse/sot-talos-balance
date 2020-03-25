@@ -27,6 +27,7 @@ SET(plugins
   simple-admittance-controller
   coupled-admittance-controller
   admittance-controller-end-effector
+  admittance-controller-op-point
   ankle-admittance-controller
   foot-force-difference-controller
   joint-position-controller
