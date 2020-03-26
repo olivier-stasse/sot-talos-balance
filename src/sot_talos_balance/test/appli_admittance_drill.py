@@ -1,29 +1,33 @@
 # flake8: noqa
 import math
-
 import numpy as np
+import pinocchio as pin
+
 from dynamic_graph import plug
 from dynamic_graph.ros import RosPublish, RosSubscribe
 from dynamic_graph.sot.core import SOT, FeaturePosture, GainAdaptive, Task, FeaturePose
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom
-from dynamic_graph.sot.core import GainAdaptive
-from dynamic_graph.sot.core import OpPointModifier
+from dynamic_graph.sot.core.gain_adaptive import GainAdaptive
+from dynamic_graph.sot.core.op_point_modifier import OpPointModifier
 from dynamic_graph.sot.core.operator import Norm_of_vector
 from dynamic_graph.sot.core.operator import CompareDouble 
 from dynamic_graph.sot.core.operator import Multiply_matrixTwist_vector
 from dynamic_graph.sot.core.operator import HomoToTwist
 from dynamic_graph.sot.core.switch import SwitchVector
-
 from dynamic_graph.tracer_real_time import TracerRealTime
-from sot_talos_balance.utils.sot_utils import go_to_position
-from sot_talos_balance.admittance_controller_op_point import AdmittanceControllerOpPoint
+
 import sot_talos_balance.talos.base_estimator_conf as baseEstimatorConf
 import sot_talos_balance.talos.control_manager_sim_conf as controlManagerConfig
 import sot_talos_balance.talos.ft_wrist_calibration_conf as forceConf
 import sot_talos_balance.talos.parameter_server_conf as paramServerConfig
-from sot_talos_balance.create_entities_utils import *
-import pinocchio as pin
+from sot_talos_balance.utils.sot_utils import go_to_position
+from sot_talos_balance.euler_to_quat import EulerToQuat
+from sot_talos_balance.admittance_controller_op_point import AdmittanceControllerOpPoint
+from sot_talos_balance.create_entities_utils import create_parameter_server, create_device_filters, create_imu_filters
+from sot_talos_balance.create_entities_utils import create_base_estimator, create_config_trajectory_generator
+from sot_talos_balance.create_entities_utils import create_com_trajectory_generator, create_ft_wrist_calibrator, create_ctrl_manager
+from sot_talos_balance.create_entities_utils import create_rospublish, create_topic, addTrace, dump_tracer
 
 robot.timeStep = robot.device.getTimeStep()
 
@@ -42,8 +46,6 @@ q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]  # Left Leg
 q += [0., 0., -0.411354, 0.859395, -0.448041, -0.001708]  # Right Leg
 q += [0.0, 0.006761]  # Chest
 q += [0.25847, 0.173046, -0.0002, -0.525366, 0., 0., 0.1, -0.005]  # Left Arm
-# q += [-0.25847, -0.173046, 0.0002, -0.525366, 0., 0., 0.1, -0.005]  # Right Arm
-# q += [-0.25847, -0.0, 0.19, -1.61, 0., 0., 0.1, -0.005]             # Right Arm
 q += [-0.0, -0.01, 0.00, -1.58, -0.01, 0., 0., -0.005]  # Right Arm
 q += [0., 0.]  # Head
 
@@ -110,7 +112,7 @@ robot.drillOpPoint.jacobian.recompute(0)
 # Task position control
 robot.taskRightHandPos = Task('taskRightHandPos')
 robot.taskRightHandPos.setWithDerivative(True)
-robot.taskRightHandPos.controlGain.value = 100
+robot.taskRightHandPos.controlGain.value = 10
 
 featureRH_pos = FeaturePose('featureRH_pos')
 featureRH_pos.selec.value = "101000"

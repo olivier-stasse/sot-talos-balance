@@ -23,16 +23,21 @@ sleep(10.0)
 # runCommandClient("robot.trajGen.move(35, -0.4, 5.0)")
 runCommandClient("robot.trajGen.move(34, -0.02, 5.0)")
 
-# sleep(8.0)
-
 input("Wait before switching to Admittance control")
 
 runCommandClient("plug(robot.sot_adm.control, robot.controlManager.ctrl_sot_input)")
 
-# robot.controller.w_forceDes.value = [.1, 0.0, 0.0, 0.0, 0.0, 0.0]
-# robot.controller.dqSaturation.value = [.1, 0.0, 0.0, 0.0, 0.0, 0.0]
+# In Gazebo add a wall at the position (0.67, -0.382, 1.125)
+# Apply a force on the hand of the robot to activate the admittance control:
+# rosservice call /gazebo/apply_body_wrench '{body_name: "arm_right_7_link", 
+# reference_frame: "arm_right_7_link", wrench: { force: { x: 0, y: 0, z: -2 } }, start_time: 0, duration: -1 }'
+
+# In a terminal run: rosrun dynamic_graph_bridge run_command
+# And set the controller gains and desired force:
+# robot.controller.w_forceDes.value = [.01, 0.0, 0.0, 0.0, 0.0, 0.0]
 # robot.controller.Kp.value = [0.1, 0.0, 0.0, 0.0, 0.0, 0.0]
-# robot.controller.Kd.value = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+# robot.controller.dqSaturation.value = [.001, 0.0, 0.0, 0.0, 0.0, 0.0]
+
 
 input("Wait before leaving the simulation")
 

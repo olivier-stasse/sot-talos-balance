@@ -125,7 +125,6 @@ DEFINE_SIGNAL_INNER_FUNCTION(w_force, dynamicgraph::Vector)
   const Vector &force = m_forceSIN(iter);
   const MatrixHomogeneous &sensorPose = m_sensorPoseSIN(iter);
   assert(force.size() == m_n && "Unexpected size of signal force");
-  assert(sensorPose.size() == 4 && "Unexpected size of signal sensorPose");
   pinocchio::SE3 sensorPlacement(sensorPose.matrix()); // homogeneous matrix to SE3
   s = sensorPlacement.act(pinocchio::Force(force)).toVector();
 
@@ -189,7 +188,6 @@ DEFINE_SIGNAL_OUT_FUNCTION(dq, dynamicgraph::Vector)
   const Vector &w_dq = m_w_dqSINNER(iter);
   const MatrixHomogeneous &opPose = m_opPoseSIN(iter);
   assert(w_dq.size() == m_n && "Unexpected size of signal w_dq");
-  assert(opPose.size() == 4 && "Unexpected size of signal opPose");
   pinocchio::SE3 opPointPlacement(opPose.matrix()); // homogeneous matrix to SE3
   s = opPointPlacement.actInv(pinocchio::Motion(w_dq)).toVector();
 
