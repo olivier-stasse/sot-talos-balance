@@ -3,20 +3,18 @@ from __future__ import print_function
 import numpy as np
 import pinocchio as pin
 from numpy.testing import assert_almost_equal as assertApprox
-from rospkg import RosPack
-
-import sot_talos_balance.talos.parameter_server_conf as parameter_server_conf
-from sot_talos_balance.create_entities_utils import Bunch, DcmEstimator, ParameterServer
 
 pin.switchToNumpyMatrix()
 
+import sot_talos_balance.talos.parameter_server_conf as param_server_conf
+from sot_talos_balance.create_entities_utils import Bunch, DcmEstimator,\
+     ParameterServer
 dt = 0.001
 conf = Bunch()
 robot_name = 'robot'
 
-rospack = RosPack()
-urdfPath = rospack.get_path('talos_data') + "/urdf/talos_reduced.urdf"
-urdfDir = [rospack.get_path('talos_data') + "/../"]
+urdfPath= param_server_conf.urdfFileName
+urdfDir= param_server_conf.model_path
 
 model = pin.buildModelFromUrdf(urdfPath, pin.JointModelFreeFlyer())
 model.lowerPositionLimit = np.vstack((np.matrix([-1.] * 7).T, model.lowerPositionLimit[7:]))
@@ -30,12 +28,11 @@ print("Expected:")
 print("CoM position value: {0}".format(tuple(data.com[0].flat)))
 print("CoM velocity value: {0}".format(tuple(data.vcom[0].flat)))
 
-conf.param_server = parameter_server_conf
 param_server = ParameterServer("param_server")
-param_server.init(dt, conf.param_server.urdfFileName, robot_name)
-param_server.setJointsUrdfToSot(conf.param_server.urdftosot)
-param_server.setRightFootForceSensorXYZ(conf.param_server.rightFootSensorXYZ)
-param_server.setRightFootSoleXYZ(conf.param_server.rightFootSoleXYZ)
+param_server.init(dt, param_server_conf.urdfFileName, robot_name)
+param_server.setJointsUrdfToSot(param_server_conf.urdftosot)
+param_server.setRightFootForceSensorXYZ(param_server_conf.rightFootSensorXYZ)
+param_server.setRightFootSoleXYZ(param_server_conf.rightFootSoleXYZ)
 
 dcm_estimator = DcmEstimator('dcm_estimator')
 dcm_estimator.q.value = list(q.flat)

@@ -8,6 +8,8 @@ from rospkg import RosPack
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
 from sot_talos_balance.create_entities_utils import create_parameter_server, create_simple_distribute_wrench
 
+pin.switchToNumpyMatrix()
+
 # --- General ---
 print("--- General ---")
 
@@ -59,9 +61,8 @@ halfSitting = [
 q = np.matrix(halfSitting).T
 print("q: %s\n" % str(q.flatten().tolist()[0]))
 
-rospack = RosPack()
-urdfPath = rospack.get_path('talos_data') + "/urdf/talos_reduced.urdf"
-urdfDir = [rospack.get_path('talos_data') + "/../"]
+urdfPath= param_server_conf.urdfFileName
+urdfDir= param_server_conf.model_path
 
 model = pin.buildModelFromUrdf(urdfPath, pin.JointModelFreeFlyer())
 data = model.createData()

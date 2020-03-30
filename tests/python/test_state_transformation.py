@@ -1,16 +1,16 @@
-import eigenpy
 import numpy as np
 import pinocchio as pin
 from numpy.testing import assert_almost_equal as assertApprox
-from rospkg import RosPack
+
+pin.switchToNumpyMatrix()
 
 import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
-from sot_talos_balance.create_entities_utils import (DcmEstimator, SimpleReferenceFrame, StateTransformation,
-                                                     TalosBaseEstimator, create_parameter_server, plug)
-from sot_talos_balance.euler_to_quat import EulerToQuat
+from sot_talos_balance.create_entities_utils \
+   import (DcmEstimator, SimpleReferenceFrame, StateTransformation,
+           TalosBaseEstimator, create_parameter_server, plug)
 
-eigenpy.switchToNumpyMatrix()
+from sot_talos_balance.euler_to_quat import EulerToQuat
 
 # --- General ---
 print("--- General ---")
@@ -64,9 +64,8 @@ q = np.matrix(halfSitting).T
 print("q:")
 print(q.flatten().tolist()[0])
 
-rospack = RosPack()
-urdfPath = rospack.get_path('talos_data') + "/urdf/talos_reduced.urdf"
-urdfDir = [rospack.get_path('talos_data') + "/../"]
+urdfPath= param_server_conf.urdfFileName
+urdfDir= param_server_conf.model_path
 
 model = pin.buildModelFromUrdf(urdfPath, pin.JointModelFreeFlyer())
 data = model.createData()
