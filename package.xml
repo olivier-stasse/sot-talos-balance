@@ -39,6 +39,7 @@
   <run_depend>roboticsgroup_gazebo_plugins</run_depend>
   <run_depend>talos_controller_configuration_gazebo</run_depend>
   <run_depend>talos_gazebo</run_depend>
+  <run_depend>talos_data</run_depend>
 
   <export>
   </export>
