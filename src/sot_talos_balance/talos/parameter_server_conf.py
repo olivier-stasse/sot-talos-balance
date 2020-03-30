@@ -3,7 +3,6 @@
 Created on Mon Feb  9 13:55:16 2015
 @author: adelpret
 """
-import numpy as np
 from rospkg import RosPack
 
 rospack = RosPack()
@@ -83,9 +82,13 @@ mapJointLimits = {
     31: [-1.308996939, 1.308996939]
 }
 
-vfMax = np.array([100.0, 100.0, 300.0, 80.0, 80.0, 30.0])
-vfMin = -vfMax
-mapForceIdToForceLimits = {0: [vfMin, vfMax], 1: [vfMin, vfMax], 2: [vfMin, vfMax], 3: [vfMin, vfMax]}
+vfMax = [100.0, 100.0, 300.0, 80.0, 80.0, 30.0]
+vfMin = [-100.0, -100.0, -300.0, -80.0, -80.0, -30.0]
+
+mapForceIdToForceLimits = {0: [vfMin, vfMax],
+                           1: [vfMin, vfMax],
+                           2: [vfMin, vfMax],
+                           3: [vfMin, vfMax]}
 
 mapNameToForceId = {"rf": 0, "lf": 1, "rh": 2, "lh": 3}
 
@@ -96,5 +99,5 @@ footFrameNames = {"Right": "leg_right_6_joint", "Left": "leg_left_6_joint"}
 rightFootSensorXYZ = (0.0, 0.0, -0.085)
 rightFootSoleXYZ = (0.0, 0.0, -0.105)
 
-urdftosot = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
-             29, 30, 31)
+urdftosot = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,\
+             19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31)
