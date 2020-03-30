@@ -4,7 +4,7 @@ from math import sqrt
 from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT, Derivator_of_Vector
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
-from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
+from dynamic_graph.sot.dynamic_pinocchio import DynamicPinocchio
 from dynamic_graph.tracer_real_time import TracerRealTime
 
 import sot_talos_balance.talos.base_estimator_conf as base_estimator_conf

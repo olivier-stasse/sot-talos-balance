@@ -18,7 +18,7 @@ import numpy as np
 
 from dynamic_graph.tracer_real_time import TracerRealTime
 
-from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
+from dynamic_graph.sot.dynamic_pinocchio import DynamicPinocchio
 
 cm_conf.CTRL_MAX = 1000.0 # temporary hack
 
