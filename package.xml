@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--Author: Gabriele Buondonno-->
 <package>
-  <name>sot_talos_balance</name>
+  <name>sot-talos-balance</name>
   <version>1.8.1</version>
   <description>The sot_talos_balance package</description>
 
