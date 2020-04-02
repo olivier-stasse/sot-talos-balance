@@ -16,7 +16,7 @@ import sot_talos_balance.talos.ft_calibration_conf as ft_conf
 import sot_talos_balance.talos.parameter_server_conf as param_server_conf
 from sot_talos_balance.create_entities_utils import *
 
-cm_conf.CTRL_MAX = 10.0  # temporary hack
+cm_conf.CTRL_MAX = 100.0  # temporary hack
 
 robot.timeStep = robot.device.getTimeStep()
 dt = robot.timeStep
@@ -45,7 +45,7 @@ robot.dynamic.WT.recompute(0)
 
 rospack = RosPack()
 
-data_folder = rospack.get_path('sot_talos_balance') + "/data/"
+data_folder = rospack.get_path('sot-talos-balance') + "/data/"
 folder = data_folder + test_folder + '/'
 
 # --- Trajectory generators

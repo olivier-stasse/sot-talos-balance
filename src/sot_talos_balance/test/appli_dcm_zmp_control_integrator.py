@@ -49,7 +49,7 @@ if test_folder is not None:
         from rospkg import RosPack
         rospack = RosPack()
 
-        folder = rospack.get_path('sot_talos_balance') + "/data/" + test_folder
+        folder = rospack.get_path('sot-talos-balance') + "/data/" + test_folder
     else:
         folder = test_folder
     if folder[-1] != '/':
