@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--Author: Gabriele Buondonno-->
 <package>
-  <name>sot_talos_balance</name>
+  <name>sot-talos-balance</name>
   <version>1.8.1</version>
   <description>The sot_talos_balance package</description>
 
@@ -39,6 +39,7 @@
   <run_depend>roboticsgroup_gazebo_plugins</run_depend>
   <run_depend>talos_controller_configuration_gazebo</run_depend>
   <run_depend>talos_gazebo</run_depend>
+  <run_depend>talos_data</run_depend>
 
   <export>
   </export>

@@ -12,7 +12,7 @@ from dynamic_graph import plug
 from dynamic_graph.sot.core import SOT, Derivator_of_Vector, FeaturePosture, MatrixHomoToPoseQuaternion, Task
 from dynamic_graph.sot.core.matrix_util import matrixToTuple
 from dynamic_graph.sot.core.meta_tasks_kine import MetaTaskKine6d, MetaTaskKineCom, gotoNd
-from dynamic_graph.sot.dynamics_pinocchio import DynamicPinocchio
+from dynamic_graph.sot.dynamic_pinocchio import DynamicPinocchio
 from dynamic_graph.tracer_real_time import TracerRealTime
 from sot_talos_balance.create_entities_utils import *
 from sot_talos_balance.meta_task_pose import MetaTaskPose
@@ -51,7 +51,7 @@ if test_folder is not None:
         from rospkg import RosPack
         rospack = RosPack()
 
-        folder = rospack.get_path('sot_talos_balance') + "/data/" + test_folder
+        folder = rospack.get_path('sot-talos-balance') + "/data/" + test_folder
     else:
         folder = test_folder
     if folder[-1] != '/':
