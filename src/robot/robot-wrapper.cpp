@@ -166,11 +166,11 @@ void RobotWrapper::frameClassicAcceleration(const Data& data, const Model::Frame
   frameAcceleration.linear() += v.angular().cross(v.linear());
 }
 
-void RobotWrapper::frameJacobianWorld(const Data& data, const Model::FrameIndex index, Data::Matrix6x& J) const {
+void RobotWrapper::frameJacobianWorld(Data& data, const Model::FrameIndex index, Data::Matrix6x& J) const {
   return pinocchio::getFrameJacobian(m_model, data, index, pinocchio::WORLD, J);
 }
 
-void RobotWrapper::frameJacobianLocal(const Data& data, const Model::FrameIndex index, Data::Matrix6x& J) const {
+void RobotWrapper::frameJacobianLocal(Data& data, const Model::FrameIndex index, Data::Matrix6x& J) const {
   return pinocchio::getFrameJacobian(m_model, data, index, pinocchio::LOCAL, J);
 }
 
