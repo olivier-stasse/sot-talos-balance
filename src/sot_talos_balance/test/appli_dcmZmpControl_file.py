@@ -31,7 +31,7 @@ g = 9.81
 omega = sqrt(g / h)
 
 # --- Parameter server
-robot.param_server = create_parameter_server(param_server_conf, dt)
+fill_parameter_server(robot.param_server,param_server_conf, dt)
 
 # --- Initial feet and waist
 robot.dynamic.createOpPoint('LF', robot.OperationalPointsMap['left-ankle'])
