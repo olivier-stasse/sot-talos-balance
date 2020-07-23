@@ -19,6 +19,7 @@
 #define __invdyn_robots_fwd_hpp__
 namespace dynamicgraph {
 namespace sot {
+namespace dg = dynamicgraph;
 namespace talos_balance {
 namespace robots {
 class RobotWrapper;
