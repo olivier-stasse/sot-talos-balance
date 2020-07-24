@@ -16,8 +16,6 @@
 // #include "RTProtocol.h"
 // #include "RTPacket.h"
 
-using namespace sot::talos_balance;
-
 namespace dynamicgraph {
 namespace sot {
 namespace talos_balance {

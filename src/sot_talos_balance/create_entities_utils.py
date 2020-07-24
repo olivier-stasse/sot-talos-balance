@@ -536,9 +536,7 @@ def create_dcm_com_controller(Kp, Ki, dt, robot, dcmSignal):
     return controller
 
 
-def create_parameter_server(conf, dt, robot_name='robot'):
-    param_server = ParameterServer("param_server")
-
+def fill_parameter_server(param_server,conf, dt, robot_name='robot'):
     # Init should be called before addCtrlMode
     # because the size of state vector must be known.
     param_server.init(dt, conf.urdfFileName, robot_name)
@@ -575,6 +573,9 @@ def create_parameter_server(conf, dt, robot_name='robot'):
 
     return param_server
 
+def create_parameter_server(conf, dt, robot_name='robot'):
+    param_server = ParameterServer("param_server")
+    fill_parameter_server(param_server,conf,dt,robot_name)
 
 def create_example(robot_name='robot', firstAdd=0., secondAdd=0.):
     example = Example('example')
@@ -696,4 +697,3 @@ def reload_folder(robot, folder, zmp=False):
     set_trigger(robot, False)
     load_folder(robot, folder, zmp)
     set_trigger(robot, True)
-

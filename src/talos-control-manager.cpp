@@ -22,12 +22,11 @@
 #include <sot/core/stop-watch.hh>
 #include <sot/talos_balance/utils/statistics.hh>
 
-using namespace sot::talos_balance;
-
 namespace dynamicgraph {
 namespace sot {
 namespace talos_balance {
 namespace dynamicgraph = ::dynamicgraph;
+namespace dg = dynamicgraph;
 using namespace dynamicgraph;
 using namespace dynamicgraph::command;
 using namespace std;

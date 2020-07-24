@@ -2,7 +2,7 @@
 <!--Author: Gabriele Buondonno-->
 <package>
   <name>sot-talos-balance</name>
-  <version>1.9.1</version>
+  <version>1.9.2</version>
   <description>The sot_talos_balance package</description>
 
   <maintainer email="gbuondon@laas.fr">Gabriele Buondonno</maintainer>

@@ -15,8 +15,6 @@
 
 #define CALIB_ITER_TIME 1000  // Iteration needed for sampling and averaging the FT sensors while calibrating
 
-using namespace sot::talos_balance;
-
 namespace dynamicgraph {
 namespace sot {
 namespace talos_balance {

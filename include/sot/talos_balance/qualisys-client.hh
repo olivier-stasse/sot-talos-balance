@@ -50,6 +50,7 @@
 
 namespace dynamicgraph {
 namespace sot {
+namespace dg = dynamicgraph;
 namespace talos_balance {
 
 /* --------------------------------------------------------------------- */
