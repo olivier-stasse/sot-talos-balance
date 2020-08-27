@@ -31,6 +31,7 @@
 #define STATETRANSFORMATION_EXPORT
 #endif
 
+#include <sot/core/robot-utils.hh>
 /* --------------------------------------------------------------------- */
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
@@ -39,7 +40,6 @@
 #include <map>
 #include "boost/assign.hpp"
 
-#include <sot/core/robot-utils.hh>
 #include <sot/core/matrix-geometry.hh>
 #include <dynamic-graph/linear-algebra.h>
 

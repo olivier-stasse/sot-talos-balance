@@ -34,12 +34,12 @@
 /* --------------------------------------------------------------------- */
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
+#include <sot/core/robot-utils.hh>
 
 #include <dynamic-graph/signal-helper.h>
 #include <map>
 #include "boost/assign.hpp"
 
-#include <sot/core/robot-utils.hh>
 #include <sot/core/matrix-geometry.hh>
 #include <dynamic-graph/linear-algebra.h>
 

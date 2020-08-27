@@ -36,11 +36,11 @@
 /* --------------------------------------------------------------------- */
 
 #include <pinocchio/fwd.hpp>
+#include <sot/core/robot-utils.hh>
 #include <dynamic-graph/signal-helper.h>
 
 #include <map>
 #include "boost/assign.hpp"
-#include <sot/core/robot-utils.hh>
 
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/multibody/data.hpp>

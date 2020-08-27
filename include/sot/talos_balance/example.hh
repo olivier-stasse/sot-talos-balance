@@ -34,12 +34,11 @@
 /* --------------------------------------------------------------------- */
 /* --- INCLUDE --------------------------------------------------------- */
 /* --------------------------------------------------------------------- */
-
+#include <sot/core/robot-utils.hh>
 #include <dynamic-graph/signal-helper.h>
 
 #include <map>
 #include "boost/assign.hpp"
-#include <sot/core/robot-utils.hh>
 
 namespace dynamicgraph {
 namespace sot {

@@ -30,6 +30,7 @@
 /* --------------------------------------------------------------------- */
 
 #include <pinocchio/fwd.hpp>
+#include <sot/core/robot-utils.hh>
 #include <dynamic-graph/signal-helper.h>
 #include <map>
 #include "boost/assign.hpp"
@@ -38,7 +39,6 @@
 #include <pinocchio/multibody/model.hpp>
 #include "pinocchio/spatial/se3.hpp"
 #include "pinocchio/spatial/motion.hpp"
-#include <sot/core/robot-utils.hh>
 #include <pinocchio/algorithm/kinematics.hpp>
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/center-of-mass.hpp>

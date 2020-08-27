@@ -27,10 +27,10 @@
 /* --------------------------------------------------------------------- */
 
 #include <pinocchio/fwd.hpp>
+#include <sot/core/robot-utils.hh>
 #include <dynamic-graph/signal-helper.h>
 #include <dynamic-graph/real-time-logger.h>
 #include <sot/core/matrix-geometry.hh>
-#include <sot/core/robot-utils.hh>
 #include <map>
 #include "boost/assign.hpp"
 
